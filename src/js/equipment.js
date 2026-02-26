@@ -21,6 +21,20 @@ let allEquipment = [];
 let allSuppliers = [];
 let isFetchingSuppliers = false; // Flag to prevent duplicate fetches
 
+// Store unique suppliers (for deduplication)
+function getUniqueSuppliers(suppliers) {
+    const seen = new Set();
+    return suppliers.filter(supplier => {
+        const name = supplier.supplier_name.toLowerCase().trim();
+        if (seen.has(name)) {
+            return false;
+        }
+        seen.add(name);
+        return true;
+    });
+}
+
+
 // ==========================================
 // 0. FETCH SUPPLIERS
 // ==========================================
@@ -59,9 +73,12 @@ function renderSupplierDropdowns() {
     const createSupplierSelect = document.getElementById('supplier');
     const editSupplierSelect = document.getElementById('editSupplier');
     
+    // Get unique suppliers to prevent duplicates in dropdown
+    const uniqueSuppliers = getUniqueSuppliers(allSuppliers);
+    
     // Options HTML
     let optionsHTML = '<option value="">Select a supplier</option>';
-    allSuppliers.forEach(supplier => {
+    uniqueSuppliers.forEach(supplier => {
         optionsHTML += `<option value="${supplier.id}">${escapeHtml(supplier.supplier_name)}</option>`;
     });
     
@@ -73,6 +90,7 @@ function renderSupplierDropdowns() {
         editSupplierSelect.innerHTML = optionsHTML;
     }
 }
+
 
 // ==========================================
 // 1. FETCH EQUIPMENT FROM SUPABASE
@@ -376,6 +394,17 @@ async function handleCreateSupplier(event) {
         return;
     }
     
+    // Check for duplicate supplier name (case-insensitive)
+    const normalizedName = supplierName.toLowerCase();
+    const existingSupplier = allSuppliers.find(s => 
+        s.supplier_name.toLowerCase() === normalizedName
+    );
+    
+    if (existingSupplier) {
+        alert(`Supplier "${supplierName}" already exists! Please use a different name or select it from the dropdown.`);
+        return;
+    }
+    
     try {
         const { data, error } = await supabase
             .from('suppliers')
@@ -385,6 +414,7 @@ async function handleCreateSupplier(event) {
                 created_at: new Date().toISOString()
             }])
             .select();
+
         
         if (error) throw error;
         
@@ -415,9 +445,10 @@ async function handleCreateSupplier(event) {
 }
 
 // ==========================================
-// 6. DELETE EQUIPMENT
+// 6. DELETE EQUIPMENT & SUPPLIERS
 // ==========================================
 async function deleteEquipment(equipmentId) {
+
     if (!confirm('Are you sure you want to delete this equipment?')) {
         return;
     }
@@ -439,9 +470,97 @@ async function deleteEquipment(equipmentId) {
     }
 }
 
+async function deleteSupplier(supplierId) {
+    if (!confirm('Are you sure you want to delete this supplier? This cannot be undone.')) {
+        return;
+    }
+    
+    try {
+        // Check if supplier is being used by any equipment
+        const { data: equipmentUsingSupplier, error: checkError } = await supabase
+            .from('equipment')
+            .select('id')
+            .eq('supplier_id', supplierId)
+            .limit(1);
+        
+        if (checkError) throw checkError;
+        
+        if (equipmentUsingSupplier && equipmentUsingSupplier.length > 0) {
+            alert('Cannot delete this supplier because it is being used by equipment items. Please reassign or delete those items first.');
+            return;
+        }
+        
+        const { error } = await supabase
+            .from('suppliers')
+            .delete()
+            .eq('id', supplierId);
+        
+        if (error) throw error;
+        
+        // Refresh suppliers list
+        await fetchSuppliers(true);
+        
+        // Refresh manage suppliers modal if open
+        renderManageSuppliersList();
+        
+        alert('Supplier deleted successfully!');
+        
+    } catch (error) {
+        console.error('Error deleting supplier:', error);
+        alert('Failed to delete supplier. Please try again.');
+    }
+}
+
+// Manage Suppliers Modal Functions
+function openManageSuppliersModal() {
+    const modal = document.getElementById('manageSuppliersModal');
+    if (modal) {
+        modal.style.display = 'flex';
+        renderManageSuppliersList();
+    }
+}
+
+function closeManageSuppliersModal() {
+    const modal = document.getElementById('manageSuppliersModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+function renderManageSuppliersList() {
+    const container = document.getElementById('manageSuppliersList');
+    if (!container) return;
+    
+    // Get unique suppliers for display
+    const uniqueSuppliers = getUniqueSuppliers(allSuppliers);
+    
+    if (uniqueSuppliers.length === 0) {
+        container.innerHTML = '<p class="no-suppliers">No suppliers found.</p>';
+        return;
+    }
+    
+    let html = '';
+    uniqueSuppliers.forEach(supplier => {
+        html += `
+            <div class="supplier-item">
+                <div class="supplier-info">
+                    <strong>${escapeHtml(supplier.supplier_name)}</strong>
+                    ${supplier.contact_info ? `<br><small>${escapeHtml(supplier.contact_info)}</small>` : ''}
+                </div>
+                <button onclick="deleteSupplier('${supplier.id}')" class="action-btn delete" title="Delete Supplier">
+                    <i class="fa-solid fa-trash"></i>
+                </button>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
 // ==========================================
 // 7. SEARCH FUNCTIONALITY
 // ==========================================
+
 function filterEquipment() {
     const query = equipmentSearch.value.trim().toLowerCase();
     const filterType = searchFilter ? searchFilter.value : 'all';
@@ -578,6 +697,17 @@ if (addSupplierModal) {
     });
 }
 
+// Manage Suppliers Modal close on outside click
+const manageSuppliersModal = document.getElementById('manageSuppliersModal');
+if (manageSuppliersModal) {
+    manageSuppliersModal.addEventListener('click', function(e) {
+        if (e.target === manageSuppliersModal) {
+            closeManageSuppliersModal();
+        }
+    });
+}
+
+
 // Edit amount calculation
 document.getElementById('editQuantity')?.addEventListener('input', updateEditAmount);
 document.getElementById('editUnitCost')?.addEventListener('input', updateEditAmount);
@@ -600,3 +730,6 @@ window.fetchEquipment = fetchEquipment;
 window.openAddSupplierModal = openAddSupplierModal;
 window.closeAddSupplierModal = closeAddSupplierModal;
 window.handleCreateSupplier = handleCreateSupplier;
+window.deleteSupplier = deleteSupplier;
+window.openManageSuppliersModal = openManageSuppliersModal;
+window.closeManageSuppliersModal = closeManageSuppliersModal;

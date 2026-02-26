@@ -184,8 +184,12 @@
                         <button type="button" class="btn btn-secondary btn-small" onclick="openAddSupplierModal()">
                             <i class="fa-solid fa-plus"></i> Add New
                         </button>
+                        <button type="button" class="btn btn-secondary btn-small" onclick="openManageSuppliersModal()">
+                            <i class="fa-solid fa-cog"></i> Manage
+                        </button>
                     </div>
                 </div>
+
                 
                 <div class="form-group">
                     <label for="accountable">Accountable</label>
@@ -262,8 +266,12 @@
                         <button type="button" class="btn btn-secondary btn-small" onclick="openAddSupplierModal()">
                             <i class="fa-solid fa-plus"></i> Add New
                         </button>
+                        <button type="button" class="btn btn-secondary btn-small" onclick="openManageSuppliersModal()">
+                            <i class="fa-solid fa-cog"></i> Manage
+                        </button>
                     </div>
                 </div>
+
                 
                 <div class="form-group">
                     <label for="editAccountable">Accountable</label>
@@ -319,6 +327,27 @@
         </div>
     </div>
 
+    <!-- Manage Suppliers Modal -->
+    <div id="manageSuppliersModal" class="modal">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h3>Manage Suppliers</h3>
+                <button onclick="closeManageSuppliersModal()">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                <div id="manageSuppliersList" class="suppliers-list">
+                    <!-- Suppliers will be rendered here dynamically -->
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" onclick="closeManageSuppliersModal()" class="btn btn-secondary">Close</button>
+            </div>
+        </div>
+    </div>
+
     <script type="module" src="../js/equipment.js"></script>
+
 </body>
 </html>
