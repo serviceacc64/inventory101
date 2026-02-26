@@ -19,11 +19,23 @@ let allEquipment = [];
 
 // Store all suppliers
 let allSuppliers = [];
+let isFetchingSuppliers = false; // Flag to prevent duplicate fetches
 
 // ==========================================
 // 0. FETCH SUPPLIERS
 // ==========================================
-async function fetchSuppliers() {
+async function fetchSuppliers(forceRefresh = false) {
+    // Prevent duplicate fetches unless force refresh is requested
+    if (isFetchingSuppliers && !forceRefresh) {
+        // If suppliers already exist and not forcing refresh, just render
+        if (allSuppliers.length > 0) {
+            renderSupplierDropdowns();
+            return;
+        }
+    }
+    
+    isFetchingSuppliers = true;
+    
     try {
         const { data: suppliers, error } = await supabase
             .from('suppliers')
@@ -37,8 +49,11 @@ async function fetchSuppliers() {
         
     } catch (error) {
         console.error('Error fetching suppliers:', error);
+    } finally {
+        isFetchingSuppliers = false;
     }
 }
+
 
 function renderSupplierDropdowns() {
     const createSupplierSelect = document.getElementById('supplier');
@@ -375,8 +390,8 @@ async function handleCreateSupplier(event) {
         
         closeAddSupplierModal();
         
-        // Refresh suppliers dropdown
-        await fetchSuppliers();
+        // Refresh suppliers dropdown with force refresh to include new supplier
+        await fetchSuppliers(true);
         
         // Select the newly created supplier in the dropdown
         if (data && data[0]) {
