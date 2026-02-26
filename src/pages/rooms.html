@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,300;0,500;0,600;1,100&display=swap" rel="stylesheet">
+    <title>Rooms - Inventory System</title>
+    <link rel="stylesheet" href="../css/dashboard.css">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/rooms.css">
+    <link rel="icon" href="data:,">
+    <!-- SheetJS for Excel Export -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script type="module" src="../js/auth.js"></script>
+    <!-- Supabase Client -->
+    <script type="module" src="../js/supabase.js"></script>
+
+</head>
+<body>
+    <script>
+        // Check if user is logged in (works with both old and new auth)
+        if (!localStorage.getItem('isLoggedIn')) {
+            window.location.href = '../../index.html';
+        }
+    </script>
+    
+    <!-- Navigation -->
+    <nav class="navigation" id="navbar">
+        <div class="logo">
+            <img src="../img/logo.png" alt="Logo">
+            <span id="label">RMNHS <br> Supplies Inventory</span>
+        </div>
+        <hr>
+        <div class="options">
+            <ul>
+                <li><a href="../../dashboard.html">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>Dashboard</span>
+                </a></li>
+                <li><a href="input.html">
+                    <i class="fa-solid fa-clipboard-list"></i>
+                    <span>Items</span>
+                </a></li>
+                <li><a href="rooms.html" class="active">
+                    <i class="fa-solid fa-door-open"></i>
+                    <span>Rooms</span>
+                </a></li>
+                <li><a href="equipment.html">
+                    <i class="fa-solid fa-tools"></i>
+                    <span>Equipment</span>
+                </a></li>
+                <li><a href="report.html">
+                    <i class="fa-solid fa-calendar-week"></i>
+                    <span>Reports</span>
+                </a></li>
+                <li><a href="logs.html">
+                    <i class="fa-solid fa-book-open"></i>
+                    <span>Logs</span>
+                </a></li>
+                <li class="logout"><a href="#" data-logout>
+                    <i class="fa-solid fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="dashboard">
+        <header class="dashboard-header">
+            <h1>Room Inventory</h1>
+
+            <div class="header-right">
+                <div class="search-box" role="search" aria-label="Search rooms">
+                    <input type="search" id="roomSearch" placeholder="Search rooms..." aria-label="Search rooms">
+                    <button type="button" id="clearSearch" title="Clear search"><i class="fa-solid fa-times"></i></button>
+                </div>
+
+                <div class="header-actions">
+                    <button class="btn btn-primary" onclick="openCreateRoomModal()"><i class="fa-solid fa-plus"></i> New Room</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Rooms Section -->
+        <section class="recent-activity">
+            <!-- Loading State -->
+            <div id="loadingState" class="loading-state">
+                <i class="fa-solid fa-spinner fa-spin"></i>
+                <p>Loading rooms...</p>
+            </div>
+            
+            <!-- Error State -->
+            <div id="errorState" class="error-state">
+                <i class="fa-solid fa-exclamation-circle"></i>
+                <p id="errorMessage">Failed to load rooms</p>
+                <button onclick="fetchRooms()" class="btn btn-primary">Retry</button>
+            </div>
+            
+            <!-- Empty State -->
+            <div id="emptyState" class="empty-state">
+                <i class="fa-solid fa-door-open"></i>
+                <p>No rooms found</p>
+                <p>Click "New Room" to create your first room.</p>
+            </div>
+
+            <!-- Dynamic Rooms Container -->
+            <div id="roomsContainer" class="rooms-grid">
+                <!-- Rooms will be rendered here dynamically -->
+            </div>
+        </section>
+    </main>
+
+    <!-- Create Room Modal -->
+    <div id="createRoomModal" class="modal">
+        <div class="modal-content modal-medium">
+            <div class="modal-header">
+                <h3>Create New Room</h3>
+                <button onclick="window.closeCreateRoomModal()">&times;</button>
+            </div>
+            
+            <form id="createRoomForm" onsubmit="window.handleCreateRoom(event)">
+                <div class="form-group">
+                    <label for="roomName">Room Name *</label>
+                    <input type="text" id="roomName" placeholder="e.g., Grade 1 Classroom, Lobby" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="roomDescription">Room Address (Optional)</label>
+                    <textarea id="roomDescription" placeholder="e.g., Building A, 2nd Floor, Room 201" rows="2"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="roomAccountable">Accountable (Optional)</label>
+                    <input type="text" id="roomAccountable" placeholder="e.g., Mr. John Smith">
+                </div>
+
+                <div class="form-group">
+                    <label for="roomAdviser">Room Adviser (Optional)</label>
+                    <input type="text" id="roomAdviser" placeholder="e.g., Mrs. Jane Doe">
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" onclick="window.closeCreateRoomModal()" class="btn btn-secondary">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="createRoomBtn">
+                        <i class="fa-solid fa-plus"></i> Create Room
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Room Items Modal -->
+    <div id="roomItemsModal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3 id="roomItemsTitle">Room Items</h3>
+                <button onclick="window.closeRoomItemsModal()">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                <!-- Add Custom Item Section -->
+                <div style="margin-bottom: 20px;">
+                    <button type="button" id="showCustomItemBtn" onclick="window.showCustomItemForm()" class="btn btn-primary" style="width: 100%; background: #550000; color: white; border: none; padding: 12px;">
+                        <i class="fa-solid fa-plus"></i> Create Custom Item
+                    </button>
+                    
+                    <form id="addCustomItemForm" class="add-item-section" style="padding: 15px; background: #fff0f0; border-radius: 8px; border-left: 4px solid #f32121; display: none; margin-top: 10px;" onsubmit="window.handleAddCustomItemToRoom(event); return false;">
+                        <div style="display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap;">
+                        <div class="form-group" style="flex: 2; margin: 0; min-width: 200px;">
+                            <label for="customItemName">Item Name *</label>
+                            <input type="text" id="customItemName" placeholder="e.g., Whiteboard, Projector, Door Lock" maxlength="100" required>
+                        </div>
+                        <div class="form-group" style="flex: 0 0 100px; margin: 0;">
+                            <label for="customItemQuantity">Qty *</label>
+                            <input type="number" id="customItemQuantity" min="1" value="1" required>
+                        </div>
+                        <div class="form-group" style="flex: 0 0 120px; margin: 0;">
+                            <label for="customItemUnits">Units</label>
+                            <select id="customItemUnits" style="width: 100%; padding: 10px 12px; border: 1px solid rgba(85, 0, 0, 0.2); border-radius: 8px; font-size: 14px; background-color: white;">
+                                <option value="pcs">pcs</option>
+                                <option value="boxes">boxes</option>
+                                <option value="sets">sets</option>
+                                <option value="units">units</option>
+                                <option value="pairs">pairs</option>
+                                <option value="bundles">bundles</option>
+                                <option value="rolls">rolls</option>
+                                <option value="packs">packs</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex: 0 0 140px; margin: 0;">
+                            <label for="customItemCondition">Condition</label>
+                            <select id="customItemCondition" style="width: 100%; padding: 10px 12px; border: 1px solid rgba(85, 0, 0, 0.2); border-radius: 8px; font-size: 14px; background-color: white;">
+                                <option value="New">New</option>
+                                <option value="Good" selected>Good</option>
+                                <option value="Fair">Fair</option>
+                                <option value="Poor">Poor</option>
+                                <option value="Damaged">Damaged</option>
+                            </select>
+                        </div>
+                       
+                    </div>
+                    <div style="display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap; margin-top: 10px;">
+                        <div class="form-group" style="flex: 1; margin: 0; min-width: 300px;">
+                            <label for="customItemDescription">Description (Optional)</label>
+                            <input type="text" id="customItemDescription" placeholder="e.g., 42-inch smart TV, mounted on wall" maxlength="255">
+                        </div>
+                        <div class="form-group" style="flex: 1; margin: 0; min-width: 300px;">
+                            <label for="customItemRemarks">Remarks / Issued By (Optional)</label>
+                            <input type="text" id="customItemRemarks" placeholder="e.g., Issued by Mr. Smith on Jan 15, 2024" maxlength="255">
+                        </div>
+                    </div>
+                        <div style="display: flex; gap: 10px; margin-top: 10px;">
+                            <button type="submit" class="btn btn-primary" style="background: #07f83b; color: white; border: none; flex: 1;">
+                                <i class="fa-solid fa-check"></i> Add Item
+                            </button>
+                            <button type="button" onclick="window.hideCustomItemForm()" class="btn btn-secondary" style="flex: 0 0 auto;">
+                                <i class="fa-solid fa-times"></i> Cancel
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+
+                <!-- Room Items List -->
+                <div id="roomItemsList" class="room-items-list">
+                    <!-- Items will be rendered here -->
+                </div>
+
+                <!-- No Items State -->
+                <div id="noItemsState" class="empty-state" style="display: none;">
+                    <i class="fa-solid fa-inbox"></i>
+                    <p>No items in this room yet</p>
+                    <p>Add items using the form above</p>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" onclick="window.closeRoomItemsModal()" class="btn btn-secondary">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Room Modal -->
+    <div id="editRoomModal" class="modal">
+        <div class="modal-content modal-medium">
+            <div class="modal-header">
+                <h3>Edit Room</h3>
+                <button onclick="window.closeEditRoomModal()">&times;</button>
+            </div>
+            
+            <form id="editRoomForm" onsubmit="window.handleEditRoom(event)">
+                <input type="hidden" id="editRoomId">
+                
+                <div class="form-group">
+                    <label for="editRoomName">Room Name *</label>
+                    <input type="text" id="editRoomName" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="editRoomDescription">Room Address (Optional)</label>
+                    <textarea id="editRoomDescription" placeholder="e.g., Building A, 2nd Floor, Room 201" rows="2"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="editRoomAccountable">Accountable (Optional)</label>
+                    <input type="text" id="editRoomAccountable" placeholder="e.g., Mr. John Smith">
+                </div>
+
+                <div class="form-group">
+                    <label for="editRoomAdviser">Room Adviser (Optional)</label>
+                    <input type="text" id="editRoomAdviser" placeholder="e.g., Mrs. Jane Doe">
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" onclick="window.closeEditRoomModal()" class="btn btn-secondary">Cancel</button>
+                    <button type="button" onclick="window.handleDeleteRoom()" class="btn btn-danger" style="margin-right: auto;">
+                        <i class="fa-solid fa-trash"></i> Delete Room
+                    </button>
+                    <button type="submit" class="btn btn-primary" id="editRoomBtn">
+                        <i class="fa-solid fa-save"></i> Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script type="module" src="../js/rooms.js"></script>
+</body>
+</html>

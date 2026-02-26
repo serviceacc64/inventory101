@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,300;0,500;0,600;1,100&display=swap" rel="stylesheet">
+    <title>Items - Inventory System</title>
+    <link rel="stylesheet" href="../css/dashboard.css">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="icon" href="data:,">
+    <script type="module" src="../js/auth.js"></script>
+    <!-- Supabase Client -->
+    <script type="module" src="../js/supabase.js"></script>
+
+</head>
+<body>
+    <script>
+        // Check if user is logged in (works with both old and new auth)
+        if (!localStorage.getItem('isLoggedIn')) {
+            window.location.href = '../../index.html';
+        }
+    </script>
+    
+    <!-- Navigation -->
+    <nav class="navigation" id="navbar">
+        <div class="logo">
+            <img src="../img/logo.png" alt="Logo">
+            <span id="label">RMNHS <br> Supplies Inventory</span>
+        </div>
+        <hr>
+        <div class="options">
+            <ul>
+<li><a href="../../dashboard.html">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>Dashboard</span>
+                </a></li>
+                <li><a href="input.html" class="active">
+                    <i class="fa-solid fa-clipboard-list"></i>
+                    <span>Items</span>
+                </a></li>
+                <li><a href="rooms.html">
+                    <i class="fa-solid fa-door-open"></i>
+                    <span>Rooms</span>
+                </a></li>
+                <li><a href="equipment.html">
+                    <i class="fa-solid fa-tools"></i>
+                    <span>Equipment</span>
+                </a></li>
+                <li><a href="report.html">
+                    <i class="fa-solid fa-calendar-week"></i>
+                    <span>Reports</span>
+                </a></li>
+                <li><a href="logs.html">
+                    <i class="fa-solid fa-book-open"></i>
+                    <span>Logs</span>
+                </a></li>
+                <li class="logout"><a href="#" data-logout>
+                    <i class="fa-solid fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="dashboard">
+        <header class="dashboard-header">
+            <h1>Inventory Items</h1>
+
+            <div class="header-right">
+                <div class="search-box" role="search" aria-label="Search items">
+                    <input type="search" id="itemSearch" placeholder="Search items..." aria-label="Search items">
+                    <button type="button" id="clearSearch" title="Clear search"><i class="fa-solid fa-times"></i></button>
+                </div>
+
+                <div class="header-actions">
+                    <button class="btn btn-primary" onclick="openSelectItemModal()"><i class="fa-solid fa-plus"></i> Add Stock</button>
+                    <button class="btn btn-secondary" onclick="openGetItemModal()"><i class="fa-solid fa-hand-holding"></i> Get Item</button>
+                    <button class="btn btn-secondary" id="filterBtn" onclick="toggleFilterDropdown()"><i class="fa-solid fa-filter"></i> Filter</button>
+                </div>
+
+
+                
+                <!-- Filter Dropdown -->
+                <div id="filterDropdown" class="filter-dropdown" style="display: none;">
+                    <div class="filter-option active" data-filter="all" onclick="setFilter('all')">All Items</div>
+                    <div class="filter-option" data-filter="Janitorial" onclick="setFilter('Janitorial')">Janitorial</div>
+                    <div class="filter-option" data-filter="Office Supplies" onclick="setFilter('Office Supplies')">Office Supplies</div>
+                </div>
+
+            </div>
+        </header>
+
+        <!-- Items Section -->
+        <section class="recent-activity">
+            <h2>All Items</h2>
+            
+            <!-- Loading State -->
+            <div id="loadingState" class="loading-state">
+                <i class="fa-solid fa-spinner fa-spin"></i>
+                <p>Loading items...</p>
+            </div>
+            
+            <!-- Error State -->
+            <div id="errorState" class="error-state">
+                <i class="fa-solid fa-exclamation-circle"></i>
+                <p id="errorMessage">Failed to load items</p>
+                <button onclick="fetchItems()" class="btn btn-primary">Retry</button>
+            </div>
+            
+            <!-- Empty State -->
+            <div id="emptyState" class="empty-state">
+                <i class="fa-solid fa-box-open"></i>
+                <p>No items found</p>
+                <p>Click "Add Item" to create your first item.</p>
+            </div>
+
+            
+            <!-- Dynamic Items Container -->
+            <div id="itemsContainer" class="activity-list">
+                <!-- Items will be rendered here dynamically -->
+            </div>
+        </section>
+    </main>
+
+    <!-- Select Item Modal -->
+    <div id="selectItemModal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3>Add Stock to Item</h3>
+                <button onclick="closeSelectItemModal()">&times;</button>
+            </div>
+            
+            <!-- Search Box -->
+            <div class="form-group">
+                <div class="search-box" style="margin-bottom: 15px;">
+                    <input type="search" id="modalItemSearch" placeholder="Search available items..." aria-label="Search items">
+                    <button type="button" id="clearModalSearch" title="Clear search"><i class="fa-solid fa-times"></i></button>
+                </div>
+            </div>
+            
+            <!-- Create New Item Button -->
+            <div class="create-new-item-section" style="padding: 15px; text-align: center; border-bottom: 1px solid #e0e0e0; background: #f9f9f9;">
+                <p style="margin: 0 0 10px 0; color: #666; font-size: 14px;">Can't find the item you're looking for?</p>
+                <button type="button" class="btn btn-secondary" onclick="openCreateItemModal()">
+                    <i class="fa-solid fa-plus"></i> Create New Item
+                </button>
+            </div>
+            
+            <!-- Selectable Items List -->
+            <div id="selectableItemsList" class="selectable-items-list">
+                <!-- Items will be rendered here dynamically -->
+            </div>
+
+            
+            <!-- Selected Item Details (hidden initially) -->
+            <div id="selectedItemDetails" style="display: none; margin-top: 20px; padding-top: 20px; border-top: 2px solid #eee;">
+                <div class="selected-item-info">
+                    <h4 id="selectedItemName">Item Name</h4>
+                    <p id="selectedItemCurrentStock">Current Stock: 0</p>
+                </div>
+                
+                <form id="updateQuantityForm" onsubmit="handleUpdateQuantity(event)">
+                    <input type="hidden" id="selectedItemId">
+                    
+                    <div class="form-group">
+                        <label for="addQuantity">Quantity to Add *</label>
+                        <input type="number" id="addQuantity" required min="1" placeholder="Enter quantity to add">
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" onclick="cancelSelection()" class="btn btn-secondary">Back</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fa-solid fa-plus"></i> Add to Stock
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- Create New Item Modal -->
+    <div id="createItemModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Create New Item</h3>
+                <button onclick="closeCreateItemModal()">&times;</button>
+            </div>
+            
+            <form id="createItemForm" onsubmit="handleCreateItem(event)">
+                <div class="form-group">
+                    <label for="newItemName">Item Name *</label>
+                    <input type="text" id="newItemName" required placeholder="e.g., Ballpoint Pens">
+                </div>
+                
+                <div class="form-group">
+                    <label for="newItemLabel">Category *</label>
+                    <select id="newItemLabel" required>
+                        <option value="">Select Category</option>
+                        <option value="Janitorial">Janitorial</option>
+                        <option value="Office Supplies">Office Supplies</option>
+                    </select>
+                </div>
+                
+                <div class="form-group" id="newItemUnitGroup" style="display: none;">
+                    <label for="newItemUnit">Unit *</label>
+                    <input type="text" id="newItemUnit" placeholder="e.g., Gallon, Box, Piece">
+                </div>
+                
+                <div class="form-group">
+                    <label for="newItemQuantity">Initial Quantity *</label>
+                    <input type="number" id="newItemQuantity" required min="0" placeholder="e.g., 100">
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" onclick="closeCreateItemModal()" class="btn btn-secondary">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa-solid fa-plus"></i> Create Item
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Item Modal -->
+    <div id="editItemModal" class="modal">
+
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Item</h3>
+                <button onclick="closeEditModal()">&times;</button>
+            </div>
+            
+            <form id="editItemForm" onsubmit="handleEditItem(event)">
+                <input type="hidden" id="editItemId">
+                
+                <div class="form-group">
+                    <label for="editItemName">Item Name *</label>
+                    <input type="text" id="editItemName" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="editItemLabel">Category *</label>
+                    <select id="editItemLabel" required>
+                        <option value="">Select Category</option>
+                        <option value="Janitorial">Janitorial</option>
+                        <option value="Office Supplies">Office Supplies</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="editItemUnitGroup" style="display: none;">
+                    <label for="editItemUnit">Unit *</label>
+                    <input type="text" id="editItemUnit" placeholder="e.g., Gallon, Box, Piece">
+                </div>
+                
+                <div class="form-group">
+                    <label for="editItemQuantity">Quantity *</label>
+                    <input type="number" id="editItemQuantity" required min="0">
+                </div>
+
+                
+                <div class="form-actions">
+                    <button type="button" onclick="closeEditModal()" class="btn btn-secondary">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa-solid fa-save"></i> Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- Get Item Modal -->
+    <div id="getItemModal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3>Get Item from Inventory</h3>
+                <button onclick="closeGetItemModal()">&times;</button>
+            </div>
+            
+            <!-- Search Box -->
+            <div class="form-group">
+                <div class="search-box" style="margin-bottom: 15px;">
+                    <input type="search" id="getItemSearch" placeholder="Search available items..." aria-label="Search items">
+                    <button type="button" id="clearGetItemSearch" title="Clear search"><i class="fa-solid fa-times"></i></button>
+                </div>
+            </div>
+            
+            <!-- Selectable Items List -->
+            <div id="getItemSelectableList" class="selectable-items-list">
+                <!-- Items will be rendered here dynamically -->
+            </div>
+
+            
+            <!-- Selected Item Details (hidden initially) -->
+            <div id="getItemDetails" style="display: none; margin-top: 20px; padding-top: 20px; border-top: 2px solid #eee;">
+                <div class="selected-item-info">
+                    <h4 id="getItemSelectedName">Item Name</h4>
+                    <p id="getItemSelectedStock">Available Stock: 0</p>
+                </div>
+                
+                <form id="getItemForm" onsubmit="handleGetItemSubmit(event)">
+                    <input type="hidden" id="getItemSelectedId">
+                    
+                    <div class="form-group">
+                        <label for="getItemPerson">Who Gets It *</label>
+                        <input type="text" id="getItemPerson" required placeholder="Enter person's name">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="getItemQuantity">Quantity to Get *</label>
+                        <input type="number" id="getItemQuantity" required min="1" placeholder="Enter quantity">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="getItemTimestamp">Timestamp</label>
+                        <input type="datetime-local" id="getItemTimestamp" required>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" onclick="cancelGetItemSelection()" class="btn btn-secondary">Back</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fa-solid fa-check"></i> Confirm Get Item
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- External JavaScript -->
+    <script type="module" src="../js/input.js"></script>
+
+</body>
+</html>

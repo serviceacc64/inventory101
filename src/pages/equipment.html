@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,300;0,500;0,600;1,100&display=swap" rel="stylesheet">
+    <title>Equipment - Inventory System</title>
+    <link rel="stylesheet" href="../css/dashboard.css">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/equipment.css">
+    <link rel="icon" href="data:,">
+    <script type="module" src="../js/auth.js"></script>
+
+    <!-- Supabase Client -->
+    <script type="module" src="../js/supabase.js"></script>
+
+</head>
+<body>
+    <script>
+        // Check if user is logged in (works with both old and new auth)
+        if (!localStorage.getItem('isLoggedIn')) {
+            window.location.href = '../../index.html';
+        }
+    </script>
+
+    
+    <!-- Navigation -->
+    <nav class="navigation" id="navbar">
+        <div class="logo">
+            <img src="../img/logo.png" alt="Logo">
+            <span id="label">RMNHS <br> Supplies Inventory</span>
+        </div>
+        <hr>
+        <div class="options">
+            <ul>
+                <li><a href="../../dashboard.html">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>Dashboard</span>
+                </a></li>
+                <li><a href="input.html">
+                    <i class="fa-solid fa-clipboard-list"></i>
+                    <span>Items</span>
+                </a></li>
+                <li><a href="rooms.html">
+                    <i class="fa-solid fa-door-open"></i>
+                    <span>Rooms</span>
+                </a></li>
+                <li><a href="equipment.html" class="active">
+                    <i class="fa-solid fa-tools"></i>
+                    <span>Equipment</span>
+                </a></li>
+                <li><a href="report.html">
+                    <i class="fa-solid fa-calendar-week"></i>
+                    <span>Reports</span>
+                </a></li>
+                <li><a href="logs.html">
+                    <i class="fa-solid fa-book-open"></i>
+                    <span>Logs</span>
+                </a></li>
+                <li class="logout"><a href="#" data-logout>
+                    <i class="fa-solid fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="dashboard">
+        <header class="dashboard-header">
+            <h1>Equipment Inventory</h1>
+
+            <div class="header-right">
+                <div class="search-box" role="search" aria-label="Search equipment">
+                    <select id="searchFilter" class="search-filter" aria-label="Search filter">
+                        <option value="all">All</option>
+                        <option value="receipt_number">P.O. No:</option>
+                        <option value="item_name">Item Name</option>
+                        <option value="supplier">Supplier</option>
+                        <option value="accountable">Accountable</option>
+                        <option value="received_by">Received By</option>
+                    </select>
+                    <input type="search" id="equipmentSearch" placeholder="Search equipment..." aria-label="Search equipment">
+                    <button type="button" id="clearSearch" title="Clear search"><i class="fa-solid fa-times"></i></button>
+                </div>
+
+                <div class="header-actions">
+                    <button class="btn btn-primary" onclick="openCreateEquipmentModal()"><i class="fa-solid fa-plus"></i> Add Equipment</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Equipment Section -->
+        <section class="equipment-section">
+            <!-- Loading State -->
+            <div id="loadingState" class="loading-state">
+                <i class="fa-solid fa-spinner fa-spin"></i>
+                <p>Loading equipment...</p>
+            </div>
+            
+            <!-- Error State -->
+            <div id="errorState" class="error-state">
+                <i class="fa-solid fa-exclamation-circle"></i>
+                <p id="errorMessage">Failed to load equipment</p>
+                <button onclick="fetchEquipment()" class="btn btn-primary">Retry</button>
+            </div>
+            
+            <!-- Empty State -->
+            <div id="emptyState" class="empty-state">
+                <i class="fa-solid fa-tools"></i>
+                <p>No equipment found</p>
+                <p>Click "Add Equipment" to add your first equipment.</p>
+            </div>
+
+            <!-- Equipment Table -->
+            <div id="equipmentContainer" class="equipment-table-wrapper">
+                <table class="equipment-table" id="equipmentTable">
+                    <thead>
+                        <tr>
+                            <th class="col-receipt">P.O. No:</th>
+                            <th class="col-name">Item Name</th>
+                            <th class="col-description">Item Description</th>
+                            <th class="col-quantity">Quantity</th>
+                            <th class="col-unit-cost">Unit Cost</th>
+                            <th class="col-amount">Amount</th>
+                            <th class="col-supplier">Supplier</th>
+                            <th class="col-accountable">Accountable</th>
+                            <th class="col-received">Received By</th>
+                            <th class="col-date">Date Delivered</th>
+                            <th class="col-actions">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="equipmentTableBody">
+                        <!-- Equipment will be rendered here dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <!-- Create Equipment Modal -->
+    <div id="createEquipmentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add New Equipment</h3>
+                <button onclick="closeCreateEquipmentModal()">&times;</button>
+            </div>
+            
+            <form id="createEquipmentForm" onsubmit="handleCreateEquipment(event)">
+                <div class="form-group">
+                    <label for="receiptNumber">P.O. No: (Receipt Number)</label>
+                    <input type="text" id="receiptNumber" placeholder="e.g., REC-001">
+                </div>
+                
+                <div class="form-group">
+                    <label for="itemName">Item Name *</label>
+                    <input type="text" id="itemName" placeholder="e.g., Office Chair, Computer Set" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="itemDescription">Item Description</label>
+                    <textarea id="itemDescription" placeholder="e.g., Ergonomic chair with lumbar support" rows="3"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="quantity">Quantity *</label>
+                    <input type="number" id="quantity" min="1" value="1" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="unitCost">Unit Cost (₱)</label>
+                    <input type="number" id="unitCost" min="0" step="0.01" placeholder="0.00">
+                </div>
+                
+                <div class="form-group">
+                    <label for="supplier">Supplier</label>
+                    <div class="supplier-dropdown-container">
+                        <select id="supplier" class="supplier-select">
+                            <option value="">Select a supplier</option>
+                        </select>
+                        <button type="button" class="btn btn-secondary btn-small" onclick="openAddSupplierModal()">
+                            <i class="fa-solid fa-plus"></i> Add New
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="accountable">Accountable</label>
+                    <input type="text" id="accountable" placeholder="Person responsible for the equipment">
+                </div>
+                
+                <div class="form-group">
+                    <label for="receivedBy">Received By</label>
+                    <input type="text" id="receivedBy" placeholder="Person who received the equipment">
+                </div>
+                
+                <div class="form-group">
+                    <label for="dateDelivered">Date Delivered</label>
+                    <input type="date" id="dateDelivered">
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" onclick="closeCreateEquipmentModal()" class="btn btn-secondary">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa-solid fa-plus"></i> Add Equipment
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Equipment Modal -->
+    <div id="editEquipmentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Equipment</h3>
+                <button onclick="closeEditEquipmentModal()">&times;</button>
+            </div>
+            
+            <form id="editEquipmentForm" onsubmit="handleEditEquipment(event)">
+                <input type="hidden" id="editEquipmentId">
+                
+                <div class="form-group">
+                    <label for="editReceiptNumber">P.O. No: (Receipt Number)</label>
+                    <input type="text" id="editReceiptNumber" placeholder="e.g., REC-001">
+                </div>
+                
+                <div class="form-group">
+                    <label for="editItemName">Item Name *</label>
+                    <input type="text" id="editItemName" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="editItemDescription">Item Description</label>
+                    <textarea id="editItemDescription" rows="3"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="editQuantity">Quantity *</label>
+                    <input type="number" id="editQuantity" min="1" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="editUnitCost">Unit Cost (₱)</label>
+                    <input type="number" id="editUnitCost" min="0" step="0.01">
+                </div>
+                
+                <div class="form-group">
+                    <label>Amount</label>
+                    <div id="editAmountDisplay" style="font-size: 18px; font-weight: 600; color: var(--equipment-hover);">₱0.00</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="editSupplier">Supplier</label>
+                    <div class="supplier-dropdown-container">
+                        <select id="editSupplier" class="supplier-select">
+                            <option value="">Select a supplier</option>
+                        </select>
+                        <button type="button" class="btn btn-secondary btn-small" onclick="openAddSupplierModal()">
+                            <i class="fa-solid fa-plus"></i> Add New
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="editAccountable">Accountable</label>
+                    <input type="text" id="editAccountable" placeholder="Person responsible for the equipment">
+                </div>
+                
+                <div class="form-group">
+                    <label for="editReceivedBy">Received By</label>
+                    <input type="text" id="editReceivedBy" placeholder="Person who received the equipment">
+                </div>
+                
+                <div class="form-group">
+                    <label for="editDateDelivered">Date Delivered</label>
+                    <input type="date" id="editDateDelivered">
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" onclick="closeEditEquipmentModal()" class="btn btn-secondary">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa-solid fa-save"></i> Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Supplier Modal -->
+    <div id="addSupplierModal" class="modal">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h3>Add New Supplier</h3>
+                <button onclick="closeAddSupplierModal()">&times;</button>
+            </div>
+            
+            <form id="addSupplierForm" onsubmit="handleCreateSupplier(event)">
+                <div class="form-group">
+                    <label for="supplierName">Supplier Name *</label>
+                    <input type="text" id="supplierName" placeholder="e.g., ABC Corporation" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="supplierContact">Contact Info</label>
+                    <textarea id="supplierContact" placeholder="e.g., Phone, Email, Address" rows="2"></textarea>
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" onclick="closeAddSupplierModal()" class="btn btn-secondary">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa-solid fa-plus"></i> Add Supplier
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script type="module" src="../js/equipment.js"></script>
+</body>
+</html>

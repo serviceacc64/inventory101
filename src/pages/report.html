@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,300;0,500;0,600;1,100&display=swap" rel="stylesheet">
+    <title>Reports - Inventory System</title>
+    <link rel="stylesheet" href="../css/dashboard.css">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/reports.css">
+    <link rel="icon" href="data:,">
+    <script type="module" src="../js/auth.js"></script>
+    <!-- SheetJS for Excel Export -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- Export Functions -->
+    <script type="module" src="../js/exportFunctions.js"></script>
+</head>
+<body>
+    <script>
+        // Check if user is logged in (works with both old and new auth)
+        if (!localStorage.getItem('isLoggedIn')) {
+            window.location.href = '../../index.html';
+        }
+    </script>
+    
+    <!-- Navigation -->
+    <nav class="navigation" id="navbar">
+        <div class="logo">
+            <img src="../img/logo.png" alt="Logo">
+            <span id="label">RMNHS <br> Supplies Inventory</span>
+        </div>
+        <hr>
+        <div class="options">
+            <ul>
+                <li><a href="../../dashboard.html">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>Dashboard</span>
+                </a></li>
+                <li><a href="input.html">
+                    <i class="fa-solid fa-clipboard-list"></i>
+                    <span>Items</span>
+                </a></li>
+                <li><a href="rooms.html">
+                    <i class="fa-solid fa-door-open"></i>
+                    <span>Rooms</span>
+                </a></li>
+                <li><a href="equipment.html">
+                    <i class="fa-solid fa-tools"></i>
+                    <span>Equipment</span>
+                </a></li>
+                <li><a href="report.html" class="active">
+                    <i class="fa-solid fa-calendar-week"></i>
+                    <span>Reports</span>
+                </a></li>
+                <li><a href="logs.html">
+                    <i class="fa-solid fa-book-open"></i>
+                    <span>Logs</span>
+                </a></li>
+                <li class="logout"><a href="#" data-logout>
+                    <i class="fa-solid fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="dashboard">
+        <header class="dashboard-header">
+            <div class="header-left">
+                <h1>Reports</h1>
+            </div>
+        </header>
+
+        <!-- Report Section -->
+        <section class="reports-section">
+            <!-- Loading State -->
+            <div id="loadingState" class="loading-state">
+                <i class="fa-solid fa-spinner"></i>
+                <p>Loading reports...</p>
+            </div>
+
+            <!-- Error State -->
+            <div id="errorState" class="error-state">
+                <i class="fa-solid fa-exclamation-circle"></i>
+                <p id="errorMessage">Failed to load report</p>
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="empty-state">
+                <i class="fa-solid fa-box-open"></i>
+                <p>No report data available</p>
+            </div>
+
+            <!-- Report Container -->
+            <div id="reportContainer">
+                <!-- Toolbar -->
+                <div class="report-toolbar">
+                    <div class="toolbar-left">
+                        <!-- Tabs -->
+                        <div class="report-tabs" role="tablist" aria-label="Report periods">
+                            <button class="tab-btn active" data-tab="weekly" type="button">Weekly</button>
+                            <button class="tab-btn" data-tab="monthly" type="button">Monthly</button>
+                            <button class="tab-btn" data-tab="yearly" type="button">Yearly</button>
+                            <button class="tab-btn" data-tab="custom" type="button">Custom Month</button>
+                        </div>
+
+                        <!-- Search Box -->
+                        <div class="search-box">
+                            <input type="search" id="reportSearch" placeholder="Search reports..." aria-label="Search reports">
+                            <button type="button" id="clearSearch" title="Clear search"><i class="fa-solid fa-times"></i></button>
+                        </div>
+                    </div>
+
+                    <div class="toolbar-right">
+                        <button id="manageTemplatesBtn" class="btn btn-ghost"><i class="fa-solid fa-file-excel"></i> Templates</button>
+                        <button id="exportBtn" class="btn btn-secondary"><i class="fa-solid fa-download"></i> Export</button>
+                        <button class="btn btn-primary" id="createReportBtn"><i class="fa-solid fa-file-export"></i> Create Report</button>
+                    </div>
+                </div>
+
+                <!-- Reports Grid -->
+                <div class="reports-grid">
+                    <!-- Weekly Report -->
+                    <section id="weekly" class="report-content active" aria-labelledby="weeklyTitle">
+                        <div class="report-card">
+                            <div class="card-header">
+                                <div>
+                                    <h3 id="weeklyTitle">Weekly Summary</h3>
+                                    <p>Last 7 days</p>
+                                </div>
+                                
+                            </div>
+
+                            <!-- Stats Grid -->
+                            <div class="stats-grid">
+                                <div class="stat-card">
+                                    <small>Items Added</small>
+                                    <div id="weeklyItemsAdded" class="stat-value">0</div>
+                                    <div id="weeklyItemsAddedTrend" class="small-muted"></div>
+                                </div>
+                                <div class="stat-card">
+                                    <small>Items Removed</small>
+                                    <div id="weeklyItemsRemoved" class="stat-value">0</div>
+                                    <div id="weeklyItemsRemovedTrend" class="small-muted"></div>
+                                </div>
+                                <div class="stat-card">
+                                    <small>Transactions</small>
+                                    <div id="weeklyTransactions" class="stat-value">0</div>
+                                    <div id="weeklyTransactionsTrend" class="small-muted"></div>
+                                </div>
+                                <div class="stat-card">
+                                    <small>Net Change</small>
+                                    <div id="weeklyNetChange" class="stat-value">0</div>
+                                </div>
+                            </div>
+
+                            <!-- Card Body - Two Column -->
+                            <div class="card-body two-column">
+                                <div>
+                                    <h4><i class="fa-solid fa-clock"></i> Recent Activity</h4>
+                                    <div id="weeklyActivity" class="activity-list"></div>
+                                </div>
+
+                                <div>
+                                    <h4><i class="fa-solid fa-trophy"></i> Top Items</h4>
+                                    <div class="table-wrap">
+                                        <table class="report-table" id="weeklySummaryTable">
+                                            <thead>
+                                                <tr>
+                                                    <th>Item</th>
+                                                    <th>Category</th>
+                                                    <th>Added</th>
+                                                    <th>Removed</th>
+                                                    <th>Net</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Monthly Report -->
+                    <section id="monthly" class="report-content" aria-labelledby="monthlyTitle">
+                        <div class="report-card">
+                            <div class="card-header">
+                                <div>
+                                    <h3 id="monthlyTitle">Monthly Summary</h3>
+                                    <p>Last 30 days</p>
+                                </div>
+                                <div class="card-actions">
+                                    <button class="btn btn-ghost" data-range="30"><i class="fa-solid fa-sync-alt"></i> Refresh</button>
+                                </div>
+                            </div>
+
+                            <!-- Stats Grid -->
+                            <div class="stats-grid">
+                                <div class="stat-card">
+                                    <small>Items Added</small>
+                                    <div id="monthlyItemsAdded" class="stat-value">0</div>
+                                    <div id="monthlyItemsAddedTrend" class="small-muted"></div>
+                                </div>
+                                <div class="stat-card">
+                                    <small>Items Removed</small>
+                                    <div id="monthlyItemsRemoved" class="stat-value">0</div>
+                                    <div id="monthlyItemsRemovedTrend" class="small-muted"></div>
+                                </div>
+                                <div class="stat-card">
+                                    <small>Transactions</small>
+                                    <div id="monthlyTransactions" class="stat-value">0</div>
+                                    <div id="monthlyTransactionsTrend" class="small-muted"></div>
+                                </div>
+                                <div class="stat-card">
+                                    <small>Net Change</small>
+                                    <div id="monthlyNetChange" class="stat-value">0</div>
+                                </div>
+                            </div>
+
+                            <!-- Card Body - Two Column -->
+                            <div class="card-body two-column">
+                                <div>
+                                    <h4><i class="fa-solid fa-clock"></i> Recent Activity</h4>
+                                    <div id="monthlyActivity" class="activity-list"></div>
+                                </div>
+                                <div>
+                                <h4><i class="fa-solid fa-trophy"></i> Top Items</h4>
+                                    <div class="table-wrap">
+                                        <table class="report-table" id="monthlySummaryTable">
+                                            <thead>
+                                                <tr>
+                                                    <th>Item</th>
+                                                    <th>Category</th>
+                                                    <th>Added</th>
+                                                    <th>Removed</th>
+                                                    <th>Net</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Yearly Report -->
+                    <section id="yearly" class="report-content" aria-labelledby="yearlyTitle">
+                        <div class="report-card">
+                            <div class="card-header">
+                                <div>
+                                    <h3 id="yearlyTitle">Yearly Summary</h3>
+                                    <p>Last 12 months</p>
+                                </div>
+                                <div class="card-actions">
+                                    <button class="btn btn-ghost" data-range="365"><i class="fa-solid fa-sync-alt"></i> Refresh</button>
+                                </div>
+                            </div>
+
+                            <!-- Stats Grid -->
+                            <div class="stats-grid">
+                                <div class="stat-card">
+                                    <small>Items Added</small>
+                                    <div id="yearlyItemsAdded" class="stat-value">0</div>
+                                    <div id="yearlyItemsAddedTrend" class="small-muted"></div>
+                                </div>
+                                <div class="stat-card">
+                                    <small>Items Removed</small>
+                                    <div id="yearlyItemsRemoved" class="stat-value">0</div>
+                                    <div id="yearlyItemsRemovedTrend" class="small-muted"></div>
+                                </div>
+                                <div class="stat-card">
+                                    <small>Transactions</small>
+                                    <div id="yearlyTransactions" class="stat-value">0</div>
+                                    <div id="yearlyTransactionsTrend" class="small-muted"></div>
+                                </div>
+                                <div class="stat-card">
+                                    <small>Net Change</small>
+                                    <div id="yearlyNetChange" class="stat-value">0</div>
+                                </div>
+                            </div>
+
+                            <!-- Card Body - Two Column -->
+                            <div class="card-body two-column">
+                                <div>
+                                    <h4><i class="fa-solid fa-clock"></i> Recent Activity</h4>
+                                    <div id="yearlyActivity" class="activity-list"></div>
+                                </div>
+                                <div>
+                                    <h4><i class="fa-solid fa-trophy"></i> Top Items</h4>
+                                    <div class="table-wrap">
+                                        <table class="report-table" id="yearlySummaryTable">
+                                            <thead>
+                                                <tr>
+                                                    <th>Item</th>
+                                                    <th>Category</th>
+                                                    <th>Added</th>
+                                                    <th>Removed</th>
+                                                    <th>Net</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Custom Month Report -->
+                    <section id="custom" class="report-content" aria-labelledby="customTitle">
+                        <div class="report-card">
+                            <div class="card-header">
+                                <div>
+                                    <h3 id="customTitle">Custom Month Summary</h3>
+                                    <p>Select a specific month to view stats</p>
+                                </div>
+                                <div class="card-actions">
+                                    <div style="display: flex; gap: 10px; align-items: center;">
+                                        <select id="customMonthSelector" onchange="window.updateCustomMonth()" style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; background: white; cursor: pointer;">
+                                            <option value="">-- Select Month --</option>
+                                        </select>
+                                        <button class="btn btn-ghost" onclick="window.refreshCustomMonth()"><i class="fa-solid fa-sync-alt"></i> Refresh</button>
+                                        <button class="btn btn-primary" onclick="window.exportCustomMonthReport()" id="exportCustomMonthBtn" disabled><i class="fa-solid fa-download"></i> Export Excel</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Stats Grid -->
+                            <div class="stats-grid">
+                                <div class="stat-card">
+                                    <small>Items Added</small>
+                                    <div id="customItemsAdded" class="stat-value">-</div>
+                                    <div id="customItemsAddedTrend" class="small-muted">Select a month</div>
+                                </div>
+                                <div class="stat-card">
+                                    <small>Items Removed</small>
+                                    <div id="customItemsRemoved" class="stat-value">-</div>
+                                    <div id="customItemsRemovedTrend" class="small-muted">to view stats</div>
+                                </div>
+                                <div class="stat-card">
+                                    <small>Transactions</small>
+                                    <div id="customTransactions" class="stat-value">-</div>
+                                    <div id="customTransactionsTrend" class="small-muted"></div>
+                                </div>
+                                <div class="stat-card">
+                                    <small>Net Change</small>
+                                    <div id="customNetChange" class="stat-value">-</div>
+                                </div>
+                            </div>
+
+                            <!-- Card Body - Two Column -->
+                            <div class="card-body two-column">
+                                <div>
+                                    <h4><i class="fa-solid fa-clock"></i> Activity for Selected Month</h4>
+                                    <div id="customActivity" class="activity-list">
+                                        <p class="small-muted" style="padding: 20px; text-align: center;">Please select a month from the dropdown above to view activity.</p>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h4><i class="fa-solid fa-trophy"></i> Top Items</h4>
+                                    <div class="table-wrap">
+                                        <table class="report-table" id="customSummaryTable">
+                                            <thead>
+                                                <tr>
+                                                    <th>Item</th>
+                                                    <th>Category</th>
+                                                    <th>Added</th>
+                                                    <th>Removed</th>
+                                                    <th>Net</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td colspan="5" style="text-align: center; padding: 20px;">Select a month to view data</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Create Report Modal -->
+    <div id="createReportModal" class="modal" style="display:none;">
+        <div class="modal-content modal-medium">
+            <div class="modal-header">
+                <h3>Create Report</h3>
+                <button onclick="window.closeCreateReportModal()">&times;</button>
+            </div>
+
+            <form id="createReportForm">
+                <!-- Report Category Selection -->
+                <div class="form-group">
+                    <label for="reportCategory">Report Type</label>
+                    <select id="reportCategory" onchange="window.handleCategoryChange()">
+                        <option value="">-- Select Report Type --</option>
+                        <option value="items_list">Items - List of Items</option>
+                        <option value="items_lost">Items - Lost/Stolen/Damaged/Destroyed</option>
+                        <option value="rooms">Rooms - Classroom Inventory</option>
+                        <option value="equipment">Equipment - Equipment Inventory</option>
+                        <option value="logs">Logs - Activity Logs</option>
+                    </select>
+                </div>
+
+                <!-- Report Format -->
+                <div class="form-group">
+                    <label for="reportFormat">File format</label>
+                    <select id="reportFormat">
+                        <option value="xlsx">Excel (.xlsx)</option>
+                        <option value="csv">CSV (.csv)</option>
+                    </select>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" onclick="window.closeCreateReportModal()" class="btn btn-secondary">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="generateReportBtn">Generate</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Template Management Modal -->
+    <div id="templatesModal" class="modal" style="display:none;">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-file-excel"></i> Manage Excel Templates</h3>
+                <button onclick="window.closeTemplatesModal()">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <p style="margin: 0; color: #666;">Upload Excel templates to customize your export format.</p>
+                    <button onclick="window.openUploadTemplateModal()" class="btn btn-primary">
+                        <i class="fa-solid fa-upload"></i> Upload New Template
+                    </button>
+                </div>
+                
+                <!-- Template List Container -->
+                <div id="templateListContainer" style="max-height: 400px; overflow-y: auto;">
+                    <p style="text-align: center; padding: 40px; color: #999;">Loading templates...</p>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button onclick="window.closeTemplatesModal()" class="btn btn-secondary">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upload Template Modal -->
+    <div id="uploadTemplateModal" class="modal" style="display:none;">
+        <div class="modal-content modal-medium">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-upload"></i> Upload Excel Template</h3>
+                <button onclick="window.closeUploadTemplateModal()">&times;</button>
+            </div>
+            
+            <!-- Scrollable modal body -->
+            <div class="modal-body-scroll">
+                <form id="uploadTemplateForm">
+                    <div class="form-group">
+                        <label for="templateName">Template Name *</label>
+                        <input type="text" id="templateName" required placeholder="e.g., My Inventory Template">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="templateDescription">Description</label>
+                        <textarea id="templateDescription" rows="2" placeholder="Brief description of this template..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="templateExportType">Export Type *</label>
+                        <select id="templateExportType" required>
+                            <option value="">-- Select Export Type --</option>
+                            <option value="items_list">Items - List of Items</option>
+                            <option value="items_lost">Items - Lost/Stolen/Damaged/Destroyed</option>
+                            <option value="rooms">Rooms - Classroom Inventory</option>
+                            <option value="equipment">Equipment - Equipment Inventory</option>
+                            <option value="logs">Logs - Activity Logs</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="templateFile">Excel File *</label>
+                        <input type="file" id="templateFile" accept=".xlsx,.xls" required 
+                               onchange="window.handleTemplateFileSelect(this)">
+                        <small style="color: #666; display: block; margin-top: 5px;">
+                            Upload an Excel file with your desired column headers. The system will map these to your data.
+                        </small>
+                    </div>
+                    
+                    <div id="templatePreview" style="display: none; margin-top: 15px; padding: 15px; background: #f5f5f5; border-radius: 8px;">
+                        <h4 style="margin: 0 0 10px 0;">Detected Headers:</h4>
+                        <div id="templateHeadersList" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" onclick="window.closeUploadTemplateModal()" class="btn btn-secondary">Cancel</button>
+                <button type="submit" form="uploadTemplateForm" class="btn btn-primary">Upload Template</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Items List Report Modal -->
+    <div id="createItemsListReportModal" class="modal" style="display:none;">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-file-signature"></i> Create List of Items Report</h3>
+                <button onclick="window.closeCreateItemsListReportModal()">&times;</button>
+            </div>
+            
+            <!-- Scrollable modal body -->
+            <div class="modal-body-scroll">
+                <form id="createItemsListReportForm">
+                    <div style="display: flex; gap: 20px;">
+                        <!-- Left Column: Selected Items -->
+                        <div style="flex: 1; min-width: 250px;">
+                            <div class="form-group">
+                                <label>Selected Items (<span id="modalItemsListSelectedItemsCount">0</span>)</label>
+                                <div id="modalItemsListSelectedItemsList" style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; padding: 10px; background: #f9f9f9;">
+                                    <p style="color: #666; margin: 0;">No items selected</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Right Column: Form Fields -->
+                        <div style="flex: 1; min-width: 300px;">
+                            <div class="form-group">
+                                <label for="itemsListReportDate">Report Date *</label>
+                                <input type="date" id="itemsListReportDate" required>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" onclick="window.closeCreateItemsListReportModal()" class="btn btn-secondary">Cancel</button>
+                <button type="submit" form="createItemsListReportForm" class="btn btn-primary">Generate Report</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Rooms Report Modal -->
+    <div id="createRoomsReportModal" class="modal" style="display:none;">
+        <div class="modal-content modal-xlarge">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-file-signature"></i> Create Classroom Inventory Report</h3>
+                <button onclick="window.closeCreateRoomsReportModal()">&times;</button>
+            </div>
+            
+            <!-- Scrollable modal body -->
+            <div class="modal-body-scroll">
+                <form id="createRoomsReportForm">
+                    <div class="form-group">
+                        <label>Selected Rooms (<span id="modalRoomsSelectedCount">0</span>)</label>
+                        <div id="modalRoomsSelectedList" style="margin-bottom: 15px; padding: 10px; background: #f0f9ff; border-radius: 8px; border-left: 4px solid #3b82f6;">
+                            <p style="color: #666; margin: 0;">No rooms selected</p>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Items in Selected Rooms <small style="color: #666; font-weight: normal;">(You can edit item details before generating)</small></label>
+                        <div style="max-height: 400px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px;">
+                            <table class="report-table" id="modalRoomsItemsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Room</th>
+                                        <th>Item Name</th>
+                                        <th>Description</th>
+                                        <th style="width: 80px;">Quantity</th>
+                                        <th style="width: 80px;">Unit</th>
+                                        <th style="width: 100px;">Condition</th>
+                                        <th style="width: 120px;">Remarks</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="modalRoomsItemsList">
+                                    <tr>
+                                        <td colspan="4" style="text-align: center; padding: 20px; color: #666;">No items to display</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" onclick="window.closeCreateRoomsReportModal()" class="btn btn-secondary">Cancel</button>
+                <button type="submit" form="createRoomsReportForm" class="btn btn-primary">Generate Report</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Lost Items Report Modal -->
+    <div id="createLostItemsReportModal" class="modal" style="display:none;">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-file-signature"></i> Create Lost/Stolen/Damaged/Destroyed Report</h3>
+                <button onclick="window.closeCreateLostItemsReportModal()">&times;</button>
+            </div>
+            
+            <!-- Scrollable modal body -->
+            <div class="modal-body-scroll">
+                <form id="createLostItemsReportForm">
+                    <div style="display: flex; gap: 20px;">
+                        <!-- Left Column: Selected Items -->
+                        <div style="flex: 1; min-width: 250px;">
+                            <div class="form-group">
+                                <label>Selected Items (<span id="modalSelectedItemsCount">0</span>)</label>
+                                <div id="modalSelectedItemsList" style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; padding: 10px; background: #f9f9f9;">
+                                    <p style="color: #666; margin: 0;">No items selected</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Right Column: Form Fields -->
+                        <div style="flex: 1; min-width: 300px;">
+                            <div class="form-group">
+                                <label for="reportDate">Report Date *</label>
+                                <input type="date" id="reportDate" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="accountableOfficer">Name of the Accountable Officer *</label>
+                                <input type="text" id="accountableOfficer" required placeholder="Enter name of accountable officer">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="immediateSupervisor">Name of the Immediate Supervisor *</label>
+                                <input type="text" id="immediateSupervisor" required placeholder="Enter name of immediate supervisor">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="incidentDescription">Incident Description</label>
+                                <textarea id="incidentDescription" rows="4" placeholder="Describe the incident or circumstances..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" onclick="window.closeCreateLostItemsReportModal()" class="btn btn-secondary">Cancel</button>
+                <button type="submit" form="createLostItemsReportForm" class="btn btn-primary">Generate Report</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Logs Report Modal -->
+    <div id="createLogsReportModal" class="modal" style="display:none;">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-file-signature"></i> Create Activity Logs Report</h3>
+                <button onclick="window.closeCreateLogsReportModal()">&times;</button>
+            </div>
+            
+            <!-- Scrollable modal body -->
+            <div class="modal-body-scroll">
+                <form id="createLogsReportForm">
+                    <div style="display: flex; gap: 20px;">
+                        <!-- Left Column: Selected Logs -->
+                        <div style="flex: 1; min-width: 250px;">
+                            <div class="form-group">
+                                <label>Selected Log Entries (<span id="modalLogsSelectedCount">0</span>)</label>
+                                <div id="modalLogsSelectedList" style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; padding: 10px; background: #f9f9f9;">
+                                    <p style="color: #666; margin: 0;">No logs selected</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Right Column: Form Fields -->
+                        <div style="flex: 1; min-width: 300px;">
+                            <div class="form-group">
+                                <label for="logsReportDate">Report Date *</label>
+                                <input type="date" id="logsReportDate" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="logsPreparedBy">Prepared By *</label>
+                                <input type="text" id="logsPreparedBy" required placeholder="Enter name of person preparing this report">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="logsDepartment">Department</label>
+                                <input type="text" id="logsDepartment" placeholder="Enter department name">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="logsNotes">Notes</label>
+                                <textarea id="logsNotes" rows="4" placeholder="Additional notes or comments..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" onclick="window.closeCreateLogsReportModal()" class="btn btn-secondary">Cancel</button>
+                <button type="submit" form="createLogsReportForm" class="btn btn-primary">Generate Report</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Equipment Report Modal -->
+    <div id="createEquipmentReportModal" class="modal" style="display:none;">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-file-signature"></i> Create Equipment Inventory Report</h3>
+                <button onclick="window.closeCreateEquipmentReportModal()">&times;</button>
+            </div>
+            
+            <!-- Scrollable modal body -->
+            <div class="modal-body-scroll">
+                <form id="createEquipmentReportForm">
+                    <div style="display: flex; gap: 20px;">
+                        <!-- Left Column: Selected Equipment -->
+                        <div style="flex: 1; min-width: 250px;">
+                            <div class="form-group">
+                                <label>Selected Equipment (<span id="modalEquipmentSelectedCount">0</span>)</label>
+                                <div id="modalEquipmentSelectedList" style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; padding: 10px; background: #f9f9f9;">
+                                    <p style="color: #666; margin: 0;">No equipment selected</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Right Column: Form Fields -->
+                        <div style="flex: 1; min-width: 300px;">
+                            <div class="form-group">
+                                <label for="equipmentReportDate">Report Date *</label>
+                                <input type="date" id="equipmentReportDate" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="equipmentPreparedBy">Prepared By *</label>
+                                <input type="text" id="equipmentPreparedBy" required placeholder="Enter name of person preparing this report">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="equipmentDepartment">Department</label>
+                                <input type="text" id="equipmentDepartment" placeholder="Enter department name">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="equipmentNotes">Notes</label>
+                                <textarea id="equipmentNotes" rows="4" placeholder="Additional notes or comments..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" onclick="window.closeCreateEquipmentReportModal()" class="btn btn-secondary">Cancel</button>
+                <button type="submit" form="createEquipmentReportForm" class="btn btn-primary">Generate Report</button>
+            </div>
+        </div>
+    </div>
+
+<!-- Report script -->
+
+    <script type="module" src="../js/report.js"></script>
+    <script src="../js/report_custom_month.js"></script>
+</body>
+</html>

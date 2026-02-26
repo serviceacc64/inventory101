@@ -1,0 +1,607 @@
+:root{
+--textcolor:#fff;
+--textcolor2:#000;
+--background:#dfd9d9;
+--background2:#550000;
+--hover:#891623;
+--border:#29060A;
+}
+
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Poppins", sans-serif;
+}
+html {
+    scrollbar-gutter: stable;
+}
+body{
+    background-color: var(--background2);
+    font-family: "Poppins", sans-serif;
+    height: 100vh;
+    display: flex;
+    overflow-x: hidden;
+}
+
+
+
+/* NAVBAR styles are provided by src/css/dashboard.css */
+
+/* main content */
+
+
+
+
+/* header */
+.header{
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 20px;
+    margin: 10px 25px;
+}
+.header .item1, .item2, .item3{
+    border: var(--border) 1px solid;
+    background-color: var(--background);
+    border-radius: 10px;
+    padding: 15px 70px;
+    padding-left: 30px;
+    margin-right: 50px;
+    width: 300px;
+}
+.header .item1 h4, .item2 h4, .item3 h4{
+    font-weight: 300;
+}
+
+/* actions */
+.actions{
+    display: flex;
+    justify-content: space-between;
+    margin-right: 100px;
+    margin-left: 50px;
+}
+.actions h2{
+    color: var(--textcolor);
+}
+.actions .search input ,button{
+    padding: 7px;
+    border: none;
+    border-radius: 5px;
+    outline: none;
+}
+
+/* ============================================
+   ITEMS.HTML STYLES
+   ============================================ */
+
+/* Items Container with independent scrolling (supports both id and class) */
+#itemsContainer,
+.itemsContainer {
+    /* Make the items list scroll independently of the page.
+       Use viewport-based height so it adapts to different screens. */
+    max-height: calc(100vh - 300px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-right: 8px;
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Custom scrollbar styling for itemsContainer */
+.itemsContainer::-webkit-scrollbar,
+#itemsContainer::-webkit-scrollbar {
+    width: 8px;
+}
+
+.itemsContainer::-webkit-scrollbar-track,
+#itemsContainer::-webkit-scrollbar-track {
+    background: rgba(85, 0, 0, 0.1);
+    border-radius: 4px;
+}
+
+.itemsContainer::-webkit-scrollbar-thumb,
+#itemsContainer::-webkit-scrollbar-thumb {
+    background: var(--hover);
+    border-radius: 4px;
+}
+
+.itemsContainer::-webkit-scrollbar-thumb:hover,
+#itemsContainer::-webkit-scrollbar-thumb:hover {
+    background: #a8204d;
+}
+
+/* ============================================
+   INPUT.HTML STYLES
+   ============================================ */
+
+
+/* Loading State */
+.loading-state {
+    display: none;
+    text-align: center;
+    padding: 40px;
+}
+
+.loading-state i {
+    font-size: 32px;
+    color: #4CAF50;
+}
+
+.loading-state p {
+    margin-top: 10px;
+    color: #666;
+}
+
+/* Error State */
+.error-state {
+    display: none;
+    color: #f44336;
+    padding: 20px;
+    text-align: center;
+    background: rgba(244, 67, 54, 0.1);
+    border-radius: 8px;
+    margin: 20px 0;
+}
+
+.error-state i {
+    font-size: 32px;
+    margin-bottom: 10px;
+}
+
+/* Empty State */
+.empty-state {
+    display: none;
+    padding: 40px;
+    text-align: center;
+    color: #666;
+}
+
+.empty-state i {
+    font-size: 64px;
+    margin-bottom: 20px;
+    color: #ccc;
+}
+
+.empty-state p:first-of-type {
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background: white;
+    padding: 30px;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: #333;
+}
+
+.modal-header button {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+}
+
+/* Form Styles */
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: #333;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.form-group select {
+    background-color: white;
+}
+
+.form-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+/* ============================================
+   REPORT.HTML STYLES
+   ============================================ */
+
+/* Report Tabs */
+.report-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.report-tabs button {
+    padding: 12px 24px;
+    background: none;
+    border: none;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    color: #ffffff64;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.report-tabs button.active {
+    border-radius: 0px;
+    color: #dfd9d9;
+    border-bottom-color: #dfd9d9;
+}
+
+.report-tabs button:hover {
+    color: #891623;
+}
+
+/* Report Content */
+.report-content {
+    display: none;
+}
+
+.report-content.active {
+    display: block;
+}
+
+/* ============================================
+   LOGS.HTML STYLES
+   ============================================ */
+
+/* Activity Icons for Logs */
+.activity-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.activity-icon.added {
+    background-color: rgba(76, 175, 80, 0.2);
+    color: #4CAF50;
+}
+
+.activity-icon.removed {
+    background-color: rgba(244, 67, 54, 0.2);
+    color: #f44336;
+}
+
+.activity-icon.updated {
+    background-color: rgba(255, 152, 0, 0.2);
+    color: #ff9800;
+}
+
+/* ============================================
+   SELECTABLE ITEMS MODAL STYLES
+   ============================================ */
+
+/* Large modal for item selection */
+.modal-content.modal-large {
+    max-width: 600px;
+    width: 95%;
+}
+
+/* Selectable Items List */
+.selectable-items-list {
+    max-height: 400px;
+    overflow-y: auto;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background: #fafafa;
+}
+
+/* Individual Selectable Item */
+.selectable-item {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    border-bottom: 1px solid #e0e0e0;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: white;
+}
+
+.selectable-item:last-child {
+    border-bottom: none;
+}
+
+.selectable-item:hover {
+    background-color: #f5f5f5;
+    transform: translateX(5px);
+}
+
+.selectable-item-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    background-color: rgba(85, 0, 0, 0.1);
+    color: var(--background2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 15px;
+    flex-shrink: 0;
+}
+
+.selectable-item-info {
+    flex: 1;
+}
+
+.selectable-item-info h4 {
+    margin: 0 0 5px 0;
+    color: #333;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.selectable-item-info p {
+    margin: 0;
+    color: #666;
+    font-size: 13px;
+}
+
+.selectable-item-action {
+    color: #999;
+    font-size: 14px;
+}
+
+/* Selected Item Details */
+.selected-item-info {
+    background: rgba(85, 0, 0, 0.05);
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.selected-item-info h4 {
+    margin: 0 0 8px 0;
+    color: var(--background2);
+    font-size: 18px;
+}
+
+.selected-item-info p {
+    margin: 0;
+    color: #666;
+    font-size: 14px;
+}
+
+/* Search box in modal */
+#modalItemSearch {
+    width: 100%;
+    padding: 12px 40px 12px 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: border-color 0.2s ease;
+}
+
+#modalItemSearch:focus {
+    outline: none;
+    border-color: var(--background2);
+}
+
+#clearModalSearch {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #999;
+    cursor: pointer;
+    padding: 5px;
+}
+
+/* ============================================
+   FILTER DROPDOWN STYLES
+   ============================================ */
+
+/* Position the header-right container for dropdown */
+.header-right {
+    position: relative;
+}
+
+.filter-dropdown {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 1000;
+    min-width: 200px;
+    overflow: hidden;
+    display: none;
+}
+
+.filter-section {
+    border-bottom: 1px solid #e0e0e0;
+    padding: 10px 0;
+}
+
+.filter-section:last-child {
+    border-bottom: none;
+}
+
+.filter-section h4 {
+    margin: 0 0 8px 0;
+    padding: 0 16px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.filter-option {
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    color: #333;
+    font-size: 14px;
+}
+
+.filter-option:hover {
+    background-color: #f5f5f5;
+}
+
+.filter-option.active {
+    background-color: var(--background2);
+    color: white;
+    font-weight: 500;
+}
+
+.filter-option.active:hover {
+    background-color: var(--hover);
+}
+
+/* ============================================
+   TREND INDICATOR STYLES
+   ============================================ */
+
+.trend-indicator {
+    margin-top: 5px;
+}
+
+.trend-indicator small {
+    font-size: 11px;
+    color: #888;
+}
+
+/* ============================================
+   SUMMARY TABLE STYLES
+   ============================================ */
+
+.table-container {
+    overflow-x: auto;
+    margin-top: 15px;
+}
+
+.summary-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.summary-table thead {
+    background-color: rgba(85, 0, 0, 0.1);
+}
+
+.summary-table th {
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--background2);
+    border-bottom: 2px solid var(--background2);
+}
+
+.summary-table td {
+    padding: 12px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.summary-table tbody tr:hover {
+    background-color: rgba(85, 0, 0, 0.05);
+}
+
+/* ============================================
+   PRINT STYLES
+   ============================================ */
+
+@media print {
+    nav {
+        display: none !important;
+    }
+    
+    .dashboard {
+        padding: 20px;
+        background: white;
+    }
+    
+    .dashboard-header {
+        margin-bottom: 20px;
+    }
+    
+    .header-actions,
+    .search-box,
+    .filter-dropdown,
+    .report-tabs {
+        display: none !important;
+    }
+    
+    .report-content {
+        display: block !important;
+        page-break-inside: avoid;
+    }
+    
+    .stat-card {
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+    
+    .recent-activity {
+        break-inside: avoid;
+        page-break-inside: avoid;
+        margin-top: 20px;
+    }
+    
+    .summary-table {
+        font-size: 12px;
+    }
+    
+    .summary-table th,
+    .summary-table td {
+        padding: 8px;
+    }
+}

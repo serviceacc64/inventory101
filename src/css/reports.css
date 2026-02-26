@@ -1,0 +1,1414 @@
+/* reports.css
+   Styles specific to Reports page — matched to project theme (dashboard.css / style.css)
+   Design System:
+   - Primary Background: #550000 (dark maroon)
+   - Secondary Background: #dfd9d9 (light gray)
+   - Accent/Hover: #891623 (darker maroon)
+   - Font: Poppins, sans-serif
+*/
+
+:root {
+    --reports-muted: #666666;
+    --reports-muted-light: #888888;
+    --reports-glass: rgba(85, 0, 0, 0.05);
+    --reports-success: #4CAF50;
+    --reports-danger: #f44336;
+    --reports-warning: #ff9800;
+    --reports-info: #2196F3;
+    --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --card-shadow-hover: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+/* Reports Section */
+.reports-section {
+    padding: 0;
+}
+
+/* Report Container */
+#reportContainer {
+    background: var(--background);
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: var(--card-shadow);
+}
+
+/* Report Toolbar */
+.report-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: stretch;
+    gap: 16px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    padding: 12px 0;
+}
+
+.toolbar-left {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.toolbar-right {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+/* Search Box - aligned with dashboard */
+.toolbar-left .search-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 40px;
+}
+
+.toolbar-left .search-box input[type="search"] {
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    min-width: 200px;
+    height: 40px;
+    background: #fff;
+    color: var(--textcolor2);
+    outline: none;
+    transition: 0.12s;
+    box-sizing: border-box;
+}
+
+.toolbar-left .search-box input[type="search"]:focus {
+    border-color: var(--hover);
+    box-shadow: 0 4px 12px rgba(137, 22, 35, 0.08);
+}
+
+.toolbar-left .search-box button {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: var(--reports-muted);
+    padding: 6px 10px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.toolbar-left .search-box button:hover {
+    color: var(--hover);
+}
+
+/* Tabs styling aligned with dashboard theme */
+.report-tabs {
+    display: flex;
+    gap: 8px;
+    background: rgba(85, 0, 0, 0.05);
+    padding: 4px;
+    border-radius: 10px;
+    margin-top: 22px;
+    height: 40px;
+    align-items: center;
+}
+
+.report-tabs button {
+    background: transparent;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 8px;
+    color: var(--reports-muted);
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.report-tabs button:hover {
+    color: var(--hover);
+    border-radius: 8px;
+    background: rgba(85, 0, 0, 0.05);
+}
+
+.report-tabs button.active {
+    background: var(--hover);
+    color: var(--textcolor);
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(137, 22, 35, 0.3);
+}
+
+.tab-btn {
+    min-width: 80px;
+}
+
+/* Toolbar Buttons - consistent height and alignment */
+.toolbar-right .btn {
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 16px;
+}
+
+/* Reports Grid */
+.reports-grid {
+    display: fl  ex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* Report Content */
+.report-content {
+    display: none;
+}
+
+.report-content.active {
+    display: block;
+}
+
+/* Report Card */
+.report-card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: var(--card-shadow);
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.report-card:hover {
+    box-shadow: var(--card-shadow-hover);
+}
+
+/* Card Header */
+.report-card .card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 20px 24px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    background: linear-gradient(to right, rgba(85, 0, 0, 0.02), transparent);
+}
+
+.report-card .card-header > div {
+    flex: 1;
+}
+
+.report-card .card-header h3 {
+    margin: 0 0 4px 0;
+    font-size: 20px;
+    color: var(--textcolor2);
+    font-weight: 600;
+}
+
+.report-card .card-header p {
+    margin: 0;
+    color: var(--reports-muted);
+    font-size: 14px;
+}
+
+.report-card .card-actions {
+    display: flex;
+    gap: 8px;
+}
+
+/* Stats Grid - matching dashboard style */
+.report-card .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    padding: 20px 24px;
+    background: rgba(85, 0, 0, 0.02);
+}
+
+@media (max-width: 900px) {
+    .report-card .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 500px) {
+    .report-card .stats-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Stat Card - light background to match design system */
+.report-card .stat-card {
+    background: #fff;
+    padding: 16px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    transition: all 0.2s ease;
+}
+
+.report-card .stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.report-card .stat-card small {
+    display: block;
+    color: var(--reports-muted);
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+.report-card .stat-card .stat-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--textcolor2);
+    line-height: 1.2;
+}
+
+.report-card .stat-card .small-muted {
+    display: block;
+    margin-top: 4px;
+    font-size: 12px;
+    color: var(--reports-muted-light);
+}
+
+/* Card Body - Two Column Layout */
+.report-card .card-body {
+    padding: 20px 24px;
+}
+
+.report-card .card-body.two-column {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    gap: 24px;
+}
+
+@media (max-width: 768px) {
+    .report-card .card-body.two-column {
+        grid-template-columns: 1fr;
+    }
+}
+
+.report-card .card-body h4 {
+    margin: 0 0 16px 0;
+    font-size: 16px;
+    color: var(--textcolor2);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.report-card .card-body h4 i {
+    color: var(--hover);
+    font-size: 14px;
+}
+
+/* Activity List */
+.report-card .activity-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 300px;
+    overflow-y: auto;
+    padding-right: 8px;
+}
+
+/* Custom scrollbar */
+.report-card .activity-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.report-card .activity-list::-webkit-scrollbar-track {
+    background: rgba(85, 0, 0, 0.05);
+    border-radius: 3px;
+}
+
+.report-card .activity-list::-webkit-scrollbar-thumb {
+    background: var(--hover);
+    border-radius: 3px;
+}
+
+.report-card .activity-list::-webkit-scrollbar-thumb:hover {
+    background: #a8204d;
+}
+
+.report-card .activity-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border-radius: 8px;
+    background: rgba(85, 0, 0, 0.03);
+    transition: all 0.18s ease;
+}
+
+.report-card .activity-item:hover {
+    background: rgba(85, 0, 0, 0.08);
+}
+
+.report-card .activity-item .activity-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+.report-card .activity-item .activity-icon.added {
+    background: rgba(76, 175, 80, 0.15);
+    color: #4CAF50;
+}
+
+.report-card .activity-item .activity-icon.removed {
+    background: rgba(244, 67, 54, 0.15);
+    color: #f44336;
+}
+
+.report-card .activity-item .activity-icon.updated {
+    background: rgba(255, 152, 0, 0.15);
+    color: #ff9800;
+}
+
+.report-card .activity-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.report-card .activity-details p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--textcolor2);
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.report-card .activity-details small {
+    font-size: 11px;
+    color: var(--reports-muted);
+}
+
+/* Table Styles - Applied to ALL report tables */
+.report-card .table-wrap {
+    max-height: 400px;
+    overflow-y: auto;
+    overflow-x: auto;
+    border-radius: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    background: #fff;
+}
+
+/* Custom scrollbar for all table containers */
+.report-card .table-wrap::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.report-card .table-wrap::-webkit-scrollbar-track {
+    background: rgba(85, 0, 0, 0.05);
+    border-radius: 4px;
+}
+
+.report-card .table-wrap::-webkit-scrollbar-thumb {
+    background: var(--hover);
+    border-radius: 4px;
+}
+
+.report-card .table-wrap::-webkit-scrollbar-thumb:hover {
+    background: #a8204d;
+}
+
+/* Sticky header for all tables */
+.report-card .table-wrap .report-table {
+    min-width: 600px;
+}
+
+.report-card .table-wrap .report-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.report-card .table-wrap .report-table thead th {
+    background: linear-gradient(to bottom, rgba(85, 0, 0, 0.08), rgba(85, 0, 0, 0.04));
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06);
+}
+
+.report-card .report-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.report-card .report-table th,
+.report-card .report-table td {
+    padding: 12px 14px;
+    text-align: left;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.report-card .report-table thead th {
+    background: rgba(85, 0, 0, 0.04);
+    color: var(--textcolor2);
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.report-card .report-table tbody tr {
+    transition: background 0.15s ease;
+}
+
+.report-card .report-table tbody tr:hover {
+    background: rgba(85, 0, 0, 0.03);
+}
+
+.report-card .report-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.report-card .report-table td {
+    color: var(--textcolor2);
+}
+
+/* Small muted text */
+.small-muted {
+    color: var(--reports-muted);
+    font-size: 12px;
+}
+
+/* Buttons use global .btn/.btn-primary styles */
+.btn {
+    display: inline-flex;
+    gap: 8px;
+    align-items: center;
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-family: "Poppins", sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.btn:active {
+    transform: translateY(1px);
+}
+
+.btn-ghost {
+    background: transparent;
+    color: var(--hover);
+    padding: 6px 12px;
+}
+
+.btn-ghost:hover {
+    background: rgba(85, 0, 0, 0.05);
+}
+
+.btn-outline {
+    background: transparent;
+    border: 1px solid var(--hover);
+    color: var(--hover);
+}
+
+.btn-outline:hover {
+    background: var(--hover);
+    color: var(--textcolor);
+}
+
+/* Loading / Error / Empty states */
+.loading-state,
+.error-state,
+.empty-state {
+    text-align: center;
+    padding: 48px 24px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: var(--card-shadow);
+}
+
+.loading-state i,
+.error-state i,
+.empty-state i {
+    font-size: 48px;
+    margin-bottom: 16px;
+    display: block;
+}
+
+.loading-state i {
+    color: var(--hover);
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.error-state {
+    color: var(--reports-danger);
+}
+
+.error-state i {
+    color: var(--reports-danger);
+}
+
+.empty-state {
+    color: var(--reports-muted);
+}
+
+.empty-state i {
+    color: #ccc;
+}
+
+.empty-state p,
+.error-state p,
+.loading-state p {
+    margin: 0;
+    font-size: 14px;
+}
+
+/* Modal tweaks specifically for reports modal */
+.modal {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    padding: 20px;
+}
+
+.modal.show {
+    display: flex;
+}
+
+.modal .modal-content {
+    background: #fff;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 500px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    animation: modalSlideIn 0.2s ease;
+}
+
+/* Allow larger modals (useful for two-column horizontal layouts) */
+.modal .modal-content.modal-large {
+    max-width: 920px; /* wide enough for two-column horizontal layout */
+}
+
+/* Extra large modal for editable items table */
+.modal .modal-content.modal-xlarge {
+    max-width: 1100px; /* wide enough for editable items table */
+    width: 95%;
+}
+
+/* Specific layout tweaks for the Create Lost Items modal to enforce horizontal layout */
+#createLostItemsReportModal .modal-content form > div {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+}
+
+#createLostItemsReportModal .modal-content form > div > div:first-child {
+    flex: 0 0 320px; /* left column fixed-ish width for selected items */
+    min-width: 240px;
+}
+
+#createLostItemsReportModal .modal-content form > div > div:last-child {
+    flex: 1 1 520px; /* right column grows to fill remaining space */
+    min-width: 300px;
+}
+
+/* Responsive: stack vertically on small screens */
+@media (max-width: 760px) {
+    .modal .modal-content.modal-large {
+        max-width: 95%;
+    }
+
+    #createLostItemsReportModal .modal-content form > div {
+        flex-direction: column;
+    }
+
+    #createLostItemsReportModal .modal-content form > div > div:first-child,
+    #createLostItemsReportModal .modal-content form > div > div:last-child {
+        min-width: 0;
+        flex: unset;
+        width: 100%;
+    }
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modal-medium {
+    max-width: 500px;
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 18px;
+    color: var(--textcolor2);
+    font-weight: 600;
+}
+
+.modal-header button {
+    background: transparent;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: var(--reports-muted);
+    line-height: 1;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: all 0.15s ease;
+}
+
+.modal-header button:hover {
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--textcolor2);
+}
+
+.modal-body {
+    padding: 24px;
+}
+
+/* Scrollable modal body for Upload Template Modal */
+.modal-body-scroll {
+    max-height: 60vh;
+    overflow-y: auto;
+    padding: 24px;
+}
+
+/* Custom scrollbar for scrollable modal body */
+.modal-body-scroll::-webkit-scrollbar {
+    width: 6px;
+}
+
+.modal-body-scroll::-webkit-scrollbar-track {
+    background: rgba(85, 0, 0, 0.05);
+    border-radius: 3px;
+}
+
+.modal-body-scroll::-webkit-scrollbar-thumb {
+    background: var(--hover);
+    border-radius: 3px;
+}
+
+.modal-body-scroll::-webkit-scrollbar-thumb:hover {
+    background: #a8204d;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 16px 24px;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    background: rgba(0, 0, 0, 0.02);
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group:last-child {
+    margin-bottom: 0;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+    color: var(--textcolor2);
+    font-weight: 500;
+}
+
+.form-group select,
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    background: #fff;
+    color: var(--textcolor2);
+    font-size: 14px;
+    font-family: "Poppins", sans-serif;
+    transition: all 0.15s ease;
+}
+
+.form-group select:focus,
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--hover);
+    box-shadow: 0 0 0 3px rgba(137, 22, 35, 0.1);
+}
+
+.form-group select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+}
+
+/* Footer buttons */
+.modal-footer .btn-secondary {
+    background: #f5f5f5;
+    color: var(--textcolor2);
+    border: 1px solid #ddd;
+}
+
+.modal-footer .btn-secondary:hover {
+    background: #e8e8e8;
+}
+
+.modal-footer .btn-primary {
+    background: var(--hover);
+    color: var(--textcolor);
+}
+
+.modal-footer .btn-primary:hover {
+    background: #a8204d;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .report-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .toolbar-left,
+    .toolbar-right {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    .report-tabs {
+        width: 100%;
+        overflow-x: auto;
+    }
+    
+    .report-tabs button {
+        flex: 1;
+        min-width: 70px;
+    }
+    
+    .report-card .card-header {
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .report-card .card-body {
+        padding: 16px;
+    }
+}
+
+/* Utility */
+.text-success {
+    color: var(--reports-success);
+}
+
+.text-danger {
+    color: var(--reports-danger);
+}
+
+.text-warning {
+    color: var(--reports-warning);
+}
+
+.text-info {
+    color: var(--reports-info);
+}
+
+/* Trend indicators */
+.trend-up {
+    color: var(--reports-success);
+}
+
+.trend-down {
+    color: var(--reports-danger);
+}
+
+.trend-neutral {
+    color: var(--reports-muted);
+}
+
+/* ============================================
+   LOST/STOLEN/DAMAGED ITEMS TABLE STYLES
+   Independent scrolling table
+   ============================================ */
+
+/* Table container with independent scrolling */
+.report-card .report-table-container {
+    max-height: 400px;
+    overflow-y: auto;
+    overflow-x: auto;
+    border-radius: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    background: #fff;
+}
+
+/* Custom scrollbar for table container */
+.report-card .report-table-container::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.report-card .report-table-container::-webkit-scrollbar-track {
+    background: rgba(85, 0, 0, 0.05);
+    border-radius: 4px;
+}
+
+.report-card .report-table-container::-webkit-scrollbar-thumb {
+    background: var(--hover);
+    border-radius: 4px;
+}
+
+.report-card .report-table-container::-webkit-scrollbar-thumb:hover {
+    background: #a8204d;
+}
+
+.report-card .report-table-container::-webkit-scrollbar-corner {
+    background: rgba(85, 0, 0, 0.05);
+}
+
+/* Sticky header for table */
+.report-card .report-table-container .report-table {
+    min-width: 600px;
+}
+
+.report-card .report-table-container .report-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.report-card .report-table-container .report-table thead th {
+    background: linear-gradient(to bottom, rgba(85, 0, 0, 0.08), rgba(85, 0, 0, 0.04));
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06);
+}
+
+/* Table improvements */
+.report-card .report-table-container .report-table th,
+.report-card .report-table-container .report-table td {
+    padding: 12px 16px;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.report-card .report-table-container .report-table td {
+    vertical-align: middle;
+}
+
+/* Checkbox styling */
+.report-card .report-table-container .report-table input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: var(--hover);
+}
+
+/* Quantity input styling */
+.report-card .report-table-container .report-table input[type="number"] {
+    width: 80px;
+    padding: 8px 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 13px;
+    text-align: center;
+    transition: all 0.15s ease;
+}
+
+.report-card .report-table-container .report-table input[type="number"]:focus {
+    outline: none;
+    border-color: var(--hover);
+    box-shadow: 0 0 0 3px rgba(137, 22, 35, 0.1);
+}
+
+.report-card .report-table-container .report-table input[type="number"]:disabled {
+    background: #f5f5f5;
+    color: #999;
+    cursor: not-allowed;
+}
+
+/* Stock status indicators */
+.report-card .report-table-container .report-table .in-stock {
+    color: var(--reports-success);
+    font-weight: 600;
+}
+
+.report-card .report-table-container .report-table .low-stock {
+    color: var(--reports-warning);
+    font-weight: 600;
+}
+
+.report-card .report-table-container .report-table .out-of-stock {
+    color: var(--reports-danger);
+    font-weight: 600;
+}
+
+/* Row hover effect */
+.report-card .report-table-container .report-table tbody tr {
+    transition: background 0.15s ease;
+}
+
+.report-card .report-table-container .report-table tbody tr:hover {
+    background: rgba(85, 0, 0, 0.04);
+}
+
+.report-card .report-table-container .report-table tbody tr.selected {
+    background: rgba(137, 22, 35, 0.08);
+}
+
+/* Search container styling */
+.report-card .search-container {
+    margin-bottom: 20px;
+}
+
+.report-card .search-container input[type="text"] {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.15s ease;
+    background: #fff;
+}
+
+.report-card .search-container input[type="text"]:focus {
+    outline: none;
+    border-color: var(--hover);
+    box-shadow: 0 0 0 3px rgba(137, 22, 35, 0.1);
+}
+
+/* Report info box */
+.report-card .report-info {
+    background: rgba(33, 150, 243, 0.08);
+    border-left: 4px solid var(--reports-info);
+    padding: 14px 18px;
+    border-radius: 0 8px 8px 0;
+    margin-bottom: 20px;
+}
+
+.report-card .report-info p {
+    margin: 0;
+    color: var(--textcolor2);
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.report-card .report-info p i {
+    color: var(--reports-info);
+    margin-right: 6px;
+}
+
+/* Report header in card */
+.report-card .report-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    background: linear-gradient(to right, rgba(85, 0, 0, 0.02), transparent);
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.report-card .report-header h2 {
+    margin: 0;
+    font-size: 20px;
+    color: var(--textcolor2);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.report-card .report-header h2 i {
+    color: var(--hover);
+}
+
+/* Stats boxes */
+.report-card .report-stats {
+    display: flex;
+    gap: 16px;
+    padding: 20px 24px;
+    background: rgba(85, 0, 0, 0.02);
+    flex-wrap: wrap;
+}
+
+.report-card .stat-box {
+    flex: 1;
+    min-width: 120px;
+    padding: 16px;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    text-align: center;
+    transition: all 0.2s ease;
+}
+
+.report-card .stat-box:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.report-card .stat-box .stat-number {
+    display: block;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--textcolor2);
+    line-height: 1.2;
+}
+
+.report-card .stat-box .stat-label {
+    display: block;
+    font-size: 12px;
+    color: var(--reports-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 4px;
+}
+
+/* ============================================
+   CLASSROOM INVENTORY TABLE STYLES
+   Redesigned room cards with modern look
+   ============================================ */
+
+/* Classroom Card */
+.report-card .classroom-card {
+    background: #fff;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    overflow: hidden;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.report-card .classroom-card:last-child {
+    margin-bottom: 0;
+}
+
+/* Classroom Card Header */
+.report-card .classroom-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 20px 24px;
+    background: linear-gradient(135deg, rgba(85, 0, 0, 0.03) 0%, rgba(85, 0, 0, 0.08) 100%);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.report-card .classroom-info {
+    flex: 1;
+}
+
+.report-card .classroom-info h3 {
+    margin: 0 0 6px 0;
+    font-size: 18px;
+    color: var(--textcolor2);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.report-card .classroom-info h3 i {
+    color: var(--hover);
+    font-size: 16px;
+}
+
+.report-card .classroom-description {
+    margin: 0;
+    font-size: 13px;
+    color: var(--reports-muted);
+    font-style: italic;
+}
+
+/* Classroom Summary Stats */
+.report-card .classroom-summary {
+    display: flex;
+    gap: 16px;
+}
+
+.report-card .classroom-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px 16px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+    min-width: 70px;
+}
+
+.report-card .classroom-stat-value {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--hover);
+    line-height: 1.2;
+}
+
+.report-card .classroom-stat-label {
+    font-size: 11px;
+    color: var(--reports-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-top: 2px;
+}
+
+/* Classroom Table Wrapper */
+.report-card .classroom-table-wrapper {
+    max-height: 300px;
+    overflow-y: auto;
+    overflow-x: auto;
+}
+
+/* Custom scrollbar for classroom tables */
+.report-card .classroom-table-wrapper::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.report-card .classroom-table-wrapper::-webkit-scrollbar-track {
+    background: rgba(85, 0, 0, 0.03);
+    border-radius: 3px;
+}
+
+.report-card .classroom-table-wrapper::-webkit-scrollbar-thumb {
+    background: var(--hover);
+    border-radius: 3px;
+}
+
+.report-card .classroom-table-wrapper::-webkit-scrollbar-thumb:hover {
+    background: #a8204d;
+}
+
+/* Table styling within classroom cards */
+.report-card .classroom-table-wrapper .report-table {
+    min-width: 400px;
+}
+
+.report-card .classroom-table-wrapper .report-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: rgba(85, 0, 0, 0.04);
+}
+
+.report-card .classroom-table-wrapper .report-table thead th {
+    padding: 12px 16px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--reports-muted);
+    font-weight: 600;
+    background: linear-gradient(to bottom, rgba(85, 0, 0, 0.06), rgba(85, 0, 0, 0.02));
+}
+
+.report-card .classroom-table-wrapper .report-table tbody td {
+    padding: 12px 16px;
+    font-size: 13px;
+}
+
+/* Item name cell */
+.report-card .item-name-cell {
+    font-weight: 500;
+    color: var(--textcolor2);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.report-card .item-name-cell i {
+    color: var(--hover);
+    font-size: 10px;
+}
+
+/* Quantity cell */
+.report-card .item-quantity-cell {
+    text-align: center;
+}
+
+.report-card .item-quantity-cell .quantity-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    background: rgba(85, 0, 0, 0.08);
+    color: var(--hover);
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+/* Date cell */
+.report-card .item-date-cell {
+    color: var(--reports-muted);
+    font-size: 12px;
+}
+
+/* Empty cell */
+.report-card .empty-cell {
+    text-align: center;
+    padding: 30px 16px !important;
+    color: var(--reports-muted);
+    font-style: italic;
+}
+
+.report-card .empty-cell i {
+    display: block;
+    font-size: 24px;
+    margin-bottom: 8px;
+    color: #ccc;
+}
+
+/* Trend Indicators */
+.trend-up {
+    color: #4CAF50;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.trend-down {
+    color: #f44336;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.trend-neutral {
+    color: #888;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.text-success {
+    color: #4CAF50;
+}
+
+.text-danger {
+    color: #f44336;
+}
+
+/* Activity List */
+.activity-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.activity-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px;
+    border-bottom: 1px solid rgba(85, 0, 0, 0.08);
+    transition: background 0.2s;
+}
+
+.activity-item:hover {
+    background: rgba(85, 0, 0, 0.03);
+}
+
+.activity-item:last-child {
+    border-bottom: none;
+}
+
+.activity-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.activity-icon.added {
+    background: rgba(76, 175, 80, 0.15);
+    color: #4CAF50;
+}
+
+.activity-icon.removed {
+    background: rgba(244, 67, 54, 0.15);
+    color: #f44336;
+}
+
+.activity-icon.updated {
+    background: rgba(33, 150, 243, 0.15);
+    color: #2196F3;
+}
+
+.activity-details {
+    flex: 1;
+}
+
+.activity-details p {
+    margin: 0 0 4px 0;
+    font-size: 13px;
+    color: var(--textcolor2);
+    font-weight: 500;
+}
+
+.activity-details small {
+    color: var(--reports-muted);
+    font-size: 11px;
+}
+
+.small-muted {
+    color: var(--reports-muted);
+    font-size: 12px;
+}
+
+/* Responsive adjustments for classroom cards */
+@media (max-width: 768px) {
+    .report-card .classroom-card-header {
+        flex-direction: column;
+        gap: 16px;
+    }
+    
+    .report-card .classroom-summary {
+        width: 100%;
+        justify-content: flex-start;
+    }
+    
+    .report-card .classroom-stat {
+        flex: 1;
+        min-width: auto;
+    }
+}

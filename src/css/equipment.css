@@ -1,0 +1,520 @@
+/* Equipment Inventory Styles - Unified with System Design */
+
+:root {
+    --textcolor: #fff;
+    --textcolor2: #000;
+    --background: #dfd9d9;
+    --background2: #550000;
+    --hover: #891623;
+    --border: #29060A;
+}
+
+/* ============================================
+   EQUIPMENT SECTION
+   ============================================ */
+
+.equipment-section {
+    padding: 0;
+}
+
+/* Search Filter Dropdown */
+.search-filter {
+    padding: 8px 12px;
+    border: 1px solid rgba(85, 0, 0, 0.2);
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--textcolor2);
+    background-color: white;
+    cursor: pointer;
+    transition: 0.2s;
+    border-right: none;
+    width: 62px;
+}
+
+.search-filter:focus {
+    outline: none;
+    border-color: var(--hover);
+    box-shadow: 0 0 0 3px rgba(137, 22, 35, 0.1);
+}
+
+.search-filter:hover {
+    border-color: var(--hover);
+}
+
+/* Equipment Container */
+#equipmentContainer {
+    background: var(--background);
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* Equipment Table Wrapper */
+.equipment-table-wrapper {
+    overflow-x: auto;
+    overflow-y: auto;
+    max-height: calc(100vh - 280px);
+    border-radius: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    background: #fff;
+}
+
+/* Make table fit container width */
+.equipment-table {
+    width: 100%;
+    min-width: 800px;
+}
+
+/* Custom scrollbar */
+.equipment-table-wrapper::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.equipment-table-wrapper::-webkit-scrollbar-track {
+    background: rgba(85, 0, 0, 0.05);
+    border-radius: 4px;
+}
+
+.equipment-table-wrapper::-webkit-scrollbar-thumb {
+    background: var(--hover);
+    border-radius: 4px;
+}
+
+.equipment-table-wrapper::-webkit-scrollbar-thumb:hover {
+    background: #a8204d;
+}
+
+/* Equipment Table */
+.equipment-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.equipment-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.equipment-table thead th {
+    background: linear-gradient(to bottom, rgba(85, 0, 0, 0.08), rgba(85, 0, 0, 0.04));
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06);
+    padding: 12px 14px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--textcolor2);
+    white-space: nowrap;
+}
+
+.equipment-table tbody tr {
+    transition: background 0.15s ease;
+}
+
+.equipment-table tbody tr:hover {
+    background: rgba(85, 0, 0, 0.04);
+}
+
+.equipment-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.equipment-table th,
+.equipment-table td {
+    padding: 12px 14px;
+    text-align: left;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.equipment-table td {
+    color: var(--textcolor2);
+}
+
+/* Column Specific Styles */
+.equipment-table .col-name {
+    font-weight: 500;
+}
+
+.equipment-table .col-description {
+    color: #666;
+    max-width: 300px;
+}
+
+.equipment-table .col-quantity {
+    text-align: center;
+}
+
+.equipment-table .col-unit-cost {
+    text-align: right;
+}
+
+.equipment-table .col-amount {
+    text-align: right;
+    font-weight: 600;
+}
+
+.equipment-table .col-supplier {
+    min-width: 120px;
+}
+
+.equipment-table .col-accountable {
+    min-width: 120px;
+}
+
+.equipment-table .col-received {
+    min-width: 120px;
+}
+
+.equipment-table .col-actions {
+    text-align: center;
+    white-space: nowrap;
+}
+
+/* Currency formatting */
+.currency {
+    font-family: 'Courier New', monospace;
+}
+
+.currency:before {
+    content: '₱';
+    margin-right: 2px;
+}
+
+/* Action buttons in table */
+.action-btn {
+    padding: 6px 10px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s ease;
+    background-color: rgba(85, 0, 0, 0.1);
+    color: var(--textcolor2);
+    margin: 0 2px;
+}
+
+.action-btn:hover {
+    background-color: var(--hover);
+    color: var(--textcolor);
+}
+
+.action-btn.edit {
+    background-color: rgba(33, 150, 243, 0.15);
+    color: #1565c0;
+}
+
+.action-btn.edit:hover {
+    background-color: #1565c0;
+    color: white;
+}
+
+.action-btn.delete {
+    background-color: rgba(244, 67, 54, 0.15);
+    color: #c62828;
+}
+
+.action-btn.delete:hover {
+    background-color: #c62828;
+    color: white;
+}
+
+/* Empty cell */
+.empty-cell {
+    text-align: center;
+    padding: 30px 16px !important;
+    color: #888;
+    font-style: italic;
+}
+
+.empty-cell i {
+    display: block;
+    font-size: 24px;
+    margin-bottom: 8px;
+    color: #ccc;
+}
+
+/* ============================================
+   MODALS
+   ============================================ */
+
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal.show {
+    display: flex;
+}
+
+.modal-content {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-content.modal-small {
+    max-width: 400px;
+}
+
+.modal-content.modal-medium {
+    max-width: 500px;
+}
+
+.modal-content.modal-large {
+    max-width: 700px;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid rgba(85, 0, 0, 0.1);
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: var(--textcolor2);
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.modal-header button {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #999;
+    transition: 0.2s;
+}
+
+.modal-header button:hover {
+    color: var(--textcolor2);
+}
+
+.modal-body {
+    margin-bottom: 20px;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(85, 0, 0, 0.1);
+}
+
+/* ============================================
+   FORM STYLES
+   ============================================ */
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 500;
+    color: var(--textcolor2);
+    font-size: 13px;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid rgba(85, 0, 0, 0.2);
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--textcolor2);
+    background-color: white;
+    transition: 0.2s;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: var(--hover);
+    box-shadow: 0 0 0 3px rgba(137, 22, 35, 0.1);
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+/* Supplier Dropdown Container */
+.supplier-dropdown-container {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.supplier-dropdown-container .supplier-select {
+    flex: 1;
+}
+
+.supplier-dropdown-container .btn-small {
+    padding: 8px 12px;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+/* ============================================
+   BUTTONS
+   ============================================ */
+
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: 0.3s;
+}
+
+.btn:active {
+    transform: translateY(1px);
+}
+
+.btn-primary {
+    background-color: var(--hover);
+    color: var(--textcolor);
+}
+
+.btn-primary:hover {
+    background-color: #a8204d;
+    transform: translateY(-2px);
+}
+
+.btn-secondary {
+    background-color: var(--background);
+    color: var(--textcolor2);
+    border: 1px solid rgba(85, 0, 0, 0.2);
+}
+
+.btn-secondary:hover {
+    background-color: #e8e2e2;
+    transform: translateY(-2px);
+}
+
+.btn-danger {
+    background-color: #f44336;
+    color: white;
+}
+
+.btn-danger:hover {
+    background-color: #da190b;
+    transform: translateY(-2px);
+}
+
+/* ============================================
+   STATE MESSAGES
+   ============================================ */
+
+.loading-state {
+    display: none;
+    text-align: center;
+    padding: 40px;
+}
+
+.loading-state i {
+    font-size: 32px;
+    color: var(--hover);
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.loading-state p {
+    margin-top: 10px;
+    color: #666;
+}
+
+.error-state {
+    display: none;
+    color: #f44336;
+    padding: 20px;
+    text-align: center;
+    background: rgba(244, 67, 54, 0.1);
+    border-radius: 8px;
+    margin: 20px 0;
+    border-left: 4px solid #f44336;
+}
+
+.error-state i {
+    font-size: 32px;
+    margin-bottom: 10px;
+}
+
+.empty-state {
+    display: none;
+    padding: 40px;
+    text-align: center;
+    color: #888;
+}
+
+.empty-state i {
+    font-size: 64px;
+    margin-bottom: 20px;
+    color: #ccc;
+}
+
+.empty-state p:first-of-type {
+    font-size: 18px;
+    margin-bottom: 10px;
+    color: var(--textcolor2);
+    font-weight: 600;
+}
+
+.empty-state p {
+    margin: 8px 0;
+    color: #999;
+    font-size: 13px;
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+@media (max-width: 768px) {
+    .modal-content {
+        width: 95%;
+    }
+
+    .equipment-table th,
+    .equipment-table td {
+        padding: 10px 12px;
+    }
+}

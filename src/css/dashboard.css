@@ -1,0 +1,547 @@
+:root {
+    --textcolor: #fff;
+    --textcolor2: #000;
+    --background: #dfd9d9;
+    --background2: #550000;
+    --hover: #891623;
+    --border: #29060A;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Poppins", sans-serif;
+}
+
+html {
+    scrollbar-gutter: stable;
+}
+
+body {
+    background-color: var(--background2);
+    font-family: "Poppins", sans-serif;
+    height: 100vh;
+    display: flex;
+    overflow-x: hidden;
+}
+
+
+
+/* NAVBAR */
+nav {
+    background-color: var(--background);
+    width: 220px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: 0;
+    left: 0;
+    flex-shrink: 0;
+    padding: 18px 16px;
+    box-shadow: 2px 0 0 rgba(0,0,0,0.02) inset;
+}
+
+
+
+/* optional small home icon placed visually */
+nav .nav-home {
+    align-self: flex-end;
+    margin-right: 6px;
+    margin-top: 6px;
+    font-size: 18px;
+    color: var(--textcolor2);
+    text-decoration: none;
+    cursor: pointer;
+    transition: 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 6px;
+}
+
+nav .nav-home:hover {
+    color: var(--hover);
+    background-color: rgba(137, 22, 35, 0.06);
+}
+
+nav hr {
+    border: 1px solid var(--textcolor2);
+    margin: 10px 0 18px 0;
+    border-radius: 2px;
+}
+
+nav .logo {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    flex-direction: column;
+    margin-bottom: 8px;
+}
+
+nav .logo img {
+    width: 64px;
+    margin: 12px auto 8px auto;
+    border-radius: 50%;
+    display: block;
+}
+
+nav .logo span {
+    font-size: 13px;
+    color: var(--textcolor2);
+    text-align: center;
+}
+
+nav .options {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+}
+
+nav .options ul {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 8px 4px;
+    flex: 1 1 auto;
+}
+
+nav .options ul li {
+    list-style: none;
+    margin-bottom: 14px;
+}
+
+/* keep logout pinned to bottom of the nav */
+nav .options ul li.logout {
+    margin-top: auto;
+    margin-bottom: 6px;
+}
+
+nav .options a {
+    color: var(--textcolor2);
+    text-decoration: none;
+    transition: 0.18s;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+nav .options a:hover {
+    color: var(--hover);
+    background-color: rgba(137, 22, 35, 0.06);
+}
+
+nav .options a.active {
+    color: var(--textcolor);
+    background-color: var(--hover);
+    font-weight: 600;
+}
+
+/* ensure icons don't push layout */
+nav .options a i {
+    min-width: 22px;
+    text-align: center;
+}
+
+/* MAIN DASHBOARD */
+.dashboard {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 40px;
+    overflow-y: auto;
+    background-color: var(--background2);
+}
+
+
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+}
+
+.dashboard-header h1 {
+    color: var(--textcolor);
+    font-size: 32px;
+    font-weight: 600;
+}
+
+.header-actions {
+    display: flex;
+    gap: 15px;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* Search box in header (Items page) */
+.search-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.search-box input[type="search"] {
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    min-width: 220px;
+    background: #fff;
+    color: var(--textcolor2);
+    outline: none;
+    transition: 0.12s;
+}
+
+.search-box input[type="search"]:focus {
+    border-color: var(--hover);
+    box-shadow: 0 4px 12px rgba(137,22,35,0.08);
+}
+
+.search-box button {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: var(--textcolor);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px;
+}
+
+/* BUTTONS */
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: "Poppins", sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: 0.3s;
+}
+
+.btn-primary {
+    background-color: var(--hover);
+    color: var(--textcolor);
+}
+
+.btn-primary:hover {
+    background-color: #a8204d;
+    transform: translateY(-2px);
+}
+
+.btn-secondary {
+    background-color: var(--background);
+    color: var(--textcolor2);
+}
+
+.btn-secondary:hover {
+    background-color: #e8e2e2;
+    transform: translateY(-2px);
+}
+
+/* STATS SECTION */
+.stats-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 40px;
+}
+
+.stat-card {
+    background-color: var(--background);
+    padding: 25px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: 0.3s;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2);
+}
+
+.stat-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    background-color: rgba(137, 22, 35, 0.2);
+    color: var(--hover);
+}
+
+.stat-content h3 {
+    color: var(--textcolor2);
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 8px;
+}
+
+.stat-value {
+    color: var(--textcolor2);
+    font-size: 28px;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.stat-content small {
+    color: #888;
+    font-size: 12px;
+}
+
+/* CONTENT SECTION */
+.content-section {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 30px;
+}
+
+.recent-activity,
+.quick-access {
+    background-color: var(--background);
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.recent-activity h2,
+.quick-access h2 {
+    color: var(--textcolor2);
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 20px;
+}
+
+/* ACTIVITY LIST */
+.activity-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-height: calc(100vh - 300px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-right: 8px;
+}
+
+/* Custom scrollbar styling for activity-list */
+.activity-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.activity-list::-webkit-scrollbar-track {
+    background: rgba(85, 0, 0, 0.1);
+    border-radius: 4px;
+}
+
+.activity-list::-webkit-scrollbar-thumb {
+    background: var(--hover);
+    border-radius: 4px;
+}
+
+.activity-list::-webkit-scrollbar-thumb:hover {
+    background: #a8204d;
+}
+
+.activity-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px;
+    border-radius: 8px;
+    background-color: rgba(85, 0, 0, 0.08);
+    transition: 0.18s;
+    margin-bottom: 5px;
+}
+
+ .activity-item:hover {
+    background-color: rgba(85, 0, 0, 0.12);
+}
+
+/* Make icons inside recent activity entries slightly smaller to reduce row height */
+.recent-activity .stat-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 8px;
+    font-size: 20px;
+}
+
+.activity-icon {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.activity-icon.added {
+    background-color: #4caf50;
+    color: white;
+}
+
+.activity-icon.removed {
+    background-color: #f44336;
+    color: white;
+}
+
+.activity-icon.updated {
+    background-color: #2196f3;
+    color: white;
+}
+
+.activity-details {
+    flex: 1;
+}
+
+.activity-details p {
+    color: var(--textcolor2);
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+.activity-details small {
+    color: #888;
+    font-size: 12px;
+}
+
+.activity-badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 5px 10px;
+    border-radius: 20px;
+    background-color: #4caf50;
+    color: white;
+    text-transform: uppercase;
+}
+
+.activity-badge.removed {
+    background-color: #f44336;
+}
+
+.activity-badge.low {
+    background-color: #ff9800;
+}
+
+.activity-badge.updated {
+    background-color: #2196f3;
+}
+
+
+/* QUICK LINKS */
+.quick-links {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.quick-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 15px;
+    border-radius: 8px;
+    background-color: rgba(137, 22, 35, 0.2);
+    color: var(--hover);
+    text-decoration: none;
+    transition: 0.3s;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.quick-link:hover {
+    background-color: var(--hover);
+    color: var(--textcolor);
+    transform: translateX(5px);
+}
+
+.quick-link i {
+    font-size: 18px;
+}
+
+/* RESPONSIVE */
+@media (max-width: 1024px) {
+    .content-section {
+        grid-template-columns: 1fr;
+    }
+
+    .stats-section {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .dashboard {
+        padding: 20px;
+    }
+}
+
+@media (max-width: 768px) {
+    nav {
+        width: 100%;
+        height: auto;
+        flex-direction: row;
+        padding: 10px 20px;
+    }
+
+    nav .logo {
+        flex-direction: row;
+        margin-right: auto;
+    }
+
+    nav .logo img {
+        width: 40px;
+        margin: 0 10px 0 0;
+    }
+
+    nav .options ul {
+        margin-left: 0;
+        flex-direction: row;
+        gap: 20px;
+    }
+
+    nav .options ul li {
+        margin-bottom: 0;
+    }
+
+    .dashboard {
+        flex-direction: column;
+    }
+
+    .dashboard-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .header-actions {
+        width: 100%;
+    }
+
+    .stats-section {
+        grid-template-columns: 1fr;
+    }
+}

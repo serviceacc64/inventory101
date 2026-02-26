@@ -1,0 +1,773 @@
+/* Room Inventory Styles - Unified with System Design */
+
+:root {
+    --textcolor: #fff;
+    --textcolor2: #000;
+    --background: #dfd9d9;
+    --background2: #550000;
+    --hover: #891623;
+    --border: #29060A;
+}
+
+/* ============================================
+   ROOMS GRID & CARDS
+   ============================================ */
+
+.rooms-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.room-card {
+    background-color: var(--background);
+    border-radius: 10px;
+    padding: 15px;
+    box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1);
+    transition: 0.3s;
+    display: flex;
+    flex-direction: column;
+    min-height: 320px;
+}
+
+.room-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2);
+}
+
+.room-card.empty {
+    opacity: 0.7;
+}
+
+.room-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+}
+
+.room-name {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--textcolor2);
+    word-break: break-word;
+    flex: 1;
+    line-height: 1.3;
+}
+
+.room-actions {
+    display: flex;
+    gap: 8px;
+    margin-left: 10px;
+}
+
+.room-actions button {
+    padding: 6px 10px;
+    font-size: 12px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: 0.2s;
+    background-color: rgba(137, 22, 35, 0.15);
+    color: var(--textcolor2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.room-actions button:hover {
+    background-color: rgba(137, 22, 35, 0.25);
+    color: var(--hover);
+}
+
+.room-description {
+    color: #666;
+    font-size: 13px;
+    margin-bottom: 15px;
+    line-height: 1.4;
+}
+
+/* Room Info Section (Address, Accountable, Adviser) */
+.room-info {
+    margin-bottom: 10px;
+    font-size: 11px;
+    color: #666;
+}
+
+.room-info p {
+    margin: 3px 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    line-height: 1.3;
+}
+
+.room-info i {
+    color: var(--hover);
+    font-size: 10px;
+    width: 12px;
+    text-align: center;
+}
+
+.room-address,
+.room-accountable,
+.room-adviser {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Room Statistics */
+.room-stats {
+    display: flex;
+    gap: 10px;
+    padding: 8px 0;
+    border-top: 1px solid rgba(85, 0, 0, 0.1);
+    border-bottom: 1px solid rgba(85, 0, 0, 0.1);
+    margin-bottom: 10px;
+}
+
+.room-stat {
+    flex: 1;
+    text-align: center;
+}
+
+.room-stat-value {
+    display: block;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--hover);
+    margin-bottom: 2px;
+}
+
+.room-stat-label {
+    display: block;
+    font-size: 10px;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Room Items Preview */
+.room-items-preview {
+    margin-bottom: 10px;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.room-items-preview h4 {
+    margin: 0 0 6px 0;
+    font-size: 11px;
+    color: #666;
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+}
+
+.items-list-compact {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    flex: 1;
+    overflow-y: auto;
+    max-height: 100px;
+    padding-right: 4px;
+}
+
+.items-list-compact::-webkit-scrollbar {
+    width: 6px;
+}
+
+.items-list-compact::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.items-list-compact::-webkit-scrollbar-thumb {
+    background: rgba(137, 22, 35, 0.3);
+    border-radius: 3px;
+}
+
+.items-list-compact::-webkit-scrollbar-thumb:hover {
+    background: rgba(137, 22, 35, 0.5);
+}
+
+.item-badge {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 10px;
+    background-color: rgba(85, 0, 0, 0.08);
+    border-radius: 5px;
+    font-size: 11px;
+    transition: 0.2s;
+    flex-shrink: 0;
+}
+
+.item-badge:hover {
+    background-color: rgba(85, 0, 0, 0.12);
+}
+
+.item-badge .item-name {
+    font-weight: 500;
+    color: var(--textcolor2);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1;
+}
+
+.item-badge .item-qty {
+    background-color: var(--hover);
+    color: var(--textcolor);
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-weight: 600;
+    margin-left: 8px;
+    white-space: nowrap;
+    font-size: 10px;
+}
+
+/* View Room Button */
+.view-room-btn {
+    width: 100%;
+    padding: 10px;
+    background-color: var(--hover);
+    color: var(--textcolor);
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-top: auto;
+    flex-shrink: 0;
+}
+
+.view-room-btn:hover {
+    background-color: #a8204d;
+    transform: translateY(-2px);
+}
+
+/* ============================================
+   ROOM ITEMS LIST
+   ============================================ */
+
+.room-items-list {
+    max-height: 400px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-right: 8px;
+}
+
+.room-items-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.room-items-list::-webkit-scrollbar-track {
+    background: rgba(85, 0, 0, 0.1);
+    border-radius: 4px;
+}
+
+.room-items-list::-webkit-scrollbar-thumb {
+    background: var(--hover);
+    border-radius: 4px;
+}
+
+.room-items-list::-webkit-scrollbar-thumb:hover {
+    background: #a8204d;
+}
+
+.room-item-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    background-color: rgba(85, 0, 0, 0.08);
+    border-radius: 8px;
+    transition: 0.2s;
+}
+
+.room-item-row:hover {
+    background-color: rgba(85, 0, 0, 0.12);
+}
+
+.room-item-info {
+    flex: 1;
+}
+
+.room-item-name {
+    font-weight: 600;
+    color: var(--textcolor2);
+    margin: 0 0 4px 0;
+    font-size: 14px;
+}
+
+.room-item-label {
+    font-size: 12px;
+    color: #888;
+    margin: 0;
+}
+
+.room-item-description {
+    font-size: 12px;
+    color: #666;
+    margin: 4px 0;
+    font-style: italic;
+    line-height: 1.4;
+}
+
+.room-item-remarks {
+    font-size: 11px;
+    color: #888;
+    margin: 4px 0;
+    line-height: 1.4;
+    background: rgba(255, 193, 7, 0.1);
+    padding: 4px 8px;
+    border-radius: 4px;
+    border-left: 3px solid #ffc107;
+}
+
+.room-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.room-item-meta {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-top: 4px;
+}
+
+/* Condition Badges */
+.condition-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.condition-new {
+    background-color: rgba(76, 175, 80, 0.15);
+    color: #2e7d32;
+}
+
+.condition-good {
+    background-color: rgba(33, 150, 243, 0.15);
+    color: #1565c0;
+}
+
+.condition-fair {
+    background-color: rgba(255, 193, 7, 0.15);
+    color: #f57f17;
+}
+
+.condition-poor {
+    background-color: rgba(255, 87, 34, 0.15);
+    color: #d84315;
+}
+
+.condition-damaged {
+    background-color: rgba(244, 67, 54, 0.15);
+    color: #c62828;
+}
+
+/* Unit Badge */
+.unit-badge {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 500;
+    background-color: rgba(85, 0, 0, 0.1);
+    color: var(--hover);
+    text-transform: lowercase;
+}
+
+/* Quantity Display with Units */
+.qty-display {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.unit-label {
+    font-size: 12px;
+    color: #666;
+    font-weight: 500;
+}
+
+.room-item-qty-control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: 12px;
+}
+
+.qty-input {
+    width: 80px;
+    padding: 6px 8px;
+    border: 1px solid rgba(85, 0, 0, 0.2);
+    border-radius: 6px;
+    text-align: center;
+    font-weight: 600;
+    color: var(--textcolor2);
+    background-color: white;
+    font-size: 13px;
+}
+
+.qty-input:focus {
+    outline: none;
+    border-color: var(--hover);
+    box-shadow: 0 0 0 2px rgba(137, 22, 35, 0.1);
+}
+
+.room-item-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.room-item-actions button {
+    padding: 6px 8px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    background-color: rgba(137, 22, 35, 0.15);
+    color: var(--textcolor2);
+    transition: 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.room-item-actions button:hover {
+    background-color: #f44336;
+    color: white;
+}
+
+/* Item Type Badges */
+.item-type-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.item-type-badge.inventory {
+    background-color: rgba(76, 175, 80, 0.15);
+    color: #2e7d32;
+}
+
+.item-type-badge.custom {
+    background-color: rgba(33, 150, 243, 0.15);
+    color: #1565c0;
+}
+
+/* ============================================
+   MODALS
+   ============================================ */
+
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-content.modal-medium {
+    max-width: 500px;
+}
+
+.modal-content.modal-large {
+    max-width: 700px;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid rgba(85, 0, 0, 0.1);
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: var(--textcolor2);
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.modal-header button {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #999;
+    transition: 0.2s;
+}
+
+.modal-header button:hover {
+    color: var(--textcolor2);
+}
+
+.modal-body {
+    margin-bottom: 20px;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(85, 0, 0, 0.1);
+}
+
+/* ============================================
+   FORM STYLES
+   ============================================ */
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 500;
+    color: var(--textcolor2);
+    font-size: 13px;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid rgba(85, 0, 0, 0.2);
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--textcolor2);
+    background-color: white;
+    transition: 0.2s;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: var(--hover);
+    box-shadow: 0 0 0 3px rgba(137, 22, 35, 0.1);
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+/* Add Item Sections */
+.add-item-section {
+    background-color: rgba(85, 0, 0, 0.05);
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border-left: 4px solid var(--hover);
+}
+
+.add-item-section p {
+    margin: 0;
+    font-size: 13px;
+    color: #666;
+}
+
+/* ============================================
+   BUTTONS
+   ============================================ */
+
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: 0.3s;
+}
+
+.btn-primary {
+    background-color: var(--hover);
+    color: var(--textcolor);
+}
+
+.btn-primary1 {
+    background-color: var(--hover);
+    margin-top: 20px;
+    color: var(--textcolor);
+}
+.btn-primary:hover {
+    background-color: #a8204d;
+    transform: translateY(-2px);
+}
+
+.btn-secondary {
+    background-color: var(--background);
+    color: var(--textcolor2);
+    border: 1px solid rgba(85, 0, 0, 0.2);
+}
+
+
+.btn-secondary:hover {
+    background-color: #e8e2e2;
+    transform: translateY(-2px);
+}
+
+.btn-danger {
+    background-color: #f44336;
+    color: white;
+}
+
+.btn-danger:hover {
+    background-color: #da190b;
+    transform: translateY(-2px);
+}
+
+/* ============================================
+   STATE MESSAGES
+   ============================================ */
+
+.loading-state {
+    display: none;
+    text-align: center;
+    padding: 40px;
+}
+
+.loading-state i {
+    font-size: 32px;
+    color: var(--hover);
+}
+
+.loading-state p {
+    margin-top: 10px;
+    color: #666;
+}
+
+.error-state {
+    display: none;
+    color: #f44336;
+    padding: 20px;
+    text-align: center;
+    background: rgba(244, 67, 54, 0.1);
+    border-radius: 8px;
+    margin: 20px 0;
+    border-left: 4px solid #f44336;
+}
+
+.error-state i {
+    font-size: 32px;
+    margin-bottom: 10px;
+}
+
+.empty-state {
+    display: none;
+    padding: 40px;
+    text-align: center;
+    color: #888;
+}
+
+.empty-state i {
+    font-size: 64px;
+    margin-bottom: 20px;
+    color: #ccc;
+}
+
+.empty-state p:first-of-type {
+    font-size: 18px;
+    margin-bottom: 10px;
+    color: var(--textcolor2);
+    font-weight: 600;
+}
+
+.empty-state p {
+    margin: 8px 0;
+    color: #999;
+    font-size: 13px;
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+@media (max-width: 768px) {
+    .rooms-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .room-stats {
+        gap: 10px;
+    }
+
+    .modal-content {
+        width: 95%;
+    }
+
+    .add-item-section {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .room-item-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .room-item-qty-control {
+        width: 100%;
+        margin-left: 0;
+    }
+
+    .qty-input {
+        width: 100%;
+    }
+}
