@@ -54,7 +54,7 @@
 .equipment-table-wrapper {
     overflow-x: auto;
     overflow-y: auto;
-    max-height: calc(100vh - 200px);
+    max-height: calc(100vh - 150px);
     border-radius: 8px;
     border: 1px solid rgba(0, 0, 0, 0.08);
     background: #fff;
