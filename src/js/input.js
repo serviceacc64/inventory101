@@ -148,9 +148,9 @@ function renderItems(items) {
             ? new Date(item.updated_at).toLocaleDateString() 
             : 'Recently';
         
-        // Build display text with unit for Janitorial items
+        // Build display text with unit for Janitorial and Office Supplies items
         let stockText = `Stock: <span class="quantity-display">${item.quantity}</span>`;
-        if (item.label === 'Janitorial' && item.unit) {
+        if ((item.label === 'Janitorial' || item.label === 'Office Supplies') && item.unit) {
             stockText += ` ${escapeHtml(item.unit)}`;
         } else {
             stockText += ' units';
@@ -223,7 +223,7 @@ function renderSelectableItems(items) {
         
         // Format stock text
         let stockText = `Stock: ${item.quantity}`;
-        if (item.label === 'Janitorial' && item.unit) {
+        if ((item.label === 'Janitorial' || item.label === 'Office Supplies') && item.unit) {
             stockText += ` ${escapeHtml(item.unit)}`;
         } else {
             stockText += ' units';
@@ -271,7 +271,7 @@ function selectItem(item) {
     selectedItemName.textContent = item.name;
     
     let stockText = `Current Stock: ${item.quantity}`;
-    if (item.label === 'Janitorial' && item.unit) {
+    if ((item.label === 'Janitorial' || item.label === 'Office Supplies') && item.unit) {
         stockText += ` ${item.unit}`;
     } else {
         stockText += ' units';
@@ -423,15 +423,16 @@ async function handleCreateItem(event) {
     const label = document.getElementById('newItemLabel').value.trim();
     const quantity = parseInt(document.getElementById('newItemQuantity').value);
     const unit = document.getElementById('newItemUnit').value.trim();
+    const poNumber = document.getElementById('newItemPO').value.trim();
     
     if (!name || isNaN(quantity)) {
         alert('Please fill in all required fields');
         return;
     }
     
-    // Validate unit is provided for Janitorial items
-    if (label === 'Janitorial' && !unit) {
-        alert('Please specify the unit for Janitorial items');
+    // Validate unit is provided for Janitorial and Office Supplies items
+    if ((label === 'Janitorial' || label === 'Office Supplies') && !unit) {
+        alert('Please specify the unit for ' + label + ' items');
         return;
     }
     
@@ -442,9 +443,14 @@ async function handleCreateItem(event) {
             quantity: quantity 
         };
         
-        // Add unit only for Janitorial items
-        if (label === 'Janitorial') {
+        // Add unit for Janitorial and Office Supplies items
+        if (label === 'Janitorial' || label === 'Office Supplies') {
             insertData.unit = unit;
+        }
+        
+        // Add P.O. Number if provided
+        if (poNumber) {
+            insertData.po_number = poNumber;
         }
         
         const { data, error } = await supabase
@@ -455,7 +461,6 @@ async function handleCreateItem(event) {
         if (error) throw error;
         
         // Close modal and reset form
-
         closeCreateItemModal();
         document.getElementById('createItemForm').reset();
         
@@ -473,7 +478,7 @@ async function handleCreateItem(event) {
 
 function toggleNewItemUnitField() {
     if (newItemLabel && newItemUnitGroup) {
-        if (newItemLabel.value === 'Janitorial') {
+        if (newItemLabel.value === 'Janitorial' || newItemLabel.value === 'Office Supplies') {
             newItemUnitGroup.style.display = 'block';
             newItemUnit.required = true;
         } else {
@@ -632,7 +637,7 @@ function renderGetItemSelectableItems(items) {
         
         // Format stock text
         let stockText = `Stock: ${item.quantity}`;
-        if (item.label === 'Janitorial' && item.unit) {
+        if ((item.label === 'Janitorial' || item.label === 'Office Supplies') && item.unit) {
             stockText += ` ${escapeHtml(item.unit)}`;
         } else {
             stockText += ' units';
@@ -680,7 +685,7 @@ function selectGetItem(item) {
     getItemSelectedName.textContent = item.name;
     
     let stockText = `Available Stock: ${item.quantity}`;
-    if (item.label === 'Janitorial' && item.unit) {
+    if ((item.label === 'Janitorial' || item.label === 'Office Supplies') && item.unit) {
         stockText += ` ${item.unit}`;
     } else {
         stockText += ' units';
