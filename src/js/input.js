@@ -265,11 +265,11 @@ function selectItem(item) {
     // Hide list, show details
     selectableItemsList.style.display = 'none';
     selectedItemDetails.style.display = 'block';
-    
+
     // Populate details
     selectedItemId.value = item.id;
     selectedItemName.textContent = item.name;
-    
+
     let stockText = `Current Stock: ${item.quantity}`;
     if ((item.label === 'Janitorial' || item.label === 'Office Supplies') && item.unit) {
         stockText += ` ${item.unit}`;
@@ -277,7 +277,11 @@ function selectItem(item) {
         stockText += ' units';
     }
     selectedItemCurrentStock.textContent = stockText;
-    
+
+    // Set default date to today
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('addDate').value = today;
+
     // Focus on quantity input
     setTimeout(() => {
         if (addQuantity) addQuantity.focus();
@@ -327,9 +331,11 @@ async function handleUpdateQuantity(event) {
     // Now do validation
     const itemId = selectedItemId.value;
     const quantityToAdd = parseInt(addQuantity.value);
+    const selectedDate = document.getElementById('addDate').value;
+    const poNumber = document.getElementById('addPO').value.trim();
     
-    if (!itemId || isNaN(quantityToAdd) || quantityToAdd < 1) {
-        alert('Please enter a valid quantity');
+    if (!itemId || isNaN(quantityToAdd) || quantityToAdd < 1 || !selectedDate) {
+        alert('Please fill in all required fields');
         // Reset submission lock on validation failure
         isSubmitting = false;
         form.classList.remove('submitting');
@@ -357,12 +363,19 @@ async function handleUpdateQuantity(event) {
         // Calculate new quantity (backend handles the math)
         const newQuantity = item.quantity + quantityToAdd;
         
+        const updateData = { 
+            quantity: newQuantity,
+            updated_at: new Date(selectedDate).toISOString()
+        };
+        
+        // Add P.O. Number if provided
+        if (poNumber) {
+            updateData.po_number = poNumber;
+        }
+        
         const { error } = await supabase
             .from('items')
-            .update({ 
-                quantity: newQuantity,
-                updated_at: new Date().toISOString()
-            })
+            .update(updateData)
             .eq('id', itemId);
         
         if (error) throw error;
