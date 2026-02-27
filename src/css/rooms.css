@@ -257,16 +257,49 @@
 }
 
 /* ============================================
+   FILTER BOX STYLES
+   ============================================ */
+
+.filter-box {
+    display: flex;
+    align-items: center;
+}
+
+.filter-box select {
+    padding: 10px 15px;
+    border: 1px solid rgba(85, 0, 0, 0.2);
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--textcolor2);
+    background-color: white;
+    cursor: pointer;
+    transition: 0.2s;
+    min-width: 140px;
+}
+
+.filter-box select:hover {
+    border-color: var(--hover);
+}
+
+.filter-box select:focus {
+    outline: none;
+    border-color: var(--hover);
+    box-shadow: 0 0 0 3px rgba(137, 22, 35, 0.1);
+}
+
+/* ============================================
    ROOM ITEMS LIST
    ============================================ */
 
 .room-items-list {
-    max-height: 400px;
+    flex: 1;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
     gap: 10px;
     padding-right: 8px;
+    min-height: 0;
 }
 
 .room-items-list::-webkit-scrollbar {
@@ -507,7 +540,8 @@
     max-width: 500px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
     max-height: 90vh;
-    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
 }
 
 .modal-content.modal-medium {
@@ -549,6 +583,10 @@
 
 .modal-body {
     margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    flex: 1;
 }
 
 .modal-footer {

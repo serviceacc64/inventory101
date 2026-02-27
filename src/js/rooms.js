@@ -8,6 +8,8 @@ const emptyState = document.getElementById('emptyState');
 const roomsContainer = document.getElementById('roomsContainer');
 const roomSearch = document.getElementById('roomSearch');
 const clearSearch = document.getElementById('clearSearch');
+const gradeFilter = document.getElementById('gradeFilter');
+
 
 const createRoomModal = document.getElementById('createRoomModal');
 const createRoomForm = document.getElementById('createRoomForm');
@@ -46,6 +48,8 @@ let currentRoomId = null;
 let isSubmitting = false;
 let isRendering = false;
 let searchTimeout = null;
+let filterTimeout = null;
+
 
 // ==========================================
 // INITIALIZE
@@ -60,16 +64,9 @@ function setupEventListeners() {
     if (roomSearch) {
         roomSearch.addEventListener('input', (e) => {
             clearTimeout(searchTimeout);
-            const searchTerm = e.target.value.toLowerCase();
             
             searchTimeout = setTimeout(() => {
-                const filtered = allRooms.filter(room =>
-                    room.name.toLowerCase().includes(searchTerm) ||
-                    (room.room_address && room.room_address.toLowerCase().includes(searchTerm)) ||
-                    (room.accountable && room.accountable.toLowerCase().includes(searchTerm)) ||
-                    (room.room_adviser && room.room_adviser.toLowerCase().includes(searchTerm))
-                );
-                renderRooms(filtered);
+                applyFiltersAndSort();
             }, 300); // 300ms debounce
         });
     }
@@ -78,9 +75,21 @@ function setupEventListeners() {
         clearSearch.addEventListener('click', () => {
             clearTimeout(searchTimeout);
             roomSearch.value = '';
-            renderRooms(allRooms);
+            applyFiltersAndSort();
         });
     }
+
+    // Grade filter with debounce
+    if (gradeFilter) {
+        gradeFilter.addEventListener('change', (e) => {
+            clearTimeout(filterTimeout);
+            
+            filterTimeout = setTimeout(() => {
+                applyFiltersAndSort();
+            }, 100);
+        });
+    }
+
 
     // Create room form
     if (createRoomForm) {
@@ -99,6 +108,39 @@ function setupEventListeners() {
 }
 
 // ==========================================
+// FILTER AND SORT FUNCTIONS
+// ==========================================
+function applyFiltersAndSort() {
+    const searchTerm = roomSearch ? roomSearch.value.toLowerCase().trim() : '';
+    const selectedGrade = gradeFilter ? gradeFilter.value : '';
+
+    // Start with all rooms
+    let filtered = [...allRooms];
+
+    // Apply grade filter
+    if (selectedGrade) {
+        filtered = filtered.filter(room => 
+            room.name.toLowerCase().startsWith(selectedGrade.toLowerCase())
+        );
+    }
+
+    // Apply search filter
+    if (searchTerm) {
+        filtered = filtered.filter(room =>
+            room.name.toLowerCase().includes(searchTerm) ||
+            (room.room_address && room.room_address.toLowerCase().includes(searchTerm)) ||
+            (room.accountable && room.accountable.toLowerCase().includes(searchTerm)) ||
+            (room.room_adviser && room.room_adviser.toLowerCase().includes(searchTerm))
+        );
+    }
+
+    // Sort by room name (alphabetically A-Z)
+    filtered.sort((a, b) => a.name.localeCompare(b.name));
+
+    renderRooms(filtered);
+}
+
+// ==========================================
 // FETCH DATA
 // ==========================================
 async function fetchRooms() {
@@ -114,7 +156,9 @@ async function fetchRooms() {
         if (error) throw error;
 
         allRooms = rooms || [];
-        renderRooms(allRooms);
+        
+        // Apply filters and sort on initial load
+        applyFiltersAndSort();
 
         if (allRooms.length === 0) {
             emptyState.style.display = 'block';
@@ -130,6 +174,7 @@ async function fetchRooms() {
         showLoading(false);
     }
 }
+
 
 // ==========================================
 // RENDER ROOMS
