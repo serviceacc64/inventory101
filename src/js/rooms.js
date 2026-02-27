@@ -41,6 +41,8 @@ const editRoomItemUnits = document.getElementById('editRoomItemUnits');
 const editRoomItemCondition = document.getElementById('editRoomItemCondition');
 const editRoomItemDescription = document.getElementById('editRoomItemDescription');
 const editRoomItemRemarks = document.getElementById('editRoomItemRemarks');
+const editRoomItemUnitValue = document.getElementById('editRoomItemUnitValue');
+
 
 // State
 let allRooms = [];
@@ -374,11 +376,13 @@ window.openEditRoomItemModal = async function(itemId) {
         editRoomItemName.value = item.item_name;
         editRoomItemQuantity.value = item.quantity;
         editRoomItemUnits.value = item.units || 'pcs';
+        editRoomItemUnitValue.value = item.unit_value || '';
         editRoomItemCondition.value = item.condition || 'Good';
         editRoomItemDescription.value = item.description || '';
         editRoomItemRemarks.value = item.remarks || '';
 
         // Show the modal
+
         editRoomItemModal.style.display = 'flex';
     } catch (error) {
         console.error('Error loading item for edit:', error);
@@ -400,11 +404,13 @@ window.handleEditRoomItem = async function(event) {
         const itemName = editRoomItemName.value.trim();
         const quantity = parseInt(editRoomItemQuantity.value);
         const units = editRoomItemUnits.value;
+        const unitValue = parseFloat(editRoomItemUnitValue.value) || null;
         const condition = editRoomItemCondition.value;
         const description = editRoomItemDescription.value.trim() || null;
         const remarks = editRoomItemRemarks.value.trim() || null;
 
         if (!itemName || isNaN(quantity) || quantity < 1) {
+
             showError('Please enter a valid item name and quantity');
             return;
         }
@@ -415,12 +421,14 @@ window.handleEditRoomItem = async function(event) {
                 item_name: itemName,
                 quantity: quantity,
                 units: units,
+                unit_value: unitValue,
                 condition: condition,
                 description: description,
                 remarks: remarks,
                 updated_at: new Date().toISOString()
             })
             .eq('id', itemId);
+
 
         if (error) throw error;
 
@@ -874,6 +882,9 @@ window.handleAddCustomItemToRoom = async function(event) {
         if (unitsInput) unitsInput.value = 'pcs';
         if (conditionInput) conditionInput.value = 'Good';
         if (remarksInput) remarksInput.value = '';
+        const unitValueInput = document.getElementById('customItemUnitValue');
+        if (unitValueInput) unitValueInput.value = '';
+
         await loadRoomItems(currentRoomId);
         await fetchRooms(); // Refresh room card
     } catch (error) {
