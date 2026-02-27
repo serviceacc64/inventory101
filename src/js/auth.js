@@ -9,7 +9,7 @@ async function logout() {
     localStorage.removeItem('isLoggedIn');
     localStorage.removeItem('userEmail');
     localStorage.removeItem('userId');
-    window.location.href = 'index.html';
+    window.location.href = '/index.html';
 }
 
 // Get current admin
@@ -29,7 +29,7 @@ async function checkAuth() {
         localStorage.removeItem('isLoggedIn');
         localStorage.removeItem('userEmail');
         localStorage.removeItem('userId');
-        window.location.href = 'index.html';
+        window.location.href = '/index.html';
         return false;
     }
     localStorage.setItem('isLoggedIn', 'true');
@@ -44,18 +44,16 @@ onAuthStateChange((event, session) => {
         localStorage.removeItem('isLoggedIn');
         localStorage.removeItem('userEmail');
         localStorage.removeItem('userId');
-        window.location.href = 'index.html';
+        window.location.href = '/index.html';
     }
 });
 
 // Auto-attach logout buttons
-document.addEventListener('DOMContentLoaded', function () {
-    var els = document.querySelectorAll('[data-logout]');
-    els.forEach(function (el) {
-        el.addEventListener('click', function (e) {
-            e.preventDefault();
-            logout();
-        });
+var els = document.querySelectorAll('[data-logout]');
+els.forEach(function (el) {
+    el.addEventListener('click', function (e) {
+        e.preventDefault();
+        logout();
     });
 });
 
