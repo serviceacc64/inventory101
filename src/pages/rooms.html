@@ -180,60 +180,72 @@
                         <i class="fa-solid fa-plus"></i> Create Custom Item
                     </button>
                     
-                    <form id="addCustomItemForm" class="add-item-section" style="padding: 15px; background: #fff0f0; border-radius: 8px; border-left: 4px solid #f32121; display: none; margin-top: 10px;" onsubmit="window.handleAddCustomItemToRoom(event); return false;">
-                        <div style="display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap;">
-                        <div class="form-group" style="flex: 2; margin: 0; min-width: 200px;">
-                            <label for="customItemName">Item Name *</label>
-                            <input type="text" id="customItemName" placeholder="e.g., Whiteboard, Projector, Door Lock" maxlength="100" required>
+                    <form id="addCustomItemForm" class="add-item-section" style="padding: 12px; background: #fff0f0; border-radius: 8px; border-left: 4px solid #f32121; display: none; margin-top: 10px; max-height: 70vh; overflow-y: auto;" onsubmit="window.handleAddCustomItemToRoom(event); return false;">
+                        <!-- Row 1: Item Name, Qty, Units -->
+                        <div style="display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 8px;">
+                            <div class="form-group" style="flex: 1; margin: 0; min-width: 150px;">
+                                <label for="customItemName" style="font-size: 12px;">Item Name *</label>
+                                <input type="text" id="customItemName" placeholder="e.g., Whiteboard" maxlength="100" required style="padding: 8px 10px; font-size: 13px;">
+                            </div>
+                            <div class="form-group" style="flex: 0 0 70px; margin: 0;">
+                                <label for="customItemQuantity" style="font-size: 12px;">Qty *</label>
+                                <input type="number" id="customItemQuantity" min="1" value="1" required style="padding: 8px 10px; font-size: 13px;">
+                            </div>
+                            <div class="form-group" style="flex: 0 0 90px; margin: 0;">
+                                <label for="customItemUnits" style="font-size: 12px;">Units</label>
+                                <select id="customItemUnits" style="width: 100%; padding: 8px 10px; border: 1px solid rgba(85, 0, 0, 0.2); border-radius: 8px; font-size: 13px; background-color: white;">
+                                    <option value="pcs">pcs</option>
+                                    <option value="boxes">boxes</option>
+                                    <option value="sets">sets</option>
+                                    <option value="units">units</option>
+                                    <option value="pairs">pairs</option>
+                                    <option value="bundles">bundles</option>
+                                    <option value="rolls">rolls</option>
+                                    <option value="packs">packs</option>
+                                </select>
+                            </div>
                         </div>
-                        <div class="form-group" style="flex: 0 0 100px; margin: 0;">
-                            <label for="customItemQuantity">Qty *</label>
-                            <input type="number" id="customItemQuantity" min="1" value="1" required>
+                        
+                        <!-- Row 2: Unit Value, Condition -->
+                        <div style="display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 8px;">
+                            <div class="form-group" style="flex: 0 0 100px; margin: 0;">
+                                <label for="customItemUnitValue" style="font-size: 12px;">Unit Value</label>
+                                <input type="number" id="customItemUnitValue" min="0" step="0.01" placeholder="0.00" style="width: 100%; padding: 8px 10px; border: 1px solid rgba(85, 0, 0, 0.2); border-radius: 8px; font-size: 13px;">
+                            </div>
+                            <div class="form-group" style="flex: 0 0 110px; margin: 0;">
+                                <label for="customItemCondition" style="font-size: 12px;">Condition</label>
+                                <select id="customItemCondition" style="width: 100%; padding: 8px 10px; border: 1px solid rgba(85, 0, 0, 0.2); border-radius: 8px; font-size: 13px; background-color: white;">
+                                    <option value="New">New</option>
+                                    <option value="Good" selected>Good</option>
+                                    <option value="Fair">Fair</option>
+                                    <option value="Poor">Poor</option>
+                                    <option value="Damaged">Damaged</option>
+                                </select>
+                            </div>
                         </div>
-                        <div class="form-group" style="flex: 0 0 120px; margin: 0;">
-                            <label for="customItemUnits">Units</label>
-                            <select id="customItemUnits" style="width: 100%; padding: 10px 12px; border: 1px solid rgba(85, 0, 0, 0.2); border-radius: 8px; font-size: 14px; background-color: white;">
-                                <option value="pcs">pcs</option>
-                                <option value="boxes">boxes</option>
-                                <option value="sets">sets</option>
-                                <option value="units">units</option>
-                                <option value="pairs">pairs</option>
-                                <option value="bundles">bundles</option>
-                                <option value="rolls">rolls</option>
-                                <option value="packs">packs</option>
-                            </select>
+                        
+                        <!-- Row 3: Description -->
+                        <div style="margin-bottom: 8px;">
+                            <div class="form-group" style="margin: 0;">
+                                <label for="customItemDescription" style="font-size: 12px;">Description (Optional)</label>
+                                <input type="text" id="customItemDescription" placeholder="e.g., 42-inch smart TV" maxlength="255" style="padding: 8px 10px; font-size: 13px;">
+                            </div>
                         </div>
-                        <div class="form-group" style="flex: 0 0 120px; margin: 0;">
-                            <label for="customItemUnitValue">Unit Value</label>
-                            <input type="number" id="customItemUnitValue" min="0" step="0.01" placeholder="0.00" style="width: 100%; padding: 10px 12px; border: 1px solid rgba(85, 0, 0, 0.2); border-radius: 8px; font-size: 14px;">
+                        
+                        <!-- Row 4: Remarks -->
+                        <div style="margin-bottom: 10px;">
+                            <div class="form-group" style="margin: 0;">
+                                <label for="customItemRemarks" style="font-size: 12px;">Remarks / Issued By (Optional)</label>
+                                <input type="text" id="customItemRemarks" placeholder="e.g., Issued by Mr. Smith" maxlength="255" style="padding: 8px 10px; font-size: 13px;">
+                            </div>
                         </div>
-                        <div class="form-group" style="flex: 0 0 140px; margin: 0;">
-                            <label for="customItemCondition">Condition</label>
-                            <select id="customItemCondition" style="width: 100%; padding: 10px 12px; border: 1px solid rgba(85, 0, 0, 0.2); border-radius: 8px; font-size: 14px; background-color: white;">
-                                <option value="New">New</option>
-                                <option value="Good" selected>Good</option>
-                                <option value="Fair">Fair</option>
-                                <option value="Poor">Poor</option>
-                                <option value="Damaged">Damaged</option>
-                            </select>
-                        </div>
-                       
-                    </div>
-                    <div style="display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap; margin-top: 10px;">
-                        <div class="form-group" style="flex: 1; margin: 0; min-width: 300px;">
-                            <label for="customItemDescription">Description (Optional)</label>
-                            <input type="text" id="customItemDescription" placeholder="e.g., 42-inch smart TV, mounted on wall" maxlength="255">
-                        </div>
-                        <div class="form-group" style="flex: 1; margin: 0; min-width: 300px;">
-                            <label for="customItemRemarks">Remarks / Issued By (Optional)</label>
-                            <input type="text" id="customItemRemarks" placeholder="e.g., Issued by Mr. Smith on Jan 15, 2024" maxlength="255">
-                        </div>
-                    </div>
-                        <div style="display: flex; gap: 10px; margin-top: 10px;">
-                            <button type="submit" class="btn btn-primary" style="background: #07f83b; color: white; border: none; flex: 1;">
+                        
+                        <!-- Row 5: Buttons (Always visible at bottom) -->
+                        <div style="display: flex; gap: 8px; position: sticky; bottom: 0; background: #fff0f0; padding-top: 5px;">
+                            <button type="submit" class="btn btn-primary" style="background: #07f83b; color: white; border: none; flex: 1; padding: 10px; font-size: 14px;">
                                 <i class="fa-solid fa-check"></i> Add Item
                             </button>
-                            <button type="button" onclick="window.hideCustomItemForm()" class="btn btn-secondary" style="flex: 0 0 auto;">
+                            <button type="button" onclick="window.hideCustomItemForm()" class="btn btn-secondary" style="flex: 0 0 80px; padding: 10px; font-size: 14px;">
                                 <i class="fa-solid fa-times"></i> Cancel
                             </button>
                         </div>
