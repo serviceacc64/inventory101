@@ -628,7 +628,7 @@ window.handleAddCustomItemToRoom = async function(event) {
     isSubmitting = true;
 
     try {
-        // Check if custom item with same name already exists in this room
+        // Check if custom item with same name AND same description already exists in this room
         // Fetch all items with this name in this room, then filter for custom items (item_id is null)
         const { data: existingItems, error: fetchError } = await supabase
             .from('room_items')
@@ -638,13 +638,22 @@ window.handleAddCustomItemToRoom = async function(event) {
 
         if (fetchError) throw fetchError;
 
-        // Find custom item (no item_id)
+        // Find custom item (no item_id) with matching name AND description
+        // Only combine items if they have the same description (or both have no description)
+        const normalizedDescription = description ? description.trim().toLowerCase() : '';
         const existing = existingItems && existingItems.length > 0 
-            ? existingItems.find(item => item.item_id === null)
+            ? existingItems.find(item => {
+                // Only match custom items (item_id is null)
+                if (item.item_id !== null) return false;
+                
+                // Compare descriptions - treat null and empty as equivalent
+                const existingDesc = item.description ? item.description.trim().toLowerCase() : '';
+                return existingDesc === normalizedDescription;
+            })
             : null;
 
         if (existing) {
-            // Update quantity of existing custom item
+            // Update quantity of existing custom item (same name AND same description)
             const newTotal = existing.quantity + quantity;
             
             const { error } = await supabase
