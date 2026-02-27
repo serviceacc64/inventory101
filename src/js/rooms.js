@@ -29,6 +29,17 @@ const editRoomAddress = document.getElementById('editRoomDescription');
 const editRoomAccountable = document.getElementById('editRoomAccountable');
 const editRoomAdviser = document.getElementById('editRoomAdviser');
 
+// Edit Room Item Modal Elements
+const editRoomItemModal = document.getElementById('editRoomItemModal');
+const editRoomItemForm = document.getElementById('editRoomItemForm');
+const editRoomItemId = document.getElementById('editRoomItemId');
+const editRoomItemName = document.getElementById('editRoomItemName');
+const editRoomItemQuantity = document.getElementById('editRoomItemQuantity');
+const editRoomItemUnits = document.getElementById('editRoomItemUnits');
+const editRoomItemCondition = document.getElementById('editRoomItemCondition');
+const editRoomItemDescription = document.getElementById('editRoomItemDescription');
+const editRoomItemRemarks = document.getElementById('editRoomItemRemarks');
+
 // State
 let allRooms = [];
 let currentRoomId = null;
@@ -79,6 +90,11 @@ function setupEventListeners() {
     // Edit room form
     if (editRoomForm) {
         editRoomForm.addEventListener('submit', window.handleEditRoom);
+    }
+
+    // Edit room item form
+    if (editRoomItemForm) {
+        editRoomItemForm.addEventListener('submit', window.handleEditRoomItem);
     }
 }
 
@@ -292,11 +308,124 @@ window.closeEditRoomModal = function() {
     editRoomModal.style.display = 'none';
 }
 
+// Edit Room Item Modal Functions
+window.openEditRoomItemModal = async function(itemId) {
+    try {
+        // Fetch the item details
+        const { data: item, error } = await supabase
+            .from('room_items')
+            .select('*')
+            .eq('id', itemId)
+            .single();
+
+        if (error) throw error;
+        if (!item) {
+            showError('Item not found');
+            return;
+        }
+
+        // Populate the form
+        editRoomItemId.value = item.id;
+        editRoomItemName.value = item.item_name;
+        editRoomItemQuantity.value = item.quantity;
+        editRoomItemUnits.value = item.units || 'pcs';
+        editRoomItemCondition.value = item.condition || 'Good';
+        editRoomItemDescription.value = item.description || '';
+        editRoomItemRemarks.value = item.remarks || '';
+
+        // Show the modal
+        editRoomItemModal.style.display = 'flex';
+    } catch (error) {
+        console.error('Error loading item for edit:', error);
+        showError('Failed to load item details');
+    }
+};
+
+window.closeEditRoomItemModal = function() {
+    editRoomItemModal.style.display = 'none';
+};
+
+window.handleEditRoomItem = async function(event) {
+    event.preventDefault();
+    if (isSubmitting) return;
+    isSubmitting = true;
+
+    try {
+        const itemId = editRoomItemId.value;
+        const itemName = editRoomItemName.value.trim();
+        const quantity = parseInt(editRoomItemQuantity.value);
+        const units = editRoomItemUnits.value;
+        const condition = editRoomItemCondition.value;
+        const description = editRoomItemDescription.value.trim() || null;
+        const remarks = editRoomItemRemarks.value.trim() || null;
+
+        if (!itemName || isNaN(quantity) || quantity < 1) {
+            showError('Please enter a valid item name and quantity');
+            return;
+        }
+
+        const { error } = await supabase
+            .from('room_items')
+            .update({
+                item_name: itemName,
+                quantity: quantity,
+                units: units,
+                condition: condition,
+                description: description,
+                remarks: remarks,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', itemId);
+
+        if (error) throw error;
+
+        closeEditRoomItemModal();
+        await loadRoomItems(currentRoomId);
+        await fetchRooms();
+        showSuccessMessage('Item updated successfully!');
+    } catch (error) {
+        console.error('Error updating item:', error);
+        showError('Failed to update item. Please try again.');
+    } finally {
+        isSubmitting = false;
+    }
+};
+
+window.handleDeleteRoomItem = async function() {
+    const itemId = editRoomItemId.value;
+    if (!confirm('Are you sure you want to delete this item?')) {
+        return;
+    }
+
+    if (isSubmitting) return;
+    isSubmitting = true;
+
+    try {
+        const { error } = await supabase
+            .from('room_items')
+            .delete()
+            .eq('id', itemId);
+
+        if (error) throw error;
+
+        closeEditRoomItemModal();
+        await loadRoomItems(currentRoomId);
+        await fetchRooms();
+        showSuccessMessage('Item deleted successfully!');
+    } catch (error) {
+        console.error('Error deleting item:', error);
+        showError('Failed to delete item. Please try again.');
+    } finally {
+        isSubmitting = false;
+    }
+};
+
 // Close modals when clicking outside
 window.addEventListener('click', (event) => {
     if (event.target === createRoomModal) window.closeCreateRoomModal();
     if (event.target === roomItemsModal) window.closeRoomItemsModal();
     if (event.target === editRoomModal) window.closeEditRoomModal();
+    if (event.target === editRoomItemModal) window.closeEditRoomItemModal();
 });
 
 // ==========================================
@@ -464,6 +593,9 @@ function renderRoomItems(items) {
             <div class="room-item-qty-control">
                 <span class="qty-display">${item.quantity} ${item.units || 'pcs'}</span>
                 <div class="room-item-actions">
+                    <button class="edit" onclick="window.openEditRoomItemModal('${item.id}')" title="Edit Item">
+                        <i class="fa-solid fa-edit"></i>
+                    </button>
                     <button class="remove" onclick="window.handleRemoveItemFromRoom('${item.id}')">
                         <i class="fa-solid fa-trash"></i>
                     </button>

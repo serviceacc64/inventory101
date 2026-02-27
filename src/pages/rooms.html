@@ -239,6 +239,9 @@
             </div>
 
             <div class="modal-footer">
+                <button type="button" onclick="window.exportRoomItemsToExcel()" class="btn btn-success" style="margin-right: auto;">
+                    <i class="fa-solid fa-file-excel"></i> Export to Excel
+                </button>
                 <button type="button" onclick="window.closeRoomItemsModal()" class="btn btn-secondary">Close</button>
             </div>
         </div>
@@ -281,6 +284,75 @@
                         <i class="fa-solid fa-trash"></i> Delete Room
                     </button>
                     <button type="submit" class="btn btn-primary" id="editRoomBtn">
+                        <i class="fa-solid fa-save"></i> Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Room Item Modal -->
+    <div id="editRoomItemModal" class="modal">
+        <div class="modal-content modal-medium">
+            <div class="modal-header">
+                <h3>Edit Room Item</h3>
+                <button onclick="window.closeEditRoomItemModal()">&times;</button>
+            </div>
+            
+            <form id="editRoomItemForm" onsubmit="window.handleEditRoomItem(event)">
+                <input type="hidden" id="editRoomItemId">
+                
+                <div class="form-group">
+                    <label for="editRoomItemName">Item Name *</label>
+                    <input type="text" id="editRoomItemName" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="editRoomItemQuantity">Quantity *</label>
+                    <input type="number" id="editRoomItemQuantity" min="1" value="1" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="editRoomItemUnits">Units</label>
+                    <select id="editRoomItemUnits" style="width: 100%; padding: 10px 12px; border: 1px solid rgba(85, 0, 0, 0.2); border-radius: 8px; font-size: 14px; background-color: white;">
+                        <option value="pcs">pcs</option>
+                        <option value="boxes">boxes</option>
+                        <option value="sets">sets</option>
+                        <option value="units">units</option>
+                        <option value="pairs">pairs</option>
+                        <option value="bundles">bundles</option>
+                        <option value="rolls">rolls</option>
+                        <option value="packs">packs</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="editRoomItemCondition">Condition</label>
+                    <select id="editRoomItemCondition" style="width: 100%; padding: 10px 12px; border: 1px solid rgba(85, 0, 0, 0.2); border-radius: 8px; font-size: 14px; background-color: white;">
+                        <option value="New">New</option>
+                        <option value="Good">Good</option>
+                        <option value="Fair">Fair</option>
+                        <option value="Poor">Poor</option>
+                        <option value="Damaged">Damaged</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="editRoomItemDescription">Description (Optional)</label>
+                    <input type="text" id="editRoomItemDescription" placeholder="e.g., 42-inch smart TV, mounted on wall" maxlength="255">
+                </div>
+
+                <div class="form-group">
+                    <label for="editRoomItemRemarks">Remarks / Issued By (Optional)</label>
+                    <input type="text" id="editRoomItemRemarks" placeholder="e.g., Issued by Mr. Smith on Jan 15, 2024" maxlength="255">
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" onclick="window.closeEditRoomItemModal()" class="btn btn-secondary">Cancel</button>
+                    <button type="button" onclick="window.handleDeleteRoomItem()" class="btn btn-danger" style="margin-right: auto;">
+                        <i class="fa-solid fa-trash"></i> Delete Item
+                    </button>
+                    <button type="submit" class="btn btn-primary" id="editRoomItemBtn">
                         <i class="fa-solid fa-save"></i> Save Changes
                     </button>
                 </div>
