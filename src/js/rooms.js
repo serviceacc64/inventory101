@@ -63,6 +63,12 @@ let isRendering = false;
 let searchTimeout = null;
 let filterTimeout = null;
 
+// Pagination state
+let currentPage = 1;
+const itemsPerPage = 16; // 16 items per page for the grid layout
+let filteredRooms = [];
+let totalPages = 1;
+
 
 // ==========================================
 // INITIALIZE
@@ -150,7 +156,12 @@ function applyFiltersAndSort() {
     // Sort by room name (alphabetically A-Z)
     filtered.sort((a, b) => a.name.localeCompare(b.name));
 
-    renderRooms(filtered);
+    // Update filtered rooms and reset pagination
+    filteredRooms = filtered;
+    currentPage = 1;
+    totalPages = Math.ceil(filteredRooms.length / itemsPerPage);
+
+    renderRooms(filteredRooms);
 }
 
 // ==========================================
@@ -198,9 +209,23 @@ async function renderRooms(rooms) {
     isRendering = true;
 
     try {
+        // Calculate pagination
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        const paginatedRooms = rooms.slice(startIndex, endIndex);
+
+        // Show/hide pagination controls
+        const paginationContainer = document.getElementById('paginationContainer');
+        if (rooms.length > itemsPerPage) {
+            paginationContainer.style.display = 'flex';
+            updatePaginationControls();
+        } else {
+            paginationContainer.style.display = 'none';
+        }
+
         roomsContainer.innerHTML = '';
 
-        for (const room of rooms) {
+        for (const room of paginatedRooms) {
             // Fetch room items
             const { data: roomItems, error } = await supabase
                 .from('room_items')
@@ -283,6 +308,40 @@ async function renderRooms(rooms) {
         }
     } finally {
         isRendering = false;
+    }
+}
+
+// ==========================================
+// PAGINATION FUNCTIONS
+// ==========================================
+function updatePaginationControls() {
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const pageIndicator = document.getElementById('pageIndicator');
+
+    // Update page indicator
+    pageIndicator.textContent = `Page ${currentPage} of ${totalPages}`;
+
+    // Disable/enable buttons
+    prevBtn.disabled = currentPage === 1;
+    nextBtn.disabled = currentPage === totalPages;
+}
+
+window.previousPage = function() {
+    if (currentPage > 1) {
+        currentPage--;
+        renderRooms(filteredRooms);
+        // Scroll to top of rooms container
+        roomsContainer.scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
+window.nextPage = function() {
+    if (currentPage < totalPages) {
+        currentPage++;
+        renderRooms(filteredRooms);
+        // Scroll to top of rooms container
+        roomsContainer.scrollIntoView({ behavior: 'smooth' });
     }
 }
 

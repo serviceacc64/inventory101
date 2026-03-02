@@ -123,6 +123,19 @@
             <div id="roomsContainer" class="rooms-grid">
                 <!-- Rooms will be rendered here dynamically -->
             </div>
+
+            <!-- Pagination Controls -->
+            <div id="paginationContainer" class="pagination-controls" style="display: none;">
+                <button id="prevBtn" class="pagination-btn" onclick="window.previousPage()">
+                    <i class="fa-solid fa-chevron-left"></i> Previous
+                </button>
+                <div class="pagination-info">
+                    <span id="pageIndicator">Page 1</span>
+                </div>
+                <button id="nextBtn" class="pagination-btn" onclick="window.nextPage()">
+                    Next <i class="fa-solid fa-chevron-right"></i>
+                </button>
+            </div>
         </section>
     </main>
 
