@@ -33,6 +33,12 @@ let allEquipment = [];
 let allSuppliers = [];
 let isFetchingSuppliers = false; // Flag to prevent duplicate fetches
 
+// Pagination state
+let currentPage = 1;
+const itemsPerPage = 16; // 16 items per page for the grid layout
+let filteredEquipment = [];
+let totalPages = 1;
+
 // Store unique suppliers (for deduplication)
 function getUniqueSuppliers(suppliers) {
     const seen = new Set();
@@ -120,6 +126,9 @@ async function fetchEquipment() {
         if (error) throw error;
         
         allEquipment = equipment || [];
+        filteredEquipment = allEquipment;
+        currentPage = 1;
+        totalPages = Math.ceil(allEquipment.length / itemsPerPage);
         renderEquipment(allEquipment);
         
         // Show empty state if no equipment
@@ -145,9 +154,24 @@ async function fetchEquipment() {
 function renderEquipment(equipment) {
     const equipmentList = document.getElementById('equipmentList');
     if (!equipmentList) return;
+
+    // Calculate pagination
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginatedEquipment = equipment.slice(startIndex, endIndex);
+
+    // Show/hide pagination controls
+    const paginationContainer = document.getElementById('paginationContainer');
+    if (equipment.length > itemsPerPage) {
+        paginationContainer.style.display = 'flex';
+        updatePaginationControls();
+    } else {
+        paginationContainer.style.display = 'none';
+    }
+
     equipmentList.innerHTML = '';
 
-    if (equipment.length === 0) {
+    if (paginatedEquipment.length === 0) {
         equipmentList.innerHTML = `
             <div class="empty-state" style="padding: 30px; text-align: center;">
                 <i class="fa-solid fa-box-open"></i>
@@ -157,7 +181,7 @@ function renderEquipment(equipment) {
         return;
     }
 
-    equipment.forEach(item => {
+    paginatedEquipment.forEach(item => {
         const itemEl = document.createElement('div');
         itemEl.className = 'equipment-card';
         itemEl.dataset.equipmentId = item.id;
@@ -202,6 +226,40 @@ function renderEquipment(equipment) {
 
         equipmentList.appendChild(itemEl);
     });
+}
+
+// ==========================================
+// PAGINATION FUNCTIONS
+// ==========================================
+function updatePaginationControls() {
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const pageIndicator = document.getElementById('pageIndicator');
+
+    // Update page indicator
+    pageIndicator.textContent = `Page ${currentPage} of ${totalPages}`;
+
+    // Disable/enable buttons
+    prevBtn.disabled = currentPage === 1;
+    nextBtn.disabled = currentPage === totalPages;
+}
+
+window.previousPage = function() {
+    if (currentPage > 1) {
+        currentPage--;
+        renderEquipment(filteredEquipment);
+        // Scroll to top of equipment list
+        document.getElementById('equipmentList').scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
+window.nextPage = function() {
+    if (currentPage < totalPages) {
+        currentPage++;
+        renderEquipment(filteredEquipment);
+        // Scroll to top of equipment list
+        document.getElementById('equipmentList').scrollIntoView({ behavior: 'smooth' });
+    }
 }
 
 // ==========================================
@@ -629,7 +687,10 @@ function filterEquipment() {
     const filterType = searchFilter ? searchFilter.value : 'all';
     
     if (!query) {
-        renderEquipment(allEquipment);
+        filteredEquipment = allEquipment;
+        currentPage = 1;
+        totalPages = Math.ceil(filteredEquipment.length / itemsPerPage);
+        renderEquipment(filteredEquipment);
         return;
     }
     
@@ -666,6 +727,9 @@ function filterEquipment() {
         }
     });
     
+    filteredEquipment = filtered;
+    currentPage = 1;
+    totalPages = Math.ceil(filteredEquipment.length / itemsPerPage);
     renderEquipment(filtered);
 }
 
