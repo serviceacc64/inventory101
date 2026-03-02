@@ -6,13 +6,25 @@ const equipmentContainer = document.getElementById('equipmentContainer');
 const loadingState = document.getElementById('loadingState');
 const errorState = document.getElementById('errorState');
 const emptyState = document.getElementById('emptyState');
-const equipmentTableBody = document.getElementById('equipmentTableBody');
 const createEquipmentModal = document.getElementById('createEquipmentModal');
 const editEquipmentModal = document.getElementById('editEquipmentModal');
 const addSupplierModal = document.getElementById('addSupplierModal');
 const equipmentSearch = document.getElementById('equipmentSearch');
 const searchFilter = document.getElementById('searchFilter');
 const clearSearch = document.getElementById('clearSearch');
+
+// View Equipment Modal elements
+const viewEquipmentModal = document.getElementById('viewEquipmentModal');
+const viewEquipmentName = document.getElementById('viewEquipmentName');
+const viewEquipmentReceipt = document.getElementById('viewEquipmentReceipt');
+const viewEquipmentQuantity = document.getElementById('viewEquipmentQuantity');
+const viewEquipmentUnitCost = document.getElementById('viewEquipmentUnitCost');
+const viewEquipmentSupplier = document.getElementById('viewEquipmentSupplier');
+const viewEquipmentAccountable = document.getElementById('viewEquipmentAccountable');
+const viewEquipmentReceivedBy = document.getElementById('viewEquipmentReceivedBy');
+const viewEquipmentDate = document.getElementById('viewEquipmentDate');
+const viewEquipmentEditBtn = document.getElementById('viewEquipmentEditBtn');
+const viewEquipmentDeleteBtn = document.getElementById('viewEquipmentDeleteBtn');
 
 // Store all equipment for search functionality
 let allEquipment = [];
@@ -128,57 +140,67 @@ async function fetchEquipment() {
 }
 
 // ==========================================
-// 2. RENDER EQUIPMENT TO THE TABLE
+// 2. RENDER EQUIPMENT (card-based uniform view)
 // ==========================================
 function renderEquipment(equipment) {
-    equipmentTableBody.innerHTML = '';
-    
+    const equipmentList = document.getElementById('equipmentList');
+    if (!equipmentList) return;
+    equipmentList.innerHTML = '';
+
     if (equipment.length === 0) {
-        equipmentTableBody.innerHTML = `
-            <tr>
-                <td colspan="11" class="empty-cell">
-                    <i class="fa-solid fa-box-open"></i>
-                    <p>No equipment found</p>
-                </td>
-            </tr>
+        equipmentList.innerHTML = `
+            <div class="empty-state" style="padding: 30px; text-align: center;">
+                <i class="fa-solid fa-box-open"></i>
+                <p>No equipment found</p>
+            </div>
         `;
         return;
     }
-    
-    equipment.forEach((item, index) => {
-        const tr = document.createElement('tr');
-        
-        // Calculate amount = quantity * unit_cost
-        const amount = item.quantity * item.unit_cost;
-        
-        // Get supplier name from joined data
+
+    equipment.forEach(item => {
+        const itemEl = document.createElement('div');
+        itemEl.className = 'equipment-card';
+        itemEl.dataset.equipmentId = item.id;
+
+        const amount = (item.quantity || 0) * (item.unit_cost || 0);
         const supplierName = item.suppliers ? item.suppliers.supplier_name : '-';
-        const accountable = item.accountable || '-';
-        const receivedBy = item.received_by || '-';
         const receiptNumber = item.receipt_number || '-';
-        
-        tr.innerHTML = `
-            <td class="col-receipt">${escapeHtml(receiptNumber)}</td>
-            <td class="col-name">${escapeHtml(item.item_name)}</td>
-            <td class="col-description">${escapeHtml(item.item_description || '-')}</td>
-            <td class="col-quantity">${item.quantity}</td>
-            <td class="col-unit-cost currency">${formatCurrency(item.unit_cost)}</td>
-            <td class="col-amount currency">${formatCurrency(amount)}</td>
-            <td class="col-supplier">${escapeHtml(supplierName)}</td>
-            <td class="col-accountable">${escapeHtml(accountable)}</td>
-            <td class="col-received">${escapeHtml(receivedBy)}</td>
-            <td class="col-date">${item.date_delivered ? formatDate(item.date_delivered) : '-'}</td>
-            <td class="col-actions">
-                <button onclick="window.openEditEquipmentModal('${item.id}')" class="action-btn edit" title="Edit">
-                    <i class="fa-solid fa-edit"></i>
-                </button>
-                <button onclick="window.deleteEquipment('${item.id}')" class="action-btn delete" title="Delete">
-                    <i class="fa-solid fa-trash"></i>
-                </button>
-            </td>
+        const updatedAt = item.updated_at || item.created_at || null;
+        const updatedDisplay = updatedAt ? new Date(updatedAt).toLocaleDateString() : 'Recently';
+
+        itemEl.innerHTML = `
+            <div class="stat-icon" style="width:50px; height:50px; border-radius:8px; background: var(--hover); color: #fff; display:flex; align-items:center; justify-content:center;">
+                <i class="fa-solid fa-tools"></i>
+            </div>
+
+            <div class="equipment-header">
+                <h3 class="equipment-name"><span class="equipment-badge">${escapeHtml(receiptNumber)}</span>${escapeHtml(item.item_name)}</h3>
+                <div class="equipment-actions">
+                    <button onclick="window.openEditEquipmentModal('${item.id}')" title="Edit">
+                        <i class="fa-solid fa-edit"></i>
+                    </button>
+                    <button onclick="window.deleteEquipment('${item.id}')" title="Delete">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+            ${item.item_description ? `<p class="equipment-description">${escapeHtml(item.item_description)}</p>` : ''}
+            <div class="equipment-meta">
+                <p>Qty: ${item.quantity} | Unit Cost: ${formatCurrency(item.unit_cost || 0)} | Amount: ${formatCurrency(amount)}</p>
+                <p>Supplier: ${escapeHtml(supplierName)}</p>
+                <p>Delivered: ${item.date_delivered ? formatDate(item.date_delivered) : '-'}</p>
+                <p>Last updated: ${escapeHtml(updatedDisplay)}</p>
+            </div>
+
         `;
-        
-        equipmentTableBody.appendChild(tr);
+
+        // Open view modal when clicking the card (ignore clicks on buttons)
+        itemEl.addEventListener('click', function(e) {
+            if (e.target.closest('button') || e.target.closest('.btn') || e.target.closest('.action-btn')) return;
+            openViewEquipmentModal(item.id);
+        });
+
+        equipmentList.appendChild(itemEl);
     });
 }
 
@@ -296,6 +318,47 @@ function openEditEquipmentModal(equipmentId) {
 function closeEditEquipmentModal() {
     editEquipmentModal.style.display = 'none';
 }
+
+// ==========================================
+// VIEW EQUIPMENT ITEM
+// ==========================================
+function openViewEquipmentModal(equipmentId) {
+    const item = allEquipment.find(e => e.id === equipmentId);
+    if (!item) return;
+
+    if (viewEquipmentName) viewEquipmentName.textContent = item.item_name;
+    if (viewEquipmentReceipt) viewEquipmentReceipt.textContent = item.receipt_number || '-';
+    if (viewEquipmentQuantity) viewEquipmentQuantity.textContent = `${item.quantity}`;
+    if (viewEquipmentUnitCost) viewEquipmentUnitCost.textContent = formatCurrency(item.unit_cost || 0);
+    if (viewEquipmentSupplier) viewEquipmentSupplier.textContent = item.suppliers ? item.suppliers.supplier_name : '-';
+    if (viewEquipmentAccountable) viewEquipmentAccountable.textContent = item.accountable || '-';
+    if (viewEquipmentReceivedBy) viewEquipmentReceivedBy.textContent = item.received_by || '-';
+    if (viewEquipmentDate) viewEquipmentDate.textContent = item.date_delivered ? formatDate(item.date_delivered) : '-';
+
+    if (viewEquipmentModal) {
+        viewEquipmentModal.style.display = 'flex';
+        viewEquipmentModal.dataset.itemId = item.id;
+    }
+
+    if (viewEquipmentEditBtn) {
+        viewEquipmentEditBtn.onclick = () => {
+            window.closeViewEquipmentModal();
+            openEditEquipmentModal(item.id);
+        };
+    }
+
+    if (viewEquipmentDeleteBtn) {
+        viewEquipmentDeleteBtn.onclick = () => {
+            if (!confirm('Delete this equipment item?')) return;
+            window.deleteEquipment(item.id);
+            window.closeViewEquipmentModal();
+        };
+    }
+}
+
+window.closeViewEquipmentModal = function() {
+    if (viewEquipmentModal) viewEquipmentModal.style.display = 'none';
+};
 
 async function handleEditEquipment(event) {
     event.preventDefault();

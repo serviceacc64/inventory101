@@ -50,7 +50,126 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
-/* Equipment Table Wrapper */
+/* Card styling for equipment list (activity items will be replaced) */
+#equipmentList .activity-item {
+    background: #fff;
+    border-left: 6px solid var(--hover);
+    transition: transform 0.2s, box-shadow 0.2s;
+    color: var(--textcolor2);
+}
+
+/* new equipment card header/actions */
+.equipment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+}
+
+.equipment-name {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--textcolor2);
+    word-break: break-word;
+    flex: 1;
+    line-height: 1.3;
+}
+
+.equipment-actions {
+    display: flex;
+    gap: 8px;
+    margin-left: 10px;
+}
+
+.equipment-actions button {
+    padding: 6px 10px;
+    font-size: 12px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: 0.2s;
+    background-color: rgba(137, 22, 35, 0.15);
+    color: var(--textcolor2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.equipment-actions button:hover {
+    background-color: rgba(137, 22, 35, 0.25);
+    color: var(--hover);
+}
+
+.equipment-description {
+    color: #666;
+    font-size: 13px;
+    margin-bottom: 15px;
+    line-height: 1.4;
+}
+
+.equipment-meta {
+    margin-bottom: 10px;
+    font-size: 11px;
+    color: #666;
+}
+
+.equipment-meta p {
+    margin: 3px 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    line-height: 1.3;
+}
+
+#equipmentList .activity-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    background: #f9f9f9;
+}
+
+.equipment-badge {
+    display: inline-block;
+    background-color: var(--hover);
+    color: var(--textcolor);
+    padding: 2px 6px;
+    font-size: 11px;
+    border-radius: 4px;
+    margin-right: 8px;
+    font-weight: 600;
+}
+
+#equipmentList .stat-icon {
+    background: var(--hover);
+    color: #fff;
+}
+
+/* Equipment Grid and Cards */
+.equipment-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.equipment-card {
+    background-color: var(--background);
+    border-radius: 10px;
+    padding: 15px;
+    border: 1px solid rgba(41, 6, 10, 0.15);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+    transition: 0.3s;
+    display: flex;
+    flex-direction: column;
+    min-height: 260px;
+}
+
+.equipment-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 20px rgba(0, 0, 0, 0.25);
+}
+
+/* residual scroll wrapper still used for grid container */
 .equipment-table-wrapper {
     overflow-x: auto;
     overflow-y: auto;
@@ -58,12 +177,6 @@
     border-radius: 8px;
     border: 1px solid rgba(0, 0, 0, 0.08);
     background: #fff;
-}
-
-/* Make table fit container width */
-.equipment-table {
-    width: 100%;
-    min-width: 800px;
 }
 
 /* Custom scrollbar */

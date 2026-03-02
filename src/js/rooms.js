@@ -43,6 +43,17 @@ const editRoomItemDescription = document.getElementById('editRoomItemDescription
 const editRoomItemRemarks = document.getElementById('editRoomItemRemarks');
 const editRoomItemUnitValue = document.getElementById('editRoomItemUnitValue');
 
+// View Room Item Modal elements
+const viewRoomItemModal = document.getElementById('viewRoomItemModal');
+const viewRoomItemName = document.getElementById('viewRoomItemName');
+const viewRoomItemQuantity = document.getElementById('viewRoomItemQuantity');
+const viewRoomItemUnits = document.getElementById('viewRoomItemUnits');
+const viewRoomItemCondition = document.getElementById('viewRoomItemCondition');
+const viewRoomItemDescription = document.getElementById('viewRoomItemDescription');
+const viewRoomItemRemarks = document.getElementById('viewRoomItemRemarks');
+const viewRoomEditBtn = document.getElementById('viewRoomEditBtn');
+const viewRoomDeleteBtn = document.getElementById('viewRoomDeleteBtn');
+
 
 // State
 let allRooms = [];
@@ -473,6 +484,66 @@ window.handleDeleteRoomItem = async function() {
     }
 };
 
+// ==========================================
+// VIEW ROOM ITEM
+// ==========================================
+function openViewRoomItemModal(itemId) {
+    // fetch item details
+    const item = document.querySelector(`[data-room-item-id]`) && null; // placeholder
+    // prefer to find from currently loaded list by making a query
+    (async () => {
+        try {
+            const { data: item, error } = await supabase
+                .from('room_items')
+                .select('*')
+                .eq('id', itemId)
+                .single();
+
+            if (error || !item) {
+                console.error('Room item not found', error);
+                return;
+            }
+
+            if (viewRoomItemName) viewRoomItemName.textContent = item.item_name;
+            if (viewRoomItemQuantity) viewRoomItemQuantity.textContent = `${item.quantity} ${item.units || 'pcs'}`;
+            if (viewRoomItemUnits) viewRoomItemUnits.textContent = item.units || '-';
+            if (viewRoomItemCondition) viewRoomItemCondition.textContent = item.condition || '-';
+            if (viewRoomItemDescription) viewRoomItemDescription.textContent = item.description || '-';
+            if (viewRoomItemRemarks) viewRoomItemRemarks.textContent = item.remarks || '-';
+
+            if (viewRoomItemModal) {
+                viewRoomItemModal.style.display = 'flex';
+                viewRoomItemModal.dataset.itemId = item.id;
+            }
+
+            if (viewRoomEditBtn) {
+                viewRoomEditBtn.onclick = () => {
+                    window.closeViewRoomItemModal();
+                    window.openEditRoomItemModal(item.id);
+                };
+            }
+
+            if (viewRoomDeleteBtn) {
+                viewRoomDeleteBtn.onclick = () => {
+                    if (!confirm('Delete this item from room?')) return;
+                    // open edit modal with id then call delete
+                    window.openEditRoomItemModal(item.id);
+                    setTimeout(() => {
+                        window.handleDeleteRoomItem();
+                        window.closeViewRoomItemModal();
+                    }, 200);
+                };
+            }
+        } catch (err) {
+            console.error('Error opening room item modal', err);
+        }
+    })();
+}
+
+window.closeViewRoomItemModal = function() {
+    if (viewRoomItemModal) viewRoomItemModal.style.display = 'none';
+};
+
 // Close modals when clicking outside
 window.addEventListener('click', (event) => {
     if (event.target === createRoomModal) window.closeCreateRoomModal();
@@ -658,6 +729,16 @@ function renderRoomItems(items) {
 
         roomItemsList.appendChild(row);
     });
+
+    // Attach click handlers to open view modal for each row (delegation alternative)
+    roomItemsList.querySelectorAll('.room-item-row').forEach(row => {
+        row.addEventListener('click', function(e) {
+            // ignore clicks on buttons inside row
+            if (e.target.closest('button') || e.target.closest('.room-item-actions')) return;
+            const id = this.dataset.roomItemId;
+            openViewRoomItemModal(id);
+        });
+    });
 }
 
 // Helper function to get condition badge class
@@ -713,61 +794,106 @@ window.exportRoomItemsToExcel = async function() {
 
         const items = roomItems || [];
 
-        // Prepare data for Excel with room name as title
-        const exportData = [
-            { 'No.': '', 'Item Name': `Room: ${room.name}`, 'Quantity': '', 'Units': '', 'Condition': '', 'Description': '', 'Remarks': '', 'Type': '', 'Date Added': '' },
-            { 'No.': '', 'Item Name': '', 'Quantity': '', 'Units': '', 'Condition': '', 'Description': '', 'Remarks': '', 'Type': '', 'Date Added': '' },
-            ...items.map((item, index) => ({
-                'No.': index + 1,
-                'Item Name': item.item_name,
-                'Quantity': item.quantity,
-                'Units': item.units || 'pcs',
-                'Condition': item.condition || 'Good',
-                'Description': item.description || '-',
-                'Remarks': item.remarks || '-',
-                'Type': item.item_id ? 'Inventory' : 'Custom',
-                'Date Added': item.created_at ? new Date(item.created_at).toLocaleDateString() : '-'
-            }))
-        ];
+        // Try to use template-based export first
+        let workbook = null;
+        let usedTemplate = false;
+        
+        try {
+            // Check if TemplateManager is available
+            if (window.TemplateManager) {
+                console.log('Looking for CLASSROOM INVENTORY template...');
+                
+                // Fetch the CLASSROOM INVENTORY template
+                const template = await window.TemplateManager.fetchTemplateByName('CLASSROOM INVENTORY');
+                
+                if (template) {
+                    console.log('Found template, filling with data...');
+                    
+                    // Prepare data with room name included
+                    const exportData = items.map(item => ({
+                        name: item.item_name,
+                        description: item.description || '',
+                        unit: item.units || 'pcs',
+                        quantity: item.quantity,
+                        room_name: room.name,
+                        condition: item.condition || 'Good',
+                        remarks: item.remarks || ''
+                    }));
+                    
+                    // Fill template with data (handles dynamic row extension)
+                    workbook = await window.TemplateManager.fillTemplateWithData(template, exportData);
+                    
+                    if (workbook) {
+                        usedTemplate = true;
+                        console.log('Template filled successfully with dynamic row extension');
+                    }
+                } else {
+                    console.log('No CLASSROOM INVENTORY template found, using default export');
+                }
+            }
+        } catch (templateError) {
+            console.warn('Template-based export failed, falling back to default:', templateError);
+        }
 
-        console.log('Export data:', exportData);
-        console.log('XLSX available:', typeof XLSX !== 'undefined');
+        // If template export failed or wasn't available, use default export
+        if (!workbook) {
+            console.log('Using default JSON-to-sheet export');
+            
+            // Prepare data for Excel with room name as title
+            const exportData = [
+                { 'No.': '', 'Item Name': `Room: ${room.name}`, 'Quantity': '', 'Units': '', 'Condition': '', 'Description': '', 'Remarks': '', 'Type': '', 'Date Added': '' },
+                { 'No.': '', 'Item Name': '', 'Quantity': '', 'Units': '', 'Condition': '', 'Description': '', 'Remarks': '', 'Type': '', 'Date Added': '' },
+                ...items.map((item, index) => ({
+                    'No.': index + 1,
+                    'Item Name': item.item_name,
+                    'Quantity': item.quantity,
+                    'Units': item.units || 'pcs',
+                    'Condition': item.condition || 'Good',
+                    'Description': item.description || '-',
+                    'Remarks': item.remarks || '-',
+                    'Type': item.item_id ? 'Inventory' : 'Custom',
+                    'Date Added': item.created_at ? new Date(item.created_at).toLocaleDateString() : '-'
+                }))
+            ];
 
-        // Create workbook and worksheet
-        const ws = XLSX.utils.json_to_sheet(exportData);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, room.name);
+            // Create workbook and worksheet
+            const ws = XLSX.utils.json_to_sheet(exportData);
+            workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, ws, room.name);
 
-        // Style the header row (optional - basic styling)
-        ws['!cols'] = [
-            { wch: 6 },  // No.
-            { wch: 25 }, // Item Name
-            { wch: 10 }, // Quantity
-            { wch: 10 }, // Units
-            { wch: 12 }, // Condition
-            { wch: 30 }, // Description
-            { wch: 30 }, // Remarks
-            { wch: 12 }, // Type
-            { wch: 15 }  // Date Added
-        ];
+            // Style the header row (optional - basic styling)
+            ws['!cols'] = [
+                { wch: 6 },  // No.
+                { wch: 25 }, // Item Name
+                { wch: 10 }, // Quantity
+                { wch: 10 }, // Units
+                { wch: 12 }, // Condition
+                { wch: 30 }, // Description
+                { wch: 30 }, // Remarks
+                { wch: 12 }, // Type
+                { wch: 15 }  // Date Added
+            ];
+        }
 
         // Generate filename with room name and timestamp
         const timestamp = new Date().toISOString().split('T')[0];
         const filename = `${room.name}_items_${timestamp}.xlsx`;
 
         console.log('Attempting to export file:', filename);
+        console.log('Used template:', usedTemplate);
 
         // Write the file
-        XLSX.writeFile(wb, filename);
+        XLSX.writeFile(workbook, filename);
 
         console.log('Export successful:', filename);
-        showSuccessMessage(`Exported ${items.length} item(s) to ${filename}`);
+        showSuccessMessage(`Exported ${items.length} item(s) to ${filename}${usedTemplate ? ' (using template)' : ''}`);
     } catch (error) {
         console.error('Error exporting items:', error);
         console.log('Full error object:', error);
         showError('Failed to export items to Excel');
     }
 }
+
 
 // ==========================================
 // ADD CUSTOM ITEM TO ROOM

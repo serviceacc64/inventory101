@@ -39,6 +39,15 @@ const getItemPerson = document.getElementById('getItemPerson');
 const getItemQuantity = document.getElementById('getItemQuantity');
 const getItemTimestamp = document.getElementById('getItemTimestamp');
 
+// View Item Modal Elements
+const viewItemModal = document.getElementById('viewItemModal');
+const viewItemName = document.getElementById('viewItemName');
+const viewItemLabel = document.getElementById('viewItemLabel');
+const viewItemUnit = document.getElementById('viewItemUnit');
+const viewItemQuantity = document.getElementById('viewItemQuantity');
+const viewItemPO = document.getElementById('viewItemPO');
+const viewItemUpdatedAt = document.getElementById('viewItemUpdatedAt');
+
 
 
 
@@ -175,7 +184,15 @@ function renderItems(items) {
                 </button>
             </div>
         `;
-        
+
+        // Clicking the card (except on action buttons) opens the view modal
+        itemEl.addEventListener('click', function(e) {
+            if (e.target.closest('button') || e.target.closest('.btn')) {
+                return; // let buttons handle their own onclicks
+            }
+            openViewItemModal(item.id);
+        });
+
         itemsContainer.appendChild(itemEl);
     });
 }
@@ -293,6 +310,66 @@ function cancelSelection() {
     selectableItemsList.style.display = 'block';
     if (addQuantity) addQuantity.value = '';
     if (selectedItemId) selectedItemId.value = '';
+}
+
+// ==========================================
+// VIEW ITEM MODAL
+// ==========================================
+function openViewItemModal(itemId) {
+    const item = allItems.find(i => i.id === itemId);
+    if (!item) return;
+
+    if (viewItemName) viewItemName.textContent = item.name;
+    if (viewItemLabel) viewItemLabel.textContent = item.label || 'No Category';
+    if (viewItemUnit) viewItemUnit.textContent = item.unit || '-';
+    if (viewItemQuantity) viewItemQuantity.textContent = `${item.quantity}${item.unit ? ' ' + item.unit : ' units'}`;
+    if (viewItemPO) viewItemPO.textContent = item.po_number || '-';
+    const updated = item.updated_at || item.created_at || null;
+    if (viewItemUpdatedAt) viewItemUpdatedAt.textContent = updated ? new Date(updated).toLocaleString() : 'N/A';
+
+    // store current viewed item id for action buttons
+    if (viewItemModal) {
+        viewItemModal.style.display = 'flex';
+        viewItemModal.dataset.itemId = item.id;
+    }
+
+    // wire action buttons
+    const editBtn = document.getElementById('viewEditBtn');
+    const addStockBtn = document.getElementById('viewAddStockBtn');
+    const getBtn = document.getElementById('viewGetBtn');
+
+    if (editBtn) {
+        editBtn.onclick = () => {
+            closeViewItemModal();
+            openEditModal(item.id);
+        };
+    }
+
+    if (addStockBtn) {
+        addStockBtn.onclick = () => {
+            closeViewItemModal();
+            // Open select modal and directly show selected item details
+            openSelectItemModal();
+            // small delay to ensure modal elements rendered
+            setTimeout(() => {
+                selectItem(item);
+            }, 120);
+        };
+    }
+
+    if (getBtn) {
+        getBtn.onclick = () => {
+            closeViewItemModal();
+            openGetItemModal();
+            setTimeout(() => {
+                selectGetItem(item);
+            }, 120);
+        };
+    }
+}
+
+function closeViewItemModal() {
+    if (viewItemModal) viewItemModal.style.display = 'none';
 }
 
 async function handleUpdateQuantity(event) {
@@ -1054,6 +1131,15 @@ editItemModal.addEventListener('click', function(e) {
     }
 });
 
+// View Item Modal outside click handler
+if (viewItemModal) {
+    viewItemModal.addEventListener('click', function(e) {
+        if (e.target === viewItemModal) {
+            closeViewItemModal();
+        }
+    });
+}
+
 // Get Item Modal Event Listeners
 if (getItemModal) {
     getItemModal.addEventListener('click', function(e) {
@@ -1127,3 +1213,6 @@ window.openGetItemModal = openGetItemModal;
 window.closeGetItemModal = closeGetItemModal;
 window.handleGetItemSubmit = handleGetItemSubmit;
 window.cancelGetItemSelection = cancelGetItemSelection;
+// View Item modal globals
+window.openViewItemModal = openViewItemModal;
+window.closeViewItemModal = closeViewItemModal;

@@ -415,6 +415,48 @@ body{
     font-size: 14px;
 }
 
+/* View Item Modal - uniform design */
+.view-item-grid {
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    gap: 16px;
+    align-items: start;
+}
+
+.view-item-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.view-item-details h4 {
+    margin: 0 0 8px 0;
+    color: var(--background2);
+    font-size: 18px;
+}
+
+.view-item-meta div {
+    margin-bottom: 6px;
+    color: #444;
+    font-size: 14px;
+}
+
+.view-item-actions {
+    margin-top: 18px;
+    justify-content: flex-end;
+}
+
+/* Make primary action stand out */
+#viewAddStockBtn {
+    background-color: var(--hover);
+    color: var(--textcolor);
+}
+
+#viewEditBtn, #viewGetBtn, #viewCloseBtn {
+    background-color: var(--background);
+    color: var(--textcolor2);
+}
+
 /* Search box in modal */
 #modalItemSearch {
     width: 100%;

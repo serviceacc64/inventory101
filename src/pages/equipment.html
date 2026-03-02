@@ -25,6 +25,7 @@
             window.location.href = '../../index.html';
         }
     </script>
+    
 
     
     <!-- Navigation -->
@@ -115,28 +116,11 @@
                 <p>Click "Add Equipment" to add your first equipment.</p>
             </div>
 
-            <!-- Equipment Table -->
+            <!-- Equipment Grid (similar to rooms page) -->
             <div id="equipmentContainer" class="equipment-table-wrapper">
-                <table class="equipment-table" id="equipmentTable">
-                    <thead>
-                        <tr>
-                            <th class="col-receipt">P.O. No:</th>
-                            <th class="col-name">Item Name</th>
-                            <th class="col-description">Item Description</th>
-                            <th class="col-quantity">Quantity</th>
-                            <th class="col-unit-cost">Unit Cost</th>
-                            <th class="col-amount">Amount</th>
-                            <th class="col-supplier">Supplier</th>
-                            <th class="col-accountable">Accountable</th>
-                            <th class="col-received">Received By</th>
-                            <th class="col-date">Date Delivered</th>
-                            <th class="col-actions">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="equipmentTableBody">
-                        <!-- Equipment will be rendered here dynamically -->
-                    </tbody>
-                </table>
+                <div id="equipmentList" class="equipment-grid">
+                    <!-- Equipment cards will be rendered here dynamically -->
+                </div>
             </div>
         </section>
     </main>
@@ -343,6 +327,43 @@
             
             <div class="modal-footer">
                 <button type="button" onclick="closeManageSuppliersModal()" class="btn btn-secondary">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Equipment Item Modal (uniform design) -->
+    <div id="viewEquipmentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Equipment Details</h3>
+                <button onclick="window.closeViewEquipmentModal()">&times;</button>
+            </div>
+
+            <div class="view-item-grid">
+                <div class="view-item-icon">
+                    <div class="stat-icon" style="width:70px; height:70px; border-radius:12px; background: rgba(85,0,0,0.06); color: var(--background2); display:flex; align-items:center; justify-content:center; font-size:28px;">
+                        <i class="fa-solid fa-tools"></i>
+                    </div>
+                </div>
+
+                <div class="view-item-details">
+                    <h4 id="viewEquipmentName">Item Name</h4>
+                    <div class="view-item-meta">
+                        <div><strong>P.O. No:</strong> <span id="viewEquipmentReceipt">-</span></div>
+                        <div><strong>Quantity:</strong> <span id="viewEquipmentQuantity">-</span></div>
+                        <div><strong>Unit Cost:</strong> <span id="viewEquipmentUnitCost">-</span></div>
+                        <div><strong>Supplier:</strong> <span id="viewEquipmentSupplier">-</span></div>
+                        <div><strong>Accountable:</strong> <span id="viewEquipmentAccountable">-</span></div>
+                        <div><strong>Received By:</strong> <span id="viewEquipmentReceivedBy">-</span></div>
+                        <div><strong>Date Delivered:</strong> <span id="viewEquipmentDate">-</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions view-item-actions">
+                <button type="button" id="viewEquipmentEditBtn" class="btn btn-secondary">Edit</button>
+                <button type="button" id="viewEquipmentDeleteBtn" class="btn btn-danger">Delete</button>
+                <button type="button" id="viewEquipmentCloseBtn" class="btn btn-secondary" onclick="window.closeViewEquipmentModal()">Close</button>
             </div>
         </div>
     </div>
