@@ -1,5 +1,6 @@
 // Import Supabase client
 import { supabase } from './supabase.js';
+import { buildRoomWorkbook, writeWorkbook } from './exportHelpers.js';
 
 // DOM Elements
 const loadingState = document.getElementById('loadingState');
@@ -1738,25 +1739,33 @@ async function generateRoomsReportWithFormData() {
             }
         }
 
-        // Fallback to default export
-        const exportData = enrichedRoomItems.map(item => ({
-            'Item Name': item.name,
-            'Room Name': item.room_name,
-            'Quantity': item.quantity,
-            'Date Added': new Date(item.created_at).toLocaleString(),
-            'Report Date': roomsReportFormData?.reportDate || '',
-            'Prepared By': roomsReportFormData?.preparedBy || '',
-            'Department': roomsReportFormData?.department || '',
-            'Notes': roomsReportFormData?.notes || ''
-        }));
-        
-        const filenameBase = `rooms_inventory_report_${new Date().toISOString().split('T')[0]}`;
-        
-        const ws = XLSX.utils.json_to_sheet(exportData);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'Rooms');
-        XLSX.writeFile(wb, `${filenameBase}.xlsx`);
-        
+        // Fallback to default export – use shared helper so the layout matches rooms.html
+        const workbook = buildRoomWorkbook(enrichedRoomItems, 'Rooms Report');
+
+        // optionally add report-specific metadata cells (these were earlier
+        // written directly to the sheet in the template branch); we can
+        // re‑apply them if present in roomsReportFormData
+        if (!roomsReportFormData) {
+            roomsReportFormData = {};
+        }
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        if (roomsReportFormData.reportDate) {
+            worksheet['C8'] = { v: new Date(roomsReportFormData.reportDate).toLocaleDateString(), t: 's' };
+        }
+        if (roomsReportFormData.preparedBy) {
+            worksheet['B35'] = { v: roomsReportFormData.preparedBy, t: 's' };
+        }
+        if (roomsReportFormData.department) {
+            worksheet['F35'] = { v: roomsReportFormData.department, t: 's' };
+        }
+        if (roomsReportFormData.notes) {
+            worksheet['B30'] = { v: roomsReportFormData.notes, t: 's' };
+        }
+
+        // Write workbook using helper; helper appends current date automatically
+        writeWorkbook(workbook, 'rooms_inventory_report');
+
         alert('Report generated successfully!');
     } catch (error) {
         console.error('Error generating rooms report:', error);
