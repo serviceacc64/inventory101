@@ -615,12 +615,23 @@ function openEditModal(itemId) {
         editItemUnit.value = '';
     }
     
+    // Populate the date field with the item's existing date (if available)
+    const editItemDate = document.getElementById('editItemDate');
+    if (item.created_at) {
+        const itemDate = new Date(item.created_at);
+        editItemDate.value = itemDate.toISOString().split('T')[0];
+    } else {
+        editItemDate.value = '';
+    }
+    
     editItemModal.style.display = 'flex';
 }
 
 
 function closeEditModal() {
     editItemModal.style.display = 'none';
+    // Reset date field
+    document.getElementById('editItemDate').value = '';
 }
 
 async function handleEditItem(event) {
@@ -631,6 +642,7 @@ async function handleEditItem(event) {
     const label = document.getElementById('editItemLabel').value.trim();
     const quantity = parseInt(document.getElementById('editItemQuantity').value);
     const unit = document.getElementById('editItemUnit').value.trim();
+    const editItemDate = document.getElementById('editItemDate').value;
     
     if (!name || isNaN(quantity)) {
         alert('Please fill in all required fields');
@@ -654,8 +666,7 @@ async function handleEditItem(event) {
         const updateData = { 
             name: name,
             label: label,
-            quantity: quantity,
-            updated_at: new Date().toISOString()
+            quantity: quantity
         };
         
         // Add or remove unit based on category
@@ -663,6 +674,15 @@ async function handleEditItem(event) {
             updateData.unit = unit;
         } else {
             updateData.unit = null;
+        }
+        
+        // Use custom date if provided, otherwise use current date
+        if (editItemDate) {
+            const dateStr = new Date(editItemDate).toISOString();
+            updateData.created_at = dateStr;
+            updateData.updated_at = dateStr;
+        } else {
+            updateData.updated_at = new Date().toISOString();
         }
         
         const { error } = await supabase
