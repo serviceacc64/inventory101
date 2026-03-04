@@ -504,6 +504,8 @@ function closeCreateItemModal() {
         newItemUnitGroup.style.display = 'none';
         newItemUnit.required = false;
     }
+    // Reset date field
+    document.getElementById('newItemDate').value = '';
 }
 
 async function handleCreateItem(event) {
@@ -514,6 +516,7 @@ async function handleCreateItem(event) {
     const quantity = parseInt(document.getElementById('newItemQuantity').value);
     const unit = document.getElementById('newItemUnit').value.trim();
     const poNumber = document.getElementById('newItemPO').value.trim();
+    const itemDate = document.getElementById('newItemDate').value;
     
     if (!name || isNaN(quantity)) {
         alert('Please fill in all required fields');
@@ -541,6 +544,13 @@ async function handleCreateItem(event) {
         // Add P.O. Number if provided
         if (poNumber) {
             insertData.po_number = poNumber;
+        }
+        
+        // Use custom date if provided, otherwise use current date
+        if (itemDate) {
+            const dateStr = new Date(itemDate).toISOString();
+            insertData.created_at = dateStr;
+            insertData.updated_at = dateStr;
         }
         
         const { data, error } = await supabase

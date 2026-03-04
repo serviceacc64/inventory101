@@ -232,6 +232,12 @@
                     <input type="number" id="newItemQuantity" required min="0" placeholder="e.g., 100">
                 </div>
                 
+                <div class="form-group">
+                    <label for="newItemDate">Date</label>
+                    <input type="date" id="newItemDate" placeholder="Leave empty for today's date">
+                    <small style="color: #666; font-size: 11px;">Set a past date for items acquired before this system was created</small>
+                </div>
+                
                 <div class="form-actions">
                     <button type="button" onclick="closeCreateItemModal()" class="btn btn-secondary">Cancel</button>
                     <button type="submit" class="btn btn-primary">
