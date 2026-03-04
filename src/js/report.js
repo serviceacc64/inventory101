@@ -1232,7 +1232,8 @@ function handleCreateItemsListReportSubmit(e) {
     e.preventDefault();
     
     itemsListReportFormData = {
-        reportDate: document.getElementById('itemsListReportDate')?.value
+        reportDate: document.getElementById('itemsListReportDate')?.value,
+        selectedMonth: document.getElementById('itemsListReportMonth')?.value || ''
     };
     
     closeCreateItemsListReportModal();
@@ -1246,8 +1247,9 @@ async function generateItemsListReportWithFormData() {
         const { default: TemplateManager } = await import('./templateManager.js');
         const activeTemplate = await TemplateManager.fetchTemplateByExportType('items_list');
 
-        // Get the selected month from form
+        // Get the selected month from form data
         const currentYear = new Date().getFullYear();
+        const selectedMonth = itemsListReportFormData?.selectedMonth || '';
         
         // Map selected items to enriched items with details
         let enrichedItems = selectedItemsList.map(selectedItem => {
@@ -1319,7 +1321,7 @@ async function generateItemsListReportWithFormData() {
         if (selectedMonth) {
             const monthIndex = parseInt(selectedMonth) - 1;
             exportData.push({ 'Item Name': '', 'Category': '', 'Quantity': '', 'Unit': '', 'Date Added': '', 'Report Date': '' });
-            exportData.push({ 'Item Name': 'MONTHLY TOTAL', 'Category': '', 'Quantity': monthTotals[monthIndex], 'Unit': '', 'Date Added': '', 'Report Date': '' });
+            exportData.push({ 'Item Name': 'MONTHLY TOTAL (' + months[monthIndex] + ')', 'Category': '', 'Quantity': monthTotals[monthIndex], 'Unit': '', 'Date Added': '', 'Report Date': '' });
         } else {
             exportData.push({ 'Item Name': '', 'Category': '', 'Quantity': '', 'Unit': '', 'Date Added': '', 'Report Date': '' });
             exportData.push({ 'Item Name': 'MONTHLY SUMMARY (' + currentYear + ')', 'Category': '', 'Quantity': '', 'Unit': '', 'Date Added': '', 'Report Date': '' });

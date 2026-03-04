@@ -97,16 +97,18 @@ const TemplateManager = {
     // This eliminates the need to manually set templates as active
     async fetchTemplateByExportType(exportType) {
         try {
+            // Use .overlaps() to check if the array contains the export type
+            // Or use a direct select with filter on the array column
             const { data, error } = await supabase
                 .from('excel_templates')
                 .select('*')
-                .contains('supported_types', [exportType])
+                .overlaps('supported_types', [exportType])
                 .order('created_at', { ascending: false })
                 .limit(1)
                 .single();
             
             if (error && error.code !== 'PGRST116') {
-                console.log(`No template found for export type: ${exportType}`);
+                console.log(`No template found for export type: ${exportType}`, error.message);
                 return null;
             }
             
@@ -482,6 +484,7 @@ const TemplateManager = {
             
             let dataStartsAtRow;
             let fieldToColumnMap;
+            let maxTemplateRows = 10; // Default capacity
 
             if (isClassroomInventory) {
                 // CLASSROOM INVENTORY template specific layout:
@@ -494,6 +497,7 @@ const TemplateManager = {
                 // - Remarks: Column K (index 10), Rows 6-15
                 
                 dataStartsAtRow = 6;
+                maxTemplateRows = 10; // Rows 6-15 = 10 items
                 fieldToColumnMap = {
                     'name': 0,           // Column A - Item Name
                     'description': 1,    // Column B - Description
@@ -510,6 +514,7 @@ const TemplateManager = {
             } else {
                 // Default government form layout for Lost/Stolen/Damaged/Destroyed Items
                 dataStartsAtRow = 22;
+                maxTemplateRows = 7; // Rows 22-28 = 7 items
                 fieldToColumnMap = {
                     'item_name': 2,      // Column C
                     'category': 3,       // Column D
@@ -524,6 +529,45 @@ const TemplateManager = {
             const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:Z100');
 
             console.log(`Filling data starting at row ${dataStartsAtRow} using template column mappings`);
+            console.log(`Data count: ${data.length}, Template capacity: ${maxTemplateRows} rows`);
+
+            // Check if we need to extend the worksheet for more items
+            const needsExtension = data.length > maxTemplateRows;
+            const lastDataRow = dataStartsAtRow + data.length - 1;
+
+            if (needsExtension) {
+                console.log(`⚠️  Data exceeds template capacity. Extending from ${maxTemplateRows} to ${data.length} rows.`);
+
+                // Extend the worksheet range to accommodate all data
+                const newEndRow = Math.max(range.e.r, lastDataRow - 1);
+                range.e.r = newEndRow;
+
+                // For classroom inventory, we need to create additional rows to preserve template structure
+                // Copy the last template row to create new rows
+                const templateLastRow = dataStartsAtRow + maxTemplateRows - 1;
+
+                for (let i = maxTemplateRows; i < data.length; i++) {
+                    const targetRow = dataStartsAtRow + i;
+
+                    // Copy all cells from the last template row to the new row
+                    for (let col = range.s.c; col <= range.e.c; col++) {
+                        const sourceCellRef = XLSX.utils.encode_cell({ r: templateLastRow - 1, c: col });
+                        const targetCellRef = XLSX.utils.encode_cell({ r: targetRow - 1, c: col });
+
+                        const sourceCell = worksheet[sourceCellRef];
+                        if (sourceCell) {
+                            // Copy the cell structure but clear the value
+                            worksheet[targetCellRef] = {
+                                ...sourceCell,
+                                v: '',
+                                t: 's'
+                            };
+                        }
+                    }
+                }
+
+                console.log(`✓ Extended worksheet with ${data.length - maxTemplateRows} additional rows`);
+            }
 
             // Fill data into template
             data.forEach((row, index) => {
@@ -587,9 +631,8 @@ const TemplateManager = {
             });
 
             // Ensure range covers all filled data
-            const lastDataRow = dataStartsAtRow + data.length - 1;
-            if (range.e.r < lastDataRow) {
-                range.e.r = lastDataRow;
+            if (range.e.r < lastDataRow - 1) {
+                range.e.r = lastDataRow - 1;
             }
 
             // Update worksheet range
