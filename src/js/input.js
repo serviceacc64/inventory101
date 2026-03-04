@@ -603,11 +603,11 @@ function openEditModal(itemId) {
     document.getElementById('editItemLabel').value = item.label || '';
     document.getElementById('editItemQuantity').value = item.quantity;
     
-    // Handle unit field visibility and value for Janitorial items
+    // Handle unit field visibility and value for Janitorial and Office Supplies items
     const editItemUnitGroup = document.getElementById('editItemUnitGroup');
     const editItemUnit = document.getElementById('editItemUnit');
     
-    if (item.label === 'Janitorial') {
+    if (item.label === 'Janitorial' || item.label === 'Office Supplies') {
         editItemUnitGroup.style.display = 'block';
         editItemUnit.value = item.unit || '';
     } else {
@@ -649,9 +649,9 @@ async function handleEditItem(event) {
         return;
     }
     
-    // Validate unit is provided for Janitorial items
-    if (label === 'Janitorial' && !unit) {
-        alert('Please specify the unit for Janitorial items');
+    // Validate unit is provided for Janitorial and Office Supplies items
+    if ((label === 'Janitorial' || label === 'Office Supplies') && !unit) {
+        alert('Please specify the unit for ' + label + ' items');
         return;
     }
     
@@ -670,7 +670,7 @@ async function handleEditItem(event) {
         };
         
         // Add or remove unit based on category
-        if (label === 'Janitorial') {
+        if (label === 'Janitorial' || label === 'Office Supplies') {
             updateData.unit = unit;
         } else {
             updateData.unit = null;
