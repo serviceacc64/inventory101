@@ -135,6 +135,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3><i class="fa-solid fa-lock"></i> Set New Password</h3>
+                <button onclick="closePasswordReset()">&times;</button>
             </div>
             <form id="passwordResetForm" onsubmit="handlePasswordReset(event)">
                 <div class="form-group">
@@ -147,6 +148,7 @@
                     <input type="password" id="confirmNewPassword" required placeholder="Confirm your password">
                 </div>
                 <div class="form-actions">
+                    <button type="button" onclick="closePasswordReset()" class="btn btn-secondary"><i class="fa-solid fa-arrow-left"></i> Back</button>
                     <button type="submit" id="updatePasswordBtn" class="btn btn-primary"><i class="fa-solid fa-save"></i> Update Password</button>
                 </div>
             </form>
@@ -156,8 +158,14 @@
     <script type="module">
         import { signIn, getCurrentUser, resetPassword, signUp, updatePassword } from './src/js/supabaseAuth.js';
 
+        // Also import supabase client directly for session handling
+        import { supabase } from './src/js/supabase.js';
+
+        // Global flag to track if session is ready for password reset
+        window.passwordResetSessionReady = false;
+
         // Check for password reset flow on page load
-        function checkPasswordResetFlow() {
+        async function checkPasswordResetFlow() {
             const hash = window.location.hash;
             const search = window.location.search;
             
@@ -171,9 +179,54 @@
                 document.getElementById('passwordResetModal').style.display = 'flex';
                 // Hide login container
                 document.querySelector('.login-container').style.display = 'none';
+                
+                // Wait for session to be detected from URL
+                // Supabase needs time to process the URL hash and exchange tokens
+                await waitForPasswordResetSession();
                 return true;
             }
             return false;
+        }
+
+        // Wait for the session to be established from the URL hash
+        async function waitForPasswordResetSession() {
+            const submitBtn = document.getElementById('updatePasswordBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Preparing reset...';
+            
+            let attempts = 0;
+            const maxAttempts = 20; // Wait up to 10 seconds (20 * 500ms)
+            
+            const checkSession = async () => {
+                attempts++;
+                
+                // Try to get the session - this will trigger URL processing if tokens are present
+                const { data: { session }, error } = await supabase.auth.getSession();
+                
+                if (session && !error) {
+                    // Session is ready!
+                    window.passwordResetSessionReady = true;
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fa-solid fa-save"></i> Update Password';
+                    console.log('Password reset session ready');
+                    return;
+                }
+                
+                // If URL has tokens but session isn't ready yet, wait and retry
+                if (window.location.hash.includes('access_token') && attempts < maxAttempts) {
+                    console.log(`Waiting for session... attempt ${attempts}/${maxAttempts}`);
+                    setTimeout(checkSession, 500);
+                } else if (attempts >= maxAttempts) {
+                    // Timeout - show error but allow user to try anyway
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fa-solid fa-save"></i> Update Password';
+                    console.warn('Session detection timeout - allowing manual attempt');
+                    window.passwordResetSessionReady = true; // Allow attempt anyway
+                }
+            };
+            
+            // Start checking
+            await checkSession();
         }
 
         // Handle password reset form submission
@@ -194,6 +247,16 @@
                 return;
             }
             
+            // Wait for session to be ready if we haven't confirmed yet
+            if (!window.passwordResetSessionReady) {
+                // Force check session one more time
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session) {
+                    alert('Please wait - the reset session is still being prepared. Please try again in a few seconds.');
+                    return;
+                }
+            }
+            
             // Disable button and show loading
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Updating...';
@@ -202,6 +265,15 @@
                 const { data, error } = await updatePassword(newPassword);
                 
                 if (error) {
+                    // Check if it's an auth session error
+                    if (error.message && error.message.includes('Auth session missing')) {
+                        alert('Your reset session has expired. Please request a new password reset link.');
+                        // Clear the hash and redirect
+                        window.location.hash = '';
+                        window.location.search = '';
+                        window.location.reload();
+                        return;
+                    }
                     alert('Error updating password: ' + error.message);
                     submitBtn.disabled = false;
                     submitBtn.innerHTML = '<i class="fa-solid fa-save"></i> Update Password';
@@ -221,6 +293,22 @@
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = '<i class="fa-solid fa-save"></i> Update Password';
             }
+        };
+
+        // Close password reset modal and return to login
+        window.closePasswordReset = function() {
+            // Clear the reset flow flag
+            localStorage.removeItem('inPasswordResetFlow');
+            // Clear the URL hash and search
+            window.location.hash = '';
+            window.location.search = '';
+            // Reset the password reset modal
+            document.getElementById('passwordResetModal').style.display = 'none';
+            document.getElementById('passwordResetForm').reset();
+            // Show login container
+            document.querySelector('.login-container').style.display = 'flex';
+            // Reset the session ready flag
+            window.passwordResetSessionReady = false;
         };
 
         // Toggle password visibility
@@ -244,17 +332,17 @@
             if (isResetFlow) {
                 // Set flag to prevent redirect loop during password reset
                 localStorage.setItem('inPasswordResetFlow', 'true');
-                // Show password reset modal and stop here
-                document.getElementById('passwordResetModal').style.display = 'flex';
-                document.querySelector('.login-container').style.display = 'none';
+                // Use the async checkPasswordResetFlow to handle session detection
+                await checkPasswordResetFlow();
                 return;
             }
             
             // Check if we're in the middle of a password reset flow
             if (localStorage.getItem('inPasswordResetFlow') === 'true') {
-                // Still in reset flow, show the modal
+                // Still in reset flow, show the modal and wait for session
                 document.getElementById('passwordResetModal').style.display = 'flex';
                 document.querySelector('.login-container').style.display = 'none';
+                await waitForPasswordResetSession();
                 return;
             }
             
