@@ -348,7 +348,7 @@ function openViewItemModal(itemId) {
         };
     }
 
-    if (addStockBtn) { 
+    if (addStockBtn) {
         addStockBtn.onclick = () => {
             closeViewItemModal();
             // Open select modal and directly show selected item details
@@ -369,100 +369,10 @@ function openViewItemModal(itemId) {
             }, 120);
         };
     }
-
-    // Fetch and display item history
-    fetchItemHistory(item.id);
 }
 
 function closeViewItemModal() {
     if (viewItemModal) viewItemModal.style.display = 'none';
-}
-
-// ==========================================
-// FETCH AND DISPLAY ITEM HISTORY
-// ==========================================
-async function fetchItemHistory(itemId) {
-    try {
-        const { data: logs, error } = await supabase
-            .from('activity_logs')
-            .select('*')
-            .eq('item_id', itemId)
-            .in('action_type', ['CREATE', 'UPDATE_QUANTITY']) // Only show creation and stock additions
-            .order('timestamp', { ascending: false });
-        
-        if (error) throw error;
-        
-        displayItemHistory(logs || []);
-    } catch (error) {
-        console.error('Error fetching item history:', error);
-        const historyContainer = document.getElementById('itemHistoryContainer');
-        if (historyContainer) {
-            historyContainer.innerHTML = '<div style="padding: 15px; text-align: center; color: #f44336;">Failed to load history</div>';
-        }
-    }
-}
-
-function displayItemHistory(logs) {
-    const historyContainer = document.getElementById('itemHistoryContainer');
-    if (!historyContainer) return;
-    
-    if (logs.length === 0) {
-        historyContainer.innerHTML = '<div style="padding: 15px; text-align: center; color: #999;">No history available</div>';
-        return;
-    }
-    
-    let historyHTML = '';
-    
-    logs.forEach((log, index) => {
-        const timestamp = new Date(log.timestamp);
-        const date = timestamp.toLocaleDateString();
-        const time = timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        
-        // Get P.O. Number from details or item's po_number field
-        let poNumber = '-';
-        if (log.details && log.details.po_number) {
-            poNumber = log.details.po_number;
-        }
-        
-        // Determine action description
-        let actionDescription = '';
-        let actionIcon = '';
-        let actionColor = '';
-        
-        if (log.action_type === 'CREATE') {
-            actionDescription = 'Item Created';
-            actionIcon = 'fa-plus-circle';
-            actionColor = 'rgba(76, 175, 80, 0.1)';
-        } else if (log.action_type === 'UPDATE_QUANTITY') {
-            actionDescription = 'Stock Added';
-            actionIcon = 'fa-arrow-up-circle';
-            actionColor = 'rgba(33, 150, 243, 0.1)';
-        }
-        
-        historyHTML += `
-            <div style="padding: 12px 15px; border-bottom: 1px solid #f0f0f0; display: flex; gap: 12px; align-items: flex-start; background: ${actionColor};">
-                <div style="flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%; background: rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; color: #666;">
-                    <i class="fa-solid ${actionIcon}" style="font-size: 14px;"></i>
-                </div>
-                <div style="flex: 1; min-width: 0;">
-                    <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 4px;">
-                        <strong style="font-size: 13px;">${actionDescription}</strong>
-                        <small style="color: #999; font-size: 11px; white-space: nowrap;">${date} ${time}</small>
-                    </div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 12px;">
-                        <div>
-                            <strong style="color: #666;">Quantity:</strong> <span style="color: ${log.action_type === 'CREATE' ? '#4caf50' : '#2196f3'}; font-weight: 500;">${log.quantity_changed}</span>
-                        </div>
-                        <div>
-                            <strong style="color: #666;">P.O. Number:</strong> <span style="color: #555;">${escapeHtml(poNumber)}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-    });
-    
-    historyContainer.innerHTML = historyHTML;
 }
 
 async function handleUpdateQuantity(event) {
