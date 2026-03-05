@@ -193,27 +193,36 @@ function renderEquipment(equipment) {
         const updatedDisplay = updatedAt ? new Date(updatedAt).toLocaleDateString() : 'Recently';
 
         itemEl.innerHTML = `
-            <div class="stat-icon" style="width:50px; height:50px; border-radius:8px; background: var(--hover); color: #fff; display:flex; align-items:center; justify-content:center;">
-                <i class="fa-solid fa-tools"></i>
-            </div>
-
-            <div class="equipment-header">
-                <h3 class="equipment-name"><span class="equipment-badge">${escapeHtml(receiptNumber)}</span>${escapeHtml(item.item_name)}</h3>
-                <div class="equipment-actions">
-                    <button onclick="window.openEditEquipmentModal('${item.id}')" title="Edit">
-                        <i class="fa-solid fa-edit"></i>
-                    </button>
-                    <button onclick="window.deleteEquipment('${item.id}')" title="Delete">
-                        <i class="fa-solid fa-trash"></i>
-                    </button>
+            <div style="display: flex; gap: 8px; margin-bottom: 10px; align-items: flex-start;">
+                <div class="stat-icon" style="width:44px; height:44px; min-width:44px; border-radius:8px; background: var(--hover); color: #fff; display:flex; align-items:center; justify-content:center; font-size: 20px;">
+                    <i class="fa-solid fa-tools"></i>
+                </div>
+                
+                <div style="flex: 1;">
+                    <div class="equipment-header">
+                        <div style="flex: 1;">
+                            <h3 class="equipment-name">${escapeHtml(item.item_name)}</h3>
+                            ${receiptNumber !== '-' ? `<p style="margin: 3px 0 0 0; font-size: 9px; color: #999; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">${escapeHtml(receiptNumber)}</p>` : ''}
+                        </div>
+                        <div class="equipment-actions">
+                            <button onclick="window.openEditEquipmentModal('${item.id}')" title="Edit">
+                                <i class="fa-solid fa-edit"></i>
+                            </button>
+                            <button onclick="window.deleteEquipment('${item.id}')" title="Delete">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
+
             ${item.item_description ? `<p class="equipment-description">${escapeHtml(item.item_description)}</p>` : ''}
+            
             <div class="equipment-meta">
-                <p>Qty: ${item.quantity} | Unit Cost: ${formatCurrency(item.unit_cost || 0)} | Amount: ${formatCurrency(amount)}</p>
-                <p>Supplier: ${escapeHtml(supplierName)}</p>
-                <p>Delivered: ${item.date_delivered ? formatDate(item.date_delivered) : '-'}</p>
-                <p>Last updated: ${escapeHtml(updatedDisplay)}</p>
+                <p><strong>Qty:</strong> ${item.quantity} <strong style="margin-left: 8px;">Unit Cost:</strong> ${formatCurrency(item.unit_cost || 0)} <strong style="margin-left: 8px;">Amount:</strong> ${formatCurrency(amount)}</p>
+                <p><strong>Supplier:</strong> ${escapeHtml(supplierName)}</p>
+                <p><strong>Delivered:</strong> ${item.date_delivered ? formatDate(item.date_delivered) : '-'}</p>
+                <p><strong>Last updated:</strong> ${escapeHtml(updatedDisplay)}</p>
             </div>
 
         `;

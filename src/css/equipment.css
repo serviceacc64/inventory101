@@ -62,64 +62,76 @@
 .equipment-header {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 10px;
+    align-items: center;
+    margin-bottom: 16px;
+    gap: 12px;
 }
 
 .equipment-name {
     margin: 0;
-    font-size: 16px;
-    font-weight: 600;
+    font-size: 14px;
+    font-weight: 700;
     color: var(--textcolor2);
     word-break: break-word;
     flex: 1;
-    line-height: 1.3;
+    line-height: 1.2;
 }
 
 .equipment-actions {
     display: flex;
-    gap: 8px;
-    margin-left: 10px;
+    gap: 10px;
+    margin-left: 0;
+    flex-shrink: 0;
 }
 
 .equipment-actions button {
-    padding: 6px 10px;
+    padding: 6px 8px;
     font-size: 12px;
-    border: none;
-    border-radius: 5px;
+    border: 1.5px solid rgba(137, 22, 35, 0.3);
+    border-radius: 6px;
     cursor: pointer;
-    transition: 0.2s;
-    background-color: rgba(137, 22, 35, 0.15);
+    transition: all 0.2s;
+    background-color: transparent;
     color: var(--textcolor2);
     display: flex;
     align-items: center;
     justify-content: center;
+    width: 32px;
+    height: 32px;
 }
 
 .equipment-actions button:hover {
-    background-color: rgba(137, 22, 35, 0.25);
+    background-color: rgba(137, 22, 35, 0.15);
+    border-color: var(--hover);
     color: var(--hover);
 }
 
 .equipment-description {
     color: #666;
-    font-size: 13px;
-    margin-bottom: 15px;
+    font-size: 12px;
+    margin-bottom: 12px;
     line-height: 1.4;
 }
 
 .equipment-meta {
-    margin-bottom: 10px;
+    margin-bottom: 0;
     font-size: 11px;
-    color: #666;
+    color: #555;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
 }
 
 .equipment-meta p {
-    margin: 3px 0;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    line-height: 1.3;
+    margin: 0;
+    display: block;
+    line-height: 1.6;
+    color: #333;
+}
+
+.equipment-meta p strong {
+    color: var(--textcolor2);
+    font-weight: 600;
 }
 
 #equipmentList .activity-item:hover {
@@ -132,11 +144,13 @@
     display: inline-block;
     background-color: var(--hover);
     color: var(--textcolor);
-    padding: 2px 6px;
+    padding: 4px 10px;
     font-size: 11px;
-    border-radius: 4px;
+    border-radius: 6px;
     margin-right: 8px;
-    font-weight: 600;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 #equipmentList .stat-icon {
@@ -147,29 +161,24 @@
 /* Equipment Grid and Cards */
 .equipment-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 15px;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 12px;
     margin-top: 20px;
 }
 
 .equipment-card {
-    background-color: var(--background);
-    border-radius: 10px;
-    padding: 15px;
-    border: 1px solid rgba(41, 6, 10, 0.15);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
-    transition: 0.3s;
+    background-color: #f5f2f0;
+    border-radius: 12px;
+    padding: 14px;
+    border: 1px solid rgba(41, 6, 10, 0.08);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
     display: flex;
     flex-direction: column;
-    min-height: 260px;
+    min-height: auto;
 }
 
-.equipment-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 12px 20px rgba(0, 0, 0, 0.25);
-}
-
-/* residual scroll wrapper still used for grid container */
+/*residual scroll wrapper still used for grid container */
 .equipment-table-wrapper {
     overflow-x: auto;
     overflow-y: auto;
@@ -177,6 +186,11 @@
     border-radius: 8px;
     border: 1px solid rgba(0, 0, 0, 0.08);
     background: #fff;
+}
+
+.equipment-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
 }
 
 /* ============================================
