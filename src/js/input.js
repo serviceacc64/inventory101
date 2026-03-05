@@ -336,6 +336,9 @@ function openViewItemModal(itemId) {
         viewItemModal.dataset.itemId = item.id;
     }
 
+    // Fetch and display item history
+    fetchItemHistory(itemId);
+
     // wire action buttons
     const editBtn = document.getElementById('viewEditBtn');
     const addStockBtn = document.getElementById('viewAddStockBtn');
@@ -373,6 +376,55 @@ function openViewItemModal(itemId) {
 
 function closeViewItemModal() {
     if (viewItemModal) viewItemModal.style.display = 'none';
+}
+
+// ==========================================
+// VIEW ITEM HISTORY
+// ==========================================
+async function fetchItemHistory(itemId) {
+    const historyList = document.getElementById('viewItemHistoryList');
+    if (!historyList) return;
+    
+    try {
+        // Fetch UPDATE_QUANTITY activities for this specific item
+        const { data: logs, error } = await supabase
+            .from('activity_logs')
+            .select('*')
+            .eq('item_id', itemId)
+            .eq('action_type', 'UPDATE_QUANTITY')
+            .order('timestamp', { ascending: false });
+        
+        if (error) throw error;
+        
+        if (!logs || logs.length === 0) {
+            historyList.innerHTML = '<p class="history-empty">No stock history available</p>';
+            return;
+        }
+        
+        // Build the history HTML
+        let historyHtml = '<div class="history-table-wrapper"><table class="history-table"><thead><tr><th>Date</th><th>P.O. Number</th><th>Qty Added</th></tr></thead><tbody>';
+        
+        logs.forEach(log => {
+            const date = log.timestamp ? new Date(log.timestamp).toLocaleString() : 'N/A';
+            const poNumber = log.details?.po_number || '-';
+            const quantityAdded = log.quantity_changed > 0 ? `+${log.quantity_changed}` : log.quantity_changed;
+            
+            historyHtml += `
+                <tr>
+                    <td>${escapeHtml(date)}</td>
+                    <td>${escapeHtml(poNumber)}</td>
+                    <td class="quantity-added">${escapeHtml(String(quantityAdded))}</td>
+                </tr>
+            `;
+        });
+        
+        historyHtml += '</tbody></table></div>';
+        historyList.innerHTML = historyHtml;
+        
+    } catch (error) {
+        console.error('Error fetching item history:', error);
+        historyList.innerHTML = '<p class="history-error">Failed to load history</p>';
+    }
 }
 
 async function handleUpdateQuantity(event) {
@@ -1263,3 +1315,4 @@ window.cancelGetItemSelection = cancelGetItemSelection;
 // View Item modal globals
 window.openViewItemModal = openViewItemModal;
 window.closeViewItemModal = closeViewItemModal;
+window.fetchItemHistory = fetchItemHistory;

@@ -457,6 +457,74 @@ body{
     color: var(--textcolor2);
 }
 
+/* Stock History Styles */
+.view-item-history {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+}
+
+.view-item-history h4 {
+    margin: 0 0 15px 0;
+    font-size: 16px;
+    color: var(--background2);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.history-list {
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+.history-loading,
+.history-empty,
+.history-error {
+    text-align: center;
+    padding: 20px;
+    color: #888;
+    font-size: 14px;
+}
+
+.history-error {
+    color: #f44336;
+}
+
+.history-table-wrapper {
+    overflow-x: auto;
+}
+
+.history-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.history-table th,
+.history-table td {
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+.history-table th {
+    background: #f5f5f5;
+    font-weight: 600;
+    color: #333;
+    position: sticky;
+    top: 0;
+}
+
+.history-table tr:hover {
+    background: #fafafa;
+}
+
+.history-table .quantity-added {
+    color: #2196f3;
+    font-weight: 600;
+}
+
 /* Search box in modal */
 #modalItemSearch {
     width: 100%;
