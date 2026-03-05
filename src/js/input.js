@@ -348,7 +348,7 @@ function openViewItemModal(itemId) {
         };
     }
 
-    if (addStockBtn) {
+    if (addStockBtn) { 
         addStockBtn.onclick = () => {
             closeViewItemModal();
             // Open select modal and directly show selected item details
