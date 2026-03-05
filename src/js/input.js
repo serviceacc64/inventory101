@@ -62,8 +62,11 @@ let isSubmitting = false; // Prevent double submission
 // ==========================================
 // NOTE: This function is ONLY used for DISTRIBUTE actions.
 // CREATE, UPDATE_QUANTITY, EDIT, and DELETE are automatically
-async function logActivity(actionType, itemId, itemName, quantityChanged, quantityBefore, quantityAfter, person = null, details = null) {
+async function logActivity(actionType, itemId, itemName, quantityChanged, quantityBefore, quantityAfter, person = null, details = null, customTimestamp = null) {
     try {
+        // Use custom timestamp if provided, otherwise use current time
+        const timestamp = customTimestamp ? new Date(customTimestamp).toISOString() : new Date().toISOString();
+        
         const { error } = await supabase
             .from('activity_logs')
             .insert([{
@@ -75,7 +78,7 @@ async function logActivity(actionType, itemId, itemName, quantityChanged, quanti
                 quantity_after: quantityAfter,
                 person: person,
                 details: details,
-                timestamp: new Date().toISOString()
+                timestamp: timestamp
             }]);
 
         if (error) {
@@ -456,6 +459,20 @@ async function handleUpdateQuantity(event) {
             .eq('id', itemId);
         
         if (error) throw error;
+        
+
+        // Log the stock addition activity with the user-selected date and P.O. Number
+        await logActivity(
+            'UPDATE_QUANTITY',
+            itemId,
+            item.name,
+            quantityToAdd,
+            oldQuantity,
+            newQuantity,
+            null, // No person for stock addition
+            { label: item.label, unit: item.unit, po_number: poNumber || null }, // Include details including P.O. Number
+            selectedDate // Pass the user-selected date
+        );
         
         // Close modal and refresh
         closeSelectItemModal();

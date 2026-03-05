@@ -83,12 +83,14 @@ function renderLogs(logs) {
                 actionDescription = `Created new item "${log.item_name}" with ${log.quantity_after} ${getUnitText(log)}`;
                 break;
                 
+
             case 'UPDATE_QUANTITY':
                 iconClass = 'fa-arrow-up';
                 iconBg = 'background-color: rgba(33, 150, 243, 0.2); color: #2196f3;';
                 badgeClass = 'activity-badge updated';
                 badgeText = 'Stock Added';
-                actionDescription = `Added ${log.quantity_changed} ${getUnitText(log)} to "${log.item_name}" (Stock: ${log.quantity_before} → ${log.quantity_after})`;
+                const poNum = log.details?.po_number ? ` (PO: ${log.details.po_number})` : '';
+                actionDescription = `Added ${log.quantity_changed} ${getUnitText(log)} to "${log.item_name}"${poNum} (Stock: ${log.quantity_before} → ${log.quantity_after})`;
                 break;
                 
             case 'DISTRIBUTE':
