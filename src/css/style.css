@@ -525,6 +525,13 @@ body{
     font-weight: 600;
 }
 
+.history-note {
+    text-align: center;
+    padding: 10px;
+    color: #888;
+    font-size: 12px;
+}
+
 /* Search box in modal */
 #modalItemSearch {
     width: 100%;
