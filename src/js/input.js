@@ -216,6 +216,7 @@ function closeSelectItemModal() {
     selectItemModal.style.display = 'none';
     // Reset form
     if (addQuantity) addQuantity.value = '';
+    if (document.getElementById('addPO')) document.getElementById('addPO').value = '';
     cancelSelection();
 }
 
@@ -301,6 +302,9 @@ function selectItem(item) {
     // Set default date to today
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('addDate').value = today;
+    
+    // Reset P.O. Number field
+    document.getElementById('addPO').value = '';
 
     // Focus on quantity input
     setTimeout(() => {
@@ -386,12 +390,12 @@ async function fetchItemHistory(itemId) {
     if (!historyList) return;
     
     try {
-        // Fetch UPDATE_QUANTITY activities for this specific item
+        // Fetch UPDATE_QUANTITY and CREATE activities for this specific item
         const { data: logs, error } = await supabase
             .from('activity_logs')
             .select('*')
             .eq('item_id', itemId)
-            .eq('action_type', 'UPDATE_QUANTITY')
+            .in('action_type', ['UPDATE_QUANTITY', 'CREATE'])
             .order('timestamp', { ascending: false });
         
         if (error) throw error;
@@ -401,19 +405,62 @@ async function fetchItemHistory(itemId) {
             return;
         }
         
-        // Build the history HTML
-        let historyHtml = '<div class="history-table-wrapper"><table class="history-table"><thead><tr><th>Date</th><th>P.O. Number</th><th>Qty Added</th></tr></thead><tbody>';
+        // Get today's date at midnight for comparison
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
         
-        logs.forEach(log => {
+        // Filter out entries with automatic date selection (1999 only)
+        // Keep entries where user selected a date (after 1999-12-31)
+        const userSelectedLogs = logs.filter(log => {
+            if (!log.timestamp) return false;
+            const logDate = new Date(log.timestamp);
+            logDate.setHours(0, 0, 0, 0);
+            // Keep entries where date is after 1999 (user selected a valid past date)
+            const year1999 = new Date('1999-12-31');
+            return logDate > year1999;
+        });
+        
+        // If no user-selected date entries, fall back to showing auto-dated entries
+        const displayLogs = userSelectedLogs.length > 0 ? userSelectedLogs : logs;
+        
+        // Group by date (YYYY-MM-DD) and action_type to show unique entries per day
+        const groupedLogs = {};
+        displayLogs.forEach(log => {
+            const dateKey = log.timestamp ? new Date(log.timestamp).toISOString().split('T')[0] : 'unknown';
+            const key = `${dateKey}_${log.action_type}`;
+            
+            // Only keep the first (most recent) entry for each date + action_type combination
+            if (!groupedLogs[key]) {
+                groupedLogs[key] = log;
+            }
+        });
+        
+        // Convert back to array and sort by timestamp
+        const uniqueLogs = Object.values(groupedLogs).sort((a, b) => 
+            new Date(b.timestamp) - new Date(a.timestamp)
+        );
+        
+        if (uniqueLogs.length === 0) {
+            historyList.innerHTML = '<p class="history-empty">No stock history with user-selected dates</p>';
+            return;
+        }
+        
+        // Build the history HTML
+        let historyHtml = '<div class="history-table-wrapper"><table class="history-table"><thead><tr><th>Date</th><th>P.O. Number</th><th>Qty Added</th><th>Type</th></tr></thead><tbody>';
+        
+        uniqueLogs.forEach(log => {
             const date = log.timestamp ? new Date(log.timestamp).toLocaleString() : 'N/A';
             const poNumber = log.details?.po_number || '-';
-            const quantityAdded = log.quantity_changed > 0 ? `+${log.quantity_changed}` : log.quantity_changed;
+            const isCreate = log.action_type === 'CREATE';
+            const quantityAdded = isCreate ? `+${log.quantity_after}` : (log.quantity_changed > 0 ? `+${log.quantity_changed}` : log.quantity_changed);
+            const typeLabel = isCreate ? 'Created' : 'Added';
             
             historyHtml += `
                 <tr>
                     <td>${escapeHtml(date)}</td>
                     <td>${escapeHtml(poNumber)}</td>
                     <td class="quantity-added">${escapeHtml(String(quantityAdded))}</td>
+                    <td><span class="activity-badge">${escapeHtml(typeLabel)}</span></td>
                 </tr>
             `;
         });
@@ -511,20 +558,6 @@ async function handleUpdateQuantity(event) {
             .eq('id', itemId);
         
         if (error) throw error;
-        
-
-        // Log the stock addition activity with the user-selected date and P.O. Number
-        await logActivity(
-            'UPDATE_QUANTITY',
-            itemId,
-            item.name,
-            quantityToAdd,
-            oldQuantity,
-            newQuantity,
-            null, // No person for stock addition
-            { label: item.label, unit: item.unit, po_number: poNumber || null }, // Include details including P.O. Number
-            selectedDate // Pass the user-selected date
-        );
         
         // Close modal and refresh
         closeSelectItemModal();
@@ -628,6 +661,22 @@ async function handleCreateItem(event) {
             .select();
         
         if (error) throw error;
+        
+        // Log the item creation activity
+        if (data && data.length > 0) {
+            const newItem = data[0];
+            await logActivity(
+                'CREATE',
+                newItem.id,
+                newItem.name,
+                newItem.quantity,
+                0,
+                newItem.quantity,
+                null,
+                { label: newItem.label, unit: newItem.unit, po_number: poNumber || null },
+                itemDate
+            );
+        }
         
         // Close modal and reset form
         closeCreateItemModal();
