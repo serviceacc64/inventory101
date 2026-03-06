@@ -1,4 +1,4 @@
-// Import Supabase client
+ // Import Supabase client
 import { supabase } from './supabase.js';
 
 // DOM Elements
@@ -1393,6 +1393,16 @@ if (viewItemModal) {
     });
 }
 
+// Add Supplier Modal outside click handler
+const addSupplierModal = document.getElementById('addSupplierModal');
+if (addSupplierModal) {
+    addSupplierModal.addEventListener('click', function(e) {
+        if (e.target === addSupplierModal) {
+            closeAddSupplierModal();
+        }
+    });
+}
+
 // Get Item Modal Event Listeners
 if (getItemModal) {
     getItemModal.addEventListener('click', function(e) {
@@ -1438,6 +1448,102 @@ if (newItemLabel) {
 }
 
 
+// ==========================================
+// 12. ADD SUPPLIER FUNCTIONS
+// ==========================================
+function openAddSupplierModal(targetDropdownId) {
+    const modal = document.getElementById('addSupplierModal');
+    const targetDropdown = document.getElementById('targetSupplierDropdown');
+    const nameInput = document.getElementById('newSupplierName');
+    const contactInput = document.getElementById('newSupplierContact');
+    
+    // Store which dropdown this is for
+    targetDropdown.value = targetDropdownId;
+    
+    // Reset form
+    if (nameInput) nameInput.value = '';
+    if (contactInput) contactInput.value = '';
+    
+    modal.style.display = 'flex';
+    
+    // Focus on name input
+    setTimeout(() => {
+        if (nameInput) nameInput.focus();
+    }, 100);
+}
+
+function closeAddSupplierModal() {
+    const modal = document.getElementById('addSupplierModal');
+    modal.style.display = 'none';
+    
+    // Reset form
+    const nameInput = document.getElementById('newSupplierName');
+    const contactInput = document.getElementById('newSupplierContact');
+    if (nameInput) nameInput.value = '';
+    if (contactInput) contactInput.value = '';
+}
+
+async function handleAddSupplier(event) {
+    event.preventDefault();
+    
+    const nameInput = document.getElementById('newSupplierName');
+    const contactInput = document.getElementById('newSupplierContact');
+    const targetDropdown = document.getElementById('targetSupplierDropdown');
+    
+    const supplierName = nameInput.value.trim();
+    const contactInfo = contactInput.value.trim();
+    const targetDropdownId = targetDropdown.value;
+    
+    if (!supplierName) {
+        alert('Please enter a supplier name');
+        return;
+    }
+    
+    // Check for duplicate (case-insensitive)
+    const isDuplicate = allSuppliers.some(s => 
+        s.supplier_name.toLowerCase().trim() === supplierName.toLowerCase()
+    );
+    
+    if (isDuplicate) {
+        alert('A supplier with this name already exists. Please use a different name or select the existing supplier.');
+        return;
+    }
+    
+    try {
+        // Insert new supplier
+        const { data, error } = await supabase
+            .from('suppliers')
+            .insert([{
+                supplier_name: supplierName,
+                contact_info: contactInfo || null
+            }])
+            .select();
+        
+        if (error) throw error;
+        
+        // Refresh suppliers list
+        await fetchSuppliers();
+        
+        // Close modal
+        closeAddSupplierModal();
+        
+        // If a target dropdown was specified, select the newly created supplier
+        if (targetDropdownId) {
+            const dropdown = document.getElementById(targetDropdownId);
+            if (dropdown && data && data.length > 0) {
+                dropdown.value = data[0].id;
+            }
+        }
+        
+        alert('Supplier added successfully!');
+        
+    } catch (error) {
+        console.error('Error adding supplier:', error);
+        alert('Failed to add supplier. Please try again.');
+    }
+}
+
+
 
 
 // ==========================================
@@ -1471,3 +1577,8 @@ window.cancelGetItemSelection = cancelGetItemSelection;
 window.openViewItemModal = openViewItemModal;
 window.closeViewItemModal = closeViewItemModal;
 window.fetchItemHistory = fetchItemHistory;
+
+// Add Supplier modal globals
+window.openAddSupplierModal = openAddSupplierModal;
+window.closeAddSupplierModal = closeAddSupplierModal;
+window.handleAddSupplier = handleAddSupplier;

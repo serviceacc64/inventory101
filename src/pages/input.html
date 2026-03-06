@@ -181,6 +181,7 @@
                         <select id="addSupplier">
                             <option value="">Select Supplier (Optional)</option>
                         </select>
+                        <small style="color: #666; font-size: 11px; cursor: pointer; color: #007bff;" onclick="openAddSupplierModal('addSupplier')">+ Add New Supplier</small>
                     </div>
 
                     <div class="form-group">
@@ -239,6 +240,7 @@
                     <select id="newItemSupplier">
                         <option value="">Select Supplier (Optional)</option>
                     </select>
+                    <small style="color: #666; font-size: 11px; cursor: pointer; color: #007bff;" onclick="openAddSupplierModal('newItemSupplier')">+ Add New Supplier</small>
                 </div>
                 
                 <div class="form-group">
@@ -309,6 +311,7 @@
                     <select id="editItemSupplier">
                         <option value="">Select Supplier (Optional)</option>
                     </select>
+                    <small style="color: #666; font-size: 11px; cursor: pointer; color: #007bff;" onclick="openAddSupplierModal('editItemSupplier')">+ Add New Supplier</small>
                 </div>
 
                 
@@ -426,6 +429,37 @@
                     </div>
                 </div>
             </div>
+
+    <!-- Add Supplier Modal -->
+    <div id="addSupplierModal" class="modal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3>Add New Supplier</h3>
+                <button onclick="closeAddSupplierModal()">&times;</button>
+            </div>
+            
+            <form id="addSupplierForm" onsubmit="handleAddSupplier(event)">
+                <input type="hidden" id="targetSupplierDropdown">
+                
+                <div class="form-group">
+                    <label for="newSupplierName">Supplier Name *</label>
+                    <input type="text" id="newSupplierName" required placeholder="e.g., ABC Supplies Inc.">
+                </div>
+                
+                <div class="form-group">
+                    <label for="newSupplierContact">Contact Info</label>
+                    <input type="text" id="newSupplierContact" placeholder="e.g., Phone, Email, Address">
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" onclick="closeAddSupplierModal()" class="btn btn-secondary">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa-solid fa-plus"></i> Add Supplier
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
     <script type="module" src="../js/input.js"></script>
 
 </body>
