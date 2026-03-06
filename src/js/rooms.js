@@ -1,5 +1,8 @@
 // Import Supabase client
 import { supabase } from './supabase.js';
+import { buildRoomWorkbook, writeWorkbook } from './exportHelpers.js';
+// animation helpers
+import { showNotification, pulseElement, fadeIn } from './animate.js';
 
 // DOM Elements
 const loadingState = document.getElementById('loadingState');
@@ -305,6 +308,7 @@ async function renderRooms(rooms) {
             `;
 
             roomsContainer.appendChild(roomEl);
+            fadeIn(roomEl);
         }
     } finally {
         isRendering = false;
@@ -350,11 +354,11 @@ window.nextPage = function() {
 // ==========================================
 window.openCreateRoomModal = function() {
     createRoomForm.reset();
-    createRoomModal.style.display = 'flex';
+    createRoomModal.classList.add('show');
 }
 
 window.closeCreateRoomModal = function() {
-    createRoomModal.style.display = 'none';
+    createRoomModal.classList.remove('show');
 }
 
 window.openRoomItemsModal = async function(roomId) {
@@ -364,12 +368,12 @@ window.openRoomItemsModal = async function(roomId) {
         roomItemsTitle.textContent = `${room.name} - Items`;
     }
 
-    roomItemsModal.style.display = 'flex';
+    roomItemsModal.classList.add('show');
     await loadRoomItems(roomId);
 };
 
 window.closeRoomItemsModal = function() {
-    roomItemsModal.style.display = 'none';
+    roomItemsModal.classList.remove('show');
     currentRoomId = null;
 }
 
@@ -417,12 +421,12 @@ window.openEditRoomModal = async function(roomId) {
         editRoomAddress.value = room.room_address || '';
         editRoomAccountable.value = room.accountable || '';
         editRoomAdviser.value = room.room_adviser || '';
-        editRoomModal.style.display = 'flex';
+        editRoomModal.classList.add('show');
     }
 };
 
 window.closeEditRoomModal = function() {
-    editRoomModal.style.display = 'none';
+    editRoomModal.classList.remove('show');
 }
 
 // Edit Room Item Modal Functions
@@ -453,7 +457,7 @@ window.openEditRoomItemModal = async function(itemId) {
 
         // Show the modal
 
-        editRoomItemModal.style.display = 'flex';
+        editRoomItemModal.classList.add('show');
     } catch (error) {
         console.error('Error loading item for edit:', error);
         showError('Failed to load item details');
@@ -461,7 +465,7 @@ window.openEditRoomItemModal = async function(itemId) {
 };
 
 window.closeEditRoomItemModal = function() {
-    editRoomItemModal.style.display = 'none';
+    editRoomItemModal.classList.remove('show');
 };
 
 window.handleEditRoomItem = async function(event) {
@@ -505,7 +509,7 @@ window.handleEditRoomItem = async function(event) {
         closeEditRoomItemModal();
         await loadRoomItems(currentRoomId);
         await fetchRooms();
-        showSuccessMessage('Item updated successfully!');
+        showNotification('Item updated successfully!');
     } catch (error) {
         console.error('Error updating item:', error);
         showError('Failed to update item. Please try again.');
@@ -534,7 +538,7 @@ window.handleDeleteRoomItem = async function() {
         closeEditRoomItemModal();
         await loadRoomItems(currentRoomId);
         await fetchRooms();
-        showSuccessMessage('Item deleted successfully!');
+        showNotification('Item deleted successfully!');
     } catch (error) {
         console.error('Error deleting item:', error);
         showError('Failed to delete item. Please try again.');
@@ -571,7 +575,7 @@ function openViewRoomItemModal(itemId) {
             if (viewRoomItemRemarks) viewRoomItemRemarks.textContent = item.remarks || '-';
 
             if (viewRoomItemModal) {
-                viewRoomItemModal.style.display = 'flex';
+                viewRoomItemModal.classList.add('show');
                 viewRoomItemModal.dataset.itemId = item.id;
             }
 
@@ -600,7 +604,7 @@ function openViewRoomItemModal(itemId) {
 }
 
 window.closeViewRoomItemModal = function() {
-    if (viewRoomItemModal) viewRoomItemModal.style.display = 'none';
+    if (viewRoomItemModal) viewRoomItemModal.classList.remove('show');
 };
 
 // Close modals when clicking outside
@@ -635,7 +639,7 @@ window.handleCreateRoom = async function(event) {
 
         closeCreateRoomModal();
         await fetchRooms();
-        showSuccessMessage('Room created successfully!');
+        showNotification('Room created successfully!');
     } catch (error) {
         console.error('Error creating room:', error);
         showError('Failed to create room. Please try again.');
@@ -669,7 +673,7 @@ window.handleEditRoom = async function(event) {
 
         closeEditRoomModal();
         await fetchRooms();
-        showSuccessMessage('Room updated successfully!');
+        showNotification('Room updated successfully!');
     } catch (error) {
         console.error('Error updating room:', error);
         showError('Failed to update room. Please try again.');
@@ -704,7 +708,7 @@ window.handleDeleteRoom = async function() {
 
         closeEditRoomModal();
         await fetchRooms();
-        showSuccessMessage('Room deleted successfully!');
+        showNotification('Room deleted successfully!');
     } catch (error) {
         console.error('Error deleting room:', error);
         showError('Failed to delete room. Please try again.');
@@ -787,6 +791,7 @@ function renderRoomItems(items) {
         `;
 
         roomItemsList.appendChild(row);
+        fadeIn(row);
     });
 
     // Attach click handlers to open view modal for each row (delegation alternative)
@@ -896,42 +901,21 @@ window.exportRoomItemsToExcel = async function() {
 
         // If template export failed or wasn't available, use default export
         if (!workbook) {
-            console.log('Using default JSON-to-sheet export');
-            
-            // Prepare data for Excel with room name as title
-            const exportData = [
-                { 'No.': '', 'Item Name': `Room: ${room.name}`, 'Quantity': '', 'Units': '', 'Condition': '', 'Description': '', 'Remarks': '', 'Type': '', 'Date Added': '' },
-                { 'No.': '', 'Item Name': '', 'Quantity': '', 'Units': '', 'Condition': '', 'Description': '', 'Remarks': '', 'Type': '', 'Date Added': '' },
-                ...items.map((item, index) => ({
-                    'No.': index + 1,
-                    'Item Name': item.item_name,
-                    'Quantity': item.quantity,
-                    'Units': item.units || 'pcs',
-                    'Condition': item.condition || 'Good',
-                    'Description': item.description || '-',
-                    'Remarks': item.remarks || '-',
-                    'Type': item.item_id ? 'Inventory' : 'Custom',
-                    'Date Added': item.created_at ? new Date(item.created_at).toLocaleDateString() : '-'
-                }))
-            ];
+            console.log('Using default JSON-to-sheet export (shared helper)');
 
-            // Create workbook and worksheet
-            const ws = XLSX.utils.json_to_sheet(exportData);
-            workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, ws, room.name);
+            // Build using shared helper so report page can reuse identical layout
+            const exportData = items.map(item => ({
+                item_name: item.item_name,
+                quantity: item.quantity,
+                units: item.units,
+                condition: item.condition,
+                description: item.description,
+                remarks: item.remarks,
+                item_id: item.item_id,
+                created_at: item.created_at
+            }));
 
-            // Style the header row (optional - basic styling)
-            ws['!cols'] = [
-                { wch: 6 },  // No.
-                { wch: 25 }, // Item Name
-                { wch: 10 }, // Quantity
-                { wch: 10 }, // Units
-                { wch: 12 }, // Condition
-                { wch: 30 }, // Description
-                { wch: 30 }, // Remarks
-                { wch: 12 }, // Type
-                { wch: 15 }  // Date Added
-            ];
+            workbook = buildRoomWorkbook(exportData, room.name);
         }
 
         // Generate filename with room name and timestamp
@@ -945,7 +929,7 @@ window.exportRoomItemsToExcel = async function() {
         XLSX.writeFile(workbook, filename);
 
         console.log('Export successful:', filename);
-        showSuccessMessage(`Exported ${items.length} item(s) to ${filename}${usedTemplate ? ' (using template)' : ''}`);
+        showNotification(`Exported ${items.length} item(s) to ${filename}${usedTemplate ? ' (using template)' : ''}`);
     } catch (error) {
         console.error('Error exporting items:', error);
         console.log('Full error object:', error);
@@ -1038,7 +1022,7 @@ window.handleAddCustomItemToRoom = async function(event) {
                 .eq('id', existing.id);
 
             if (error) throw error;
-            showSuccessMessage(`Updated "${itemName}" quantity to ${newTotal}`);
+            showNotification(`Updated "${itemName}" quantity to ${newTotal}`);
         } else {
             // Insert new custom room item (item_id is null)
             const { error } = await supabase
@@ -1057,7 +1041,7 @@ window.handleAddCustomItemToRoom = async function(event) {
                 }]);
 
             if (error) throw error;
-            showSuccessMessage(`Created custom item "${itemName}" (${quantity} ${units}) in room`);
+            showNotification(`Created custom item "${itemName}" (${quantity} ${units}) in room`);
         }
 
         // Clear inputs
@@ -1125,7 +1109,7 @@ window.handleRemoveItemFromRoom = async function(roomItemId) {
 
         if (error) throw error;
 
-        showSuccessMessage('Item removed from room!');
+        showNotification('Item removed from room!');
         if (currentRoomId) {
             await loadRoomItems(currentRoomId);
             await fetchRooms();
@@ -1152,29 +1136,6 @@ function hideError() {
     errorState.style.display = 'none';
 }
 
-function showSuccessMessage(message) {
-    // Create a temporary notification
-    const notification = document.createElement('div');
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: #4CAF50;
-        color: white;
-        padding: 15px 20px;
-        border-radius: 6px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-        z-index: 10000;
-        animation: slideIn 0.3s ease;
-    `;
-    notification.textContent = message;
-    document.body.appendChild(notification);
-
-    setTimeout(() => {
-        notification.style.animation = 'slideOut 0.3s ease';
-        setTimeout(() => notification.remove(), 300);
-    }, 3000);
-}
 
 function escapeHtml(text) {
     const div = document.createElement('div');

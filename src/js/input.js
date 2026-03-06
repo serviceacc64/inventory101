@@ -1,5 +1,7 @@
  // Import Supabase client
 import { supabase } from './supabase.js';
+// animation utilities
+import { showNotification, pulseElement, fadeIn } from './animate.js';
 
 // DOM Elements
 const itemsContainer = document.getElementById('itemsContainer');
@@ -256,6 +258,8 @@ function renderItems(items) {
             }
             openViewItemModal(item.id);
         });
+        // animate appearance
+        fadeIn(itemEl);
 
         itemsContainer.appendChild(itemEl);
     });
@@ -409,7 +413,7 @@ function openViewItemModal(itemId) {
 
     // store current viewed item id for action buttons
     if (viewItemModal) {
-        viewItemModal.style.display = 'flex';
+        viewItemModal.classList.add('show');
         viewItemModal.dataset.itemId = item.id;
     }
 
@@ -588,7 +592,7 @@ async function handleUpdateQuantity(event) {
     const supplierId = document.getElementById('addSupplier').value;
     
     if (!itemId || isNaN(quantityToAdd) || quantityToAdd < 1 || !selectedDate) {
-        alert('Please fill in all required fields');
+        showNotification('Please fill in all required fields', 'error');
         // Reset submission lock on validation failure
         isSubmitting = false;
         form.classList.remove('submitting');
@@ -607,7 +611,7 @@ async function handleUpdateQuantity(event) {
         // Get current item data
         const item = allItems.find(i => i.id === itemId);
         if (!item) {
-            alert('Item not found');
+            showNotification('Item not found', 'error');
             return false;
         }
 
@@ -641,11 +645,11 @@ async function handleUpdateQuantity(event) {
         // Close modal and refresh
         closeSelectItemModal();
         await fetchItems();
-        alert(`Successfully added ${quantityToAdd} units to ${item.name}. New stock: ${newQuantity}`);
+        showNotification(`Successfully added ${quantityToAdd} units to ${item.name}. New stock: ${newQuantity}`);
         
     } catch (error) {
         console.error('Error updating quantity:', error);
-        alert('Failed to update quantity. Please try again.');
+        showNotification('Failed to update quantity. Please try again.', 'error');
     } finally {
         // Reset submission lock and button state
         isSubmitting = false;
@@ -674,11 +678,11 @@ async function handleUpdateQuantity(event) {
 function openCreateItemModal() {
     // Close the select item modal first
     closeSelectItemModal();
-    createItemModal.style.display = 'flex';
+    createItemModal.classList.add('show');
 }
 
 function closeCreateItemModal() {
-    createItemModal.style.display = 'none';
+    createItemModal.classList.remove('show');
     document.getElementById('createItemForm').reset();
     // Reset unit field visibility
     if (newItemUnitGroup) {
@@ -703,7 +707,7 @@ async function handleCreateItem(event) {
     const itemDate = document.getElementById('newItemDate').value;
     
     if (!name || isNaN(quantity)) {
-        alert('Please fill in all required fields');
+        showNotification('Please fill in all required fields', 'error');
         return;
     }
     
@@ -772,11 +776,11 @@ async function handleCreateItem(event) {
         // Refresh items list
         await fetchItems();
         
-        alert('Item created successfully!');
+        showNotification('Item created successfully!');
         
     } catch (error) {
         console.error('Error creating item:', error);
-        alert('Failed to create item. Please try again.');
+        showNotification('Failed to create item. Please try again.', 'error');
     }
 }
 
@@ -861,13 +865,13 @@ async function handleEditItem(event) {
     const editItemSupplier = document.getElementById('editItemSupplier').value;
     
     if (!name || isNaN(quantity)) {
-        alert('Please fill in all required fields');
+        showNotification('Please fill in all required fields', 'error');
         return;
     }
     
     // Validate unit is provided for Janitorial and Office Supplies items
     if ((label === 'Janitorial' || label === 'Office Supplies') && !unit) {
-        alert('Please specify the unit for ' + label + ' items');
+        showNotification('Please specify the unit for ' + label + ' items', 'error');
         return;
     }
     
@@ -875,7 +879,7 @@ async function handleEditItem(event) {
         // Get current item data before update
         const currentItem = allItems.find(i => i.id === itemId);
         if (!currentItem) {
-            alert('Item not found');
+            showNotification('Item not found', 'error');
             return;
         }
         
@@ -918,11 +922,11 @@ async function handleEditItem(event) {
         
         closeEditModal();
         await fetchItems();
-        alert('Item updated successfully!');
+        showNotification('Item updated successfully!');
         
     } catch (error) {
         console.error('Error updating item:', error);
-        alert('Failed to update item. Please try again.');
+        showNotification('Failed to update item. Please try again.', 'error');
     }
 }
 
@@ -931,7 +935,7 @@ async function handleEditItem(event) {
 // 5b. GET ITEM FUNCTIONS
 // ==========================================
 function openGetItemModal() {
-    getItemModal.style.display = 'flex';
+    getItemModal.classList.add('show');
     renderGetItemSelectableItems(allItems);
     // Reset selection view
     getItemDetails.style.display = 'none';
@@ -947,7 +951,7 @@ function openGetItemModal() {
 }
 
 function closeGetItemModal() {
-    getItemModal.style.display = 'none';
+    getItemModal.classList.remove('show');
     // Reset form
     if (getItemPerson) getItemPerson.value = '';
     if (getItemQuantity) getItemQuantity.value = '';
@@ -1075,20 +1079,20 @@ async function handleGetItemSubmit(event) {
     const timestamp = getItemTimestamp.value;
     
     if (!itemId || !person || isNaN(quantity) || quantity < 1 || !timestamp) {
-        alert('Please fill in all required fields');
+        showNotification('Please fill in all required fields', 'error');
         return false;
     }
     
     // Get current item data
     const item = allItems.find(i => i.id === itemId);
     if (!item) {
-        alert('Item not found');
+        showNotification('Item not found', 'error');
         return false;
     }
     
     // Validate quantity doesn't exceed available stock
     if (quantity > item.quantity) {
-        alert(`Cannot get ${quantity} units. Only ${item.quantity} units available in stock.`);
+        showNotification(`Cannot get ${quantity} units. Only ${item.quantity} units available in stock.`, 'error');
         return false;
     }
     
@@ -1126,7 +1130,7 @@ async function handleGetItemSubmit(event) {
         
         if (updateError) {
             console.error('Error updating item quantity:', updateError);
-            alert('Failed to update item stock. Please try again.');
+            showNotification('Failed to update item stock. Please try again.', 'error');
             return false;
         }
         
@@ -1172,11 +1176,11 @@ async function handleGetItemSubmit(event) {
 
         closeGetItemModal();
         await fetchItems();
-        alert(`Successfully recorded: ${person} got ${quantity} ${item.unit || 'units'} of ${item.name}`);
+        showNotification(`Successfully recorded: ${person} got ${quantity} ${item.unit || 'units'} of ${item.name}`);
         
     } catch (error) {
         console.error('Error distributing item:', error);
-        alert('Failed to process item distribution. Please try again.');
+        showNotification('Failed to process item distribution. Please try again.', 'error');
     } finally {
         // Reset submission lock and button state
         isSubmitting = false;
@@ -1218,11 +1222,11 @@ async function deleteItem(itemId) {
         
         await fetchItems();
 
-        alert('Item deleted successfully!');
+        showNotification('Item deleted successfully!');
         
     } catch (error) {
         console.error('Error deleting item:', error);
-        alert('Failed to delete item. Please try again.');
+        showNotification('Failed to delete item. Please try again.', 'error');
     }
 }
 
@@ -1474,7 +1478,7 @@ function openAddSupplierModal(targetDropdownId) {
 
 function closeAddSupplierModal() {
     const modal = document.getElementById('addSupplierModal');
-    modal.style.display = 'none';
+    modal.classList.remove('show');
     
     // Reset form
     const nameInput = document.getElementById('newSupplierName');
@@ -1495,7 +1499,7 @@ async function handleAddSupplier(event) {
     const targetDropdownId = targetDropdown.value;
     
     if (!supplierName) {
-        alert('Please enter a supplier name');
+        showNotification('Please enter a supplier name', 'error');
         return;
     }
     
@@ -1505,7 +1509,7 @@ async function handleAddSupplier(event) {
     );
     
     if (isDuplicate) {
-        alert('A supplier with this name already exists. Please use a different name or select the existing supplier.');
+        showNotification('A supplier with this name already exists. Please use a different name or select the existing supplier.', 'error');
         return;
     }
     
@@ -1535,11 +1539,11 @@ async function handleAddSupplier(event) {
             }
         }
         
-        alert('Supplier added successfully!');
+        showNotification('Supplier added successfully!');
         
     } catch (error) {
         console.error('Error adding supplier:', error);
-        alert('Failed to add supplier. Please try again.');
+        showNotification('Failed to add supplier. Please try again.', 'error');
     }
 }
 

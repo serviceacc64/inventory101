@@ -1,5 +1,7 @@
 // Import Supabase client
 import { supabase } from './supabase.js';
+// animation helpers
+import { showNotification, pulseElement, fadeIn } from './animate.js';
 
 // DOM Elements
 const equipmentContainer = document.getElementById('equipmentContainer');
@@ -185,6 +187,8 @@ function renderEquipment(equipment) {
         const itemEl = document.createElement('div');
         itemEl.className = 'equipment-card';
         itemEl.dataset.equipmentId = item.id;
+        // animate card appearance
+        fadeIn(itemEl);
 
         const amount = (item.quantity || 0) * (item.unit_cost || 0);
         const supplierName = item.suppliers ? item.suppliers.supplier_name : '-';
@@ -275,14 +279,14 @@ window.nextPage = function() {
 // 3. CREATE EQUIPMENT MODAL FUNCTIONS
 // ==========================================
 function openCreateEquipmentModal() {
-    createEquipmentModal.style.display = 'flex';
+    createEquipmentModal.classList.add('show');
     document.getElementById('createEquipmentForm').reset();
     // Refresh suppliers dropdown
     fetchSuppliers();
 }
 
 function closeCreateEquipmentModal() {
-    createEquipmentModal.style.display = 'none';
+    createEquipmentModal.classList.remove('show');
 }
 
 async function handleCreateEquipment(event) {
@@ -299,7 +303,7 @@ async function handleCreateEquipment(event) {
     const dateDelivered = document.getElementById('dateDelivered').value;
     
     if (!itemName || isNaN(quantity)) {
-        alert('Please fill in all required fields');
+        showNotification('Please fill in all required fields', 'error');
         return;
     }
     
@@ -339,11 +343,11 @@ async function handleCreateEquipment(event) {
         
         closeCreateEquipmentModal();
         await fetchEquipment();
-        alert('Equipment created successfully!');
+        showNotification('Equipment created successfully!');
         
     } catch (error) {
         console.error('Error creating equipment:', error);
-        alert('Failed to create equipment. Please try again.');
+        showNotification('Failed to create equipment. Please try again.', 'error');
     }
 }
 
@@ -379,11 +383,11 @@ function openEditEquipmentModal(equipmentId) {
     const currentAmount = item.quantity * item.unit_cost;
     document.getElementById('editAmountDisplay').textContent = formatCurrency(currentAmount);
     
-    editEquipmentModal.style.display = 'flex';
+    editEquipmentModal.classList.add('show');
 }
 
 function closeEditEquipmentModal() {
-    editEquipmentModal.style.display = 'none';
+    editEquipmentModal.classList.remove('show');
 }
 
 // ==========================================
@@ -403,7 +407,7 @@ function openViewEquipmentModal(equipmentId) {
     if (viewEquipmentDate) viewEquipmentDate.textContent = item.date_delivered ? formatDate(item.date_delivered) : '-';
 
     if (viewEquipmentModal) {
-        viewEquipmentModal.style.display = 'flex';
+        viewEquipmentModal.classList.add('show');
         viewEquipmentModal.dataset.itemId = item.id;
     }
 
@@ -424,7 +428,7 @@ function openViewEquipmentModal(equipmentId) {
 }
 
 window.closeViewEquipmentModal = function() {
-    if (viewEquipmentModal) viewEquipmentModal.style.display = 'none';
+    if (viewEquipmentModal) viewEquipmentModal.classList.remove('show');
 };
 
 async function handleEditEquipment(event) {
@@ -442,7 +446,7 @@ async function handleEditEquipment(event) {
     const dateDelivered = document.getElementById('editDateDelivered').value;
     
     if (!itemName || isNaN(quantity)) {
-        alert('Please fill in all required fields');
+        showNotification('Please fill in all required fields', 'error');
         return;
     }
     
@@ -485,11 +489,11 @@ async function handleEditEquipment(event) {
         
         closeEditEquipmentModal();
         await fetchEquipment();
-        alert('Equipment updated successfully!');
+        showNotification('Equipment updated successfully!');
         
     } catch (error) {
         console.error('Error updating equipment:', error);
-        alert('Failed to update equipment. Please try again.');
+        showNotification('Failed to update equipment. Please try again.', 'error');
     }
 }
 
@@ -505,12 +509,12 @@ function updateEditAmount() {
 // 5. ADD SUPPLIER MODAL FUNCTIONS
 // ==========================================
 function openAddSupplierModal() {
-    addSupplierModal.style.display = 'flex';
+    addSupplierModal.classList.add('show');
     document.getElementById('addSupplierForm').reset();
 }
 
 function closeAddSupplierModal() {
-    addSupplierModal.style.display = 'none';
+    addSupplierModal.classList.remove('show');
 }
 
 async function handleCreateSupplier(event) {
@@ -520,7 +524,7 @@ async function handleCreateSupplier(event) {
     const supplierContact = document.getElementById('supplierContact').value.trim();
     
     if (!supplierName) {
-        alert('Please enter a supplier name');
+        showNotification('Please enter a supplier name', 'error');
         return;
     }
     
@@ -531,7 +535,7 @@ async function handleCreateSupplier(event) {
     );
     
     if (existingSupplier) {
-        alert(`Supplier "${supplierName}" already exists! Please use a different name or select it from the dropdown.`);
+        showNotification(`Supplier "${supplierName}" already exists! Please use a different name or select it from the dropdown.`, 'error');
         return;
     }
     
@@ -566,11 +570,11 @@ async function handleCreateSupplier(event) {
             }
         }
         
-        alert('Supplier created successfully!');
+        showNotification('Supplier created successfully!');
         
     } catch (error) {
         console.error('Error creating supplier:', error);
-        alert('Failed to create supplier. Please try again.');
+        showNotification('Failed to create supplier. Please try again.', 'error');
     }
 }
 
@@ -592,11 +596,11 @@ async function deleteEquipment(equipmentId) {
         if (error) throw error;
         
         await fetchEquipment();
-        alert('Equipment deleted successfully!');
+        showNotification('Equipment deleted successfully!');
         
     } catch (error) {
         console.error('Error deleting equipment:', error);
-        alert('Failed to delete equipment. Please try again.');
+        showNotification('Failed to delete equipment. Please try again.', 'error');
     }
 }
 
@@ -616,7 +620,7 @@ async function deleteSupplier(supplierId) {
         if (checkError) throw checkError;
         
         if (equipmentUsingSupplier && equipmentUsingSupplier.length > 0) {
-            alert('Cannot delete this supplier because it is being used by equipment items. Please reassign or delete those items first.');
+            showNotification('Cannot delete this supplier because it is being used by equipment items. Please reassign or delete those items first.', 'error');
             return;
         }
         
@@ -633,11 +637,11 @@ async function deleteSupplier(supplierId) {
         // Refresh manage suppliers modal if open
         renderManageSuppliersList();
         
-        alert('Supplier deleted successfully!');
+        showNotification('Supplier deleted successfully!');
         
     } catch (error) {
         console.error('Error deleting supplier:', error);
-        alert('Failed to delete supplier. Please try again.');
+        showNotification('Failed to delete supplier. Please try again.', 'error');
     }
 }
 
@@ -645,7 +649,7 @@ async function deleteSupplier(supplierId) {
 function openManageSuppliersModal() {
     const modal = document.getElementById('manageSuppliersModal');
     if (modal) {
-        modal.style.display = 'flex';
+        modal.classList.add('show');
         renderManageSuppliersList();
     }
 }
@@ -653,7 +657,7 @@ function openManageSuppliersModal() {
 function closeManageSuppliersModal() {
     const modal = document.getElementById('manageSuppliersModal');
     if (modal) {
-        modal.style.display = 'none';
+        modal.classList.remove('show');
     }
 }
 
