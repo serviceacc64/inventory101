@@ -177,6 +177,13 @@
                     </div>
 
                     <div class="form-group">
+                        <label for="addSupplier">Supplier</label>
+                        <select id="addSupplier">
+                            <option value="">Select Supplier (Optional)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
                         <label for="addQuantity">Quantity to Add *</label>
                         <input type="number" id="addQuantity" required min="1" placeholder="Enter quantity to add">
                     </div>
@@ -225,6 +232,13 @@
                 <div class="form-group">
                     <label for="newItemPO">P.O. Number</label>
                     <input type="text" id="newItemPO" placeholder="e.g., PO-2024-001">
+                </div>
+
+                <div class="form-group">
+                    <label for="newItemSupplier">Supplier</label>
+                    <select id="newItemSupplier">
+                        <option value="">Select Supplier (Optional)</option>
+                    </select>
                 </div>
                 
                 <div class="form-group">
@@ -288,6 +302,13 @@
                     <label for="editItemDate">Date</label>
                     <input type="date" id="editItemDate" placeholder="Leave empty to keep current date">
                     <small style="color: #666; font-size: 11px;">Set a past date for items acquired before this system was created</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="editItemSupplier">Supplier</label>
+                    <select id="editItemSupplier">
+                        <option value="">Select Supplier (Optional)</option>
+                    </select>
                 </div>
 
                 
@@ -383,6 +404,7 @@
                                 <div><strong>Unit:</strong> <span id="viewItemUnit">-</span></div>
                                 <div><strong>Quantity:</strong> <span id="viewItemQuantity">-</span></div>
                                 <div><strong>P.O. Number:</strong> <span id="viewItemPO">-</span></div>
+                                <div><strong>Supplier:</strong> <span id="viewItemSupplier">-</span></div>
                                 <div><strong>Last Updated:</strong> <span id="viewItemUpdatedAt">-</span></div>
                             </div>
                         </div>

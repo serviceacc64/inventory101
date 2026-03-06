@@ -46,13 +46,13 @@ const viewItemLabel = document.getElementById('viewItemLabel');
 const viewItemUnit = document.getElementById('viewItemUnit');
 const viewItemQuantity = document.getElementById('viewItemQuantity');
 const viewItemPO = document.getElementById('viewItemPO');
+const viewItemSupplier = document.getElementById('viewItemSupplier');
 const viewItemUpdatedAt = document.getElementById('viewItemUpdatedAt');
-
-
 
 
 // Store all items for search functionality
 let allItems = [];
+let allSuppliers = []; // Store suppliers for dropdown
 let currentFilter = 'all'; // Track current category filter
 let isSubmitting = false; // Prevent double submission
 
@@ -124,6 +124,67 @@ async function fetchItems() {
         showError('Failed to load items. Please try again.');
     } finally {
         showLoading(false);
+    }
+}
+
+// ==========================================
+// 1b. FETCH SUPPLIERS FROM SUPABASE
+// ==========================================
+async function fetchSuppliers() {
+    try {
+        const { data: suppliers, error } = await supabase
+            .from('suppliers')
+            .select('id, supplier_name')
+            .order('supplier_name', { ascending: true });
+        
+        if (error) throw error;
+        
+        // Filter out duplicate supplier names (case-insensitive)
+        const uniqueSupplierMap = new Map();
+        suppliers.forEach(supplier => {
+            const normalizedName = supplier.supplier_name.toLowerCase().trim();
+            if (!uniqueSupplierMap.has(normalizedName)) {
+                uniqueSupplierMap.set(normalizedName, supplier);
+            }
+        });
+        
+        allSuppliers = Array.from(uniqueSupplierMap.values());
+        populateSupplierDropdowns();
+        
+    } catch (error) {
+        console.error('Error fetching suppliers:', error);
+        // Non-critical error, don't show error to user
+    }
+}
+
+// ==========================================
+// 1c. POPULATE SUPPLIER DROPDOWNS
+// ==========================================
+function populateSupplierDropdowns() {
+    // Get the dropdown elements
+    const newItemSupplier = document.getElementById('newItemSupplier');
+    const addSupplier = document.getElementById('addSupplier');
+    const editItemSupplier = document.getElementById('editItemSupplier');
+    
+    // Build options HTML
+    const defaultOption = '<option value="">Select Supplier (Optional)</option>';
+    const supplierOptions = allSuppliers.map(supplier => 
+        `<option value="${supplier.id}">${escapeHtml(supplier.supplier_name)}</option>`
+    ).join('');
+    
+    // Populate Create New Item dropdown
+    if (newItemSupplier) {
+        newItemSupplier.innerHTML = defaultOption + supplierOptions;
+    }
+    
+    // Populate Add Stock dropdown
+    if (addSupplier) {
+        addSupplier.innerHTML = defaultOption + supplierOptions;
+    }
+    
+    // Populate Edit Item dropdown
+    if (editItemSupplier) {
+        editItemSupplier.innerHTML = defaultOption + supplierOptions;
     }
 }
 
@@ -217,6 +278,7 @@ function closeSelectItemModal() {
     // Reset form
     if (addQuantity) addQuantity.value = '';
     if (document.getElementById('addPO')) document.getElementById('addPO').value = '';
+    if (document.getElementById('addSupplier')) document.getElementById('addSupplier').value = '';
     cancelSelection();
 }
 
@@ -331,6 +393,17 @@ function openViewItemModal(itemId) {
     if (viewItemUnit) viewItemUnit.textContent = item.unit || '-';
     if (viewItemQuantity) viewItemQuantity.textContent = `${item.quantity}${item.unit ? ' ' + item.unit : ' units'}`;
     if (viewItemPO) viewItemPO.textContent = item.po_number || '-';
+    
+    // Display supplier name if available
+    if (viewItemSupplier) {
+        if (item.supplier_id) {
+            const supplier = allSuppliers.find(s => s.id === item.supplier_id);
+            viewItemSupplier.textContent = supplier ? supplier.supplier_name : 'Unknown Supplier';
+        } else {
+            viewItemSupplier.textContent = '-';
+        }
+    }
+    
     const updated = item.updated_at || item.created_at || null;
     if (viewItemUpdatedAt) viewItemUpdatedAt.textContent = updated ? new Date(updated).toLocaleString() : 'N/A';
 
@@ -512,6 +585,7 @@ async function handleUpdateQuantity(event) {
     const quantityToAdd = parseInt(addQuantity.value);
     const selectedDate = document.getElementById('addDate').value;
     const poNumber = document.getElementById('addPO').value.trim();
+    const supplierId = document.getElementById('addSupplier').value;
     
     if (!itemId || isNaN(quantityToAdd) || quantityToAdd < 1 || !selectedDate) {
         alert('Please fill in all required fields');
@@ -550,6 +624,11 @@ async function handleUpdateQuantity(event) {
         // Add P.O. Number if provided
         if (poNumber) {
             updateData.po_number = poNumber;
+        }
+        
+        // Add Supplier if provided
+        if (supplierId) {
+            updateData.supplier_id = supplierId;
         }
         
         const { error } = await supabase
@@ -608,6 +687,8 @@ function closeCreateItemModal() {
     }
     // Reset date field
     document.getElementById('newItemDate').value = '';
+    // Reset supplier dropdown
+    document.getElementById('newItemSupplier').value = '';
 }
 
 async function handleCreateItem(event) {
@@ -618,6 +699,7 @@ async function handleCreateItem(event) {
     const quantity = parseInt(document.getElementById('newItemQuantity').value);
     const unit = document.getElementById('newItemUnit').value.trim();
     const poNumber = document.getElementById('newItemPO').value.trim();
+    const supplierId = document.getElementById('newItemSupplier').value;
     const itemDate = document.getElementById('newItemDate').value;
     
     if (!name || isNaN(quantity)) {
@@ -646,6 +728,11 @@ async function handleCreateItem(event) {
         // Add P.O. Number if provided
         if (poNumber) {
             insertData.po_number = poNumber;
+        }
+        
+        // Add Supplier if provided
+        if (supplierId) {
+            insertData.supplier_id = supplierId;
         }
         
         // Use custom date if provided, otherwise use current date
@@ -742,6 +829,14 @@ function openEditModal(itemId) {
         editItemDate.value = '';
     }
     
+    // Set the supplier dropdown to the item's current supplier
+    const editItemSupplier = document.getElementById('editItemSupplier');
+    if (editItemSupplier && item.supplier_id) {
+        editItemSupplier.value = item.supplier_id;
+    } else if (editItemSupplier) {
+        editItemSupplier.value = '';
+    }
+    
     editItemModal.style.display = 'flex';
 }
 
@@ -750,6 +845,8 @@ function closeEditModal() {
     editItemModal.style.display = 'none';
     // Reset date field
     document.getElementById('editItemDate').value = '';
+    // Reset supplier dropdown
+    document.getElementById('editItemSupplier').value = '';
 }
 
 async function handleEditItem(event) {
@@ -761,6 +858,7 @@ async function handleEditItem(event) {
     const quantity = parseInt(document.getElementById('editItemQuantity').value);
     const unit = document.getElementById('editItemUnit').value.trim();
     const editItemDate = document.getElementById('editItemDate').value;
+    const editItemSupplier = document.getElementById('editItemSupplier').value;
     
     if (!name || isNaN(quantity)) {
         alert('Please fill in all required fields');
@@ -792,6 +890,13 @@ async function handleEditItem(event) {
             updateData.unit = unit;
         } else {
             updateData.unit = null;
+        }
+        
+        // Update supplier if selected
+        if (editItemSupplier) {
+            updateData.supplier_id = editItemSupplier;
+        } else {
+            updateData.supplier_id = null;
         }
         
         // Use custom date if provided, otherwise use current date
@@ -1339,6 +1444,7 @@ if (newItemLabel) {
 // 9. INITIALIZE - LOAD ITEMS ON PAGE LOAD
 // ==========================================
 fetchItems();
+fetchSuppliers(); // Load suppliers for dropdowns
 
 // Make functions available globally for onclick handlers
 window.openSelectItemModal = openSelectItemModal;
