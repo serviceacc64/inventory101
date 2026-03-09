@@ -37,9 +37,7 @@ const getItemDetails = document.getElementById('getItemDetails');
 const getItemSelectedId = document.getElementById('getItemSelectedId');
 const getItemSelectedName = document.getElementById('getItemSelectedName');
 const getItemSelectedStock = document.getElementById('getItemSelectedStock');
-const getItemPerson = document.getElementById('getItemPerson');
 const getItemQuantity = document.getElementById('getItemQuantity');
-const getItemTimestamp = document.getElementById('getItemTimestamp');
 
 // View Item Modal Elements
 const viewItemModal = document.getElementById('viewItemModal');
@@ -57,6 +55,16 @@ let allItems = [];
 let allSuppliers = []; // Store suppliers for dropdown
 let currentFilter = 'all'; // Track current category filter
 let isSubmitting = false; // Prevent double submission
+
+// Get Item Flow - Requester Info State
+let requesterName = '';
+let requesterTimestamp = '';
+let selectedGetItem = null; // Store selected item object for confirmation
+let preSelectedItem = null; // For when item is pre-selected from view modal
+let cartItems = []; // Cart array for multi-item support
+let currentGetTab = 'items'; // Track current tab: 'items' or 'equipment'
+let allEquipmentForGet = []; // Store equipment for get item modal
+
 
 
 // ==========================================
@@ -447,10 +455,8 @@ function openViewItemModal(itemId) {
     if (getBtn) {
         getBtn.onclick = () => {
             closeViewItemModal();
-            openGetItemModal();
-            setTimeout(() => {
-                selectGetItem(item);
-            }, 120);
+            // Pass the current item to be pre-selected after requester info is filled
+            openGetItemModal(item);
         };
     }
 }
@@ -934,28 +940,108 @@ async function handleEditItem(event) {
 // ==========================================
 // 5b. GET ITEM FUNCTIONS
 // ==========================================
-function openGetItemModal() {
+function openGetItemModal(preSelectedItemFromView = null) {
     getItemModal.classList.add('show');
-    renderGetItemSelectableItems(allItems);
-    // Reset selection view
-    getItemDetails.style.display = 'none';
-    getItemSelectableList.style.display = 'block';
-    if (getItemSearch) getItemSearch.value = '';
     
-    // Set default timestamp to current date/time
-    if (getItemTimestamp) {
+    // Reset all states for new flow
+    requesterName = '';
+    requesterTimestamp = '';
+    selectedGetItem = null;
+    preSelectedItem = preSelectedItemFromView;
+    
+    // Show Step 1: Requester Info Form (always show first)
+    document.getElementById('requesterInfoSection').style.display = 'block';
+    document.getElementById('getItemSearchContainer').style.display = 'none';
+    getItemSelectableList.style.display = 'none';
+    getItemDetails.style.display = 'none';
+    document.getElementById('confirmationSection').style.display = 'none';
+    
+    // Reset form fields
+    if (document.getElementById('requesterName')) document.getElementById('requesterName').value = '';
+    if (document.getElementById('requesterTimestamp')) {
         const now = new Date();
         now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-        getItemTimestamp.value = now.toISOString().slice(0, 16);
+        document.getElementById('requesterTimestamp').value = now.toISOString().slice(0, 16);
     }
+    if (getItemSearch) getItemSearch.value = '';
+    if (getItemQuantity) getItemQuantity.value = '';
+    
+    // Focus on requester name input
+    setTimeout(() => {
+        document.getElementById('requesterName').focus();
+    }, 100);
 }
 
 function closeGetItemModal() {
     getItemModal.classList.remove('show');
+    // Reset all flow states
+    requesterName = '';
+    requesterTimestamp = '';
+    selectedGetItem = null;
+    preSelectedItem = null;
+    cartItems = []; // Reset cart
     // Reset form
-    if (getItemPerson) getItemPerson.value = '';
     if (getItemQuantity) getItemQuantity.value = '';
     cancelGetItemSelection();
+}
+
+// Step 1 -> Step 2: Proceed from requester info to item selection
+function proceedToItemSelection(event) {
+    event.preventDefault();
+    
+    const nameInput = document.getElementById('requesterName');
+    const timestampInput = document.getElementById('requesterTimestamp');
+    
+    if (!nameInput.value.trim()) {
+        showNotification('Please enter who gets it', 'error');
+        nameInput.focus();
+        return false;
+    }
+    
+    if (!timestampInput.value) {
+        showNotification('Please select a timestamp', 'error');
+        timestampInput.focus();
+        return false;
+    }
+    
+    // Store requester info
+    requesterName = nameInput.value.trim();
+    requesterTimestamp = timestampInput.value;
+    
+    // Hide requester form, show item selection
+    document.getElementById('requesterInfoSection').style.display = 'none';
+    document.getElementById('getItemSearchContainer').style.display = 'block';
+    getItemSelectableList.style.display = 'block';
+    
+    // Render available items
+    renderGetItemSelectableItems(allItems);
+    
+    // If there was a pre-selected item from view modal, auto-select it
+    if (preSelectedItem) {
+        // Find the item in the rendered list
+        const item = allItems.find(i => i.id === preSelectedItem.id);
+        if (item) {
+            selectGetItem(item);
+        }
+        preSelectedItem = null; // Clear after use
+    }
+    
+    return false;
+}
+
+// Back from item details to item selection
+function backToItemSelection() {
+    // If cart has items, go to confirmation section instead
+    if (cartItems.length > 0) {
+        getItemDetails.style.display = 'none';
+        document.getElementById('confirmationSection').style.display = 'block';
+        return;
+    }
+    
+    getItemDetails.style.display = 'none';
+    getItemSelectableList.style.display = 'block';
+    if (getItemQuantity) getItemQuantity.value = '';
+    selectedGetItem = null;
 }
 
 function renderGetItemSelectableItems(items) {
@@ -1007,6 +1093,158 @@ function renderGetItemSelectableItems(items) {
     });
 }
 
+// ==========================================
+// EQUIPMENT TAB FUNCTIONS
+// ==========================================
+
+// Switch to Items tab
+function switchToItemsTab() {
+    currentGetTab = 'items';
+    
+    // Update tab button styles
+    document.getElementById('tabItems').style.background = 'var(--primary-color)';
+    document.getElementById('tabItems').style.color = 'white';
+    document.getElementById('tabEquipment').style.background = '#f5f5f5';
+    document.getElementById('tabEquipment').style.color = '#666';
+    
+    // Update search placeholder
+    document.getElementById('getItemSearch').placeholder = 'Search available items...';
+    
+    // Show/hide lists
+    document.getElementById('getItemSelectableList').style.display = 'block';
+    document.getElementById('getEquipmentSelectableList').style.display = 'none';
+    
+    // Re-render items
+    filterGetItemSelectableItems();
+}
+
+// Switch to Equipment tab
+async function switchToEquipmentTab() {
+    currentGetTab = 'equipment';
+    
+    // Update tab button styles
+    document.getElementById('tabItems').style.background = '#f5f5f5';
+    document.getElementById('tabItems').style.color = '#666';
+    document.getElementById('tabEquipment').style.background = 'var(--primary-color)';
+    document.getElementById('tabEquipment').style.color = 'white';
+    
+    // Update search placeholder
+    document.getElementById('getItemSearch').placeholder = 'Search available equipment...';
+    
+    // Show/hide lists
+    document.getElementById('getItemSelectableList').style.display = 'none';
+    document.getElementById('getEquipmentSelectableList').style.display = 'block';
+    
+    // Fetch equipment if not already loaded
+    if (allEquipmentForGet.length === 0) {
+        try {
+            const { data: equipment, error } = await supabase
+                .from('equipment')
+                .select('*')
+                .order('created_at', { ascending: false });
+            
+            if (!error && equipment) {
+                allEquipmentForGet = equipment;
+            }
+        } catch (e) {
+            console.error('Error fetching equipment:', e);
+        }
+    }
+    
+    // Render equipment
+    renderGetEquipmentSelectableItems(allEquipmentForGet);
+}
+
+// Render equipment selectable list
+function renderGetEquipmentSelectableItems(equipment) {
+    const equipmentList = document.getElementById('getEquipmentSelectableList');
+    if (!equipmentList) return;
+    
+    equipmentList.innerHTML = '';
+    
+    // Only show equipment with quantity > 0
+    const availableEquipment = equipment.filter(item => item.quantity > 0);
+    
+    if (availableEquipment.length === 0) {
+        equipmentList.innerHTML = `
+            <div class="empty-state" style="padding: 20px;">
+                <i class="fa-solid fa-tools"></i>
+                <p>No available equipment in stock</p>
+            </div>
+        `;
+        return;
+    }
+    
+    availableEquipment.forEach(item => {
+        const itemEl = document.createElement('div');
+        itemEl.className = 'selectable-item';
+        itemEl.dataset.equipmentId = item.id;
+        itemEl.onclick = () => selectGetEquipment(item);
+        
+        // Format stock text
+        const stockText = `Qty: ${item.quantity}`;
+        
+        itemEl.innerHTML = `
+            <div class="selectable-item-icon">
+                <i class="fa-solid fa-tools"></i>
+            </div>
+            <div class="selectable-item-info">
+                <h4>${escapeHtml(item.item_name)}</h4>
+                <p>${stockText}</p>
+            </div>
+            <div class="selectable-item-action">
+                <i class="fa-solid fa-chevron-right"></i>
+            </div>
+        `;
+        
+        equipmentList.appendChild(itemEl);
+    });
+}
+
+// Filter equipment selectable items
+function filterGetEquipmentSelectableItems() {
+    const query = getItemSearch.value.trim().toLowerCase();
+    
+    let filtered = allEquipmentForGet.filter(item => item.quantity > 0);
+    
+    if (query) {
+        filtered = filtered.filter(item => {
+            const searchText = (item.item_name + ' ' + (item.item_description || '')).toLowerCase();
+            return searchText.includes(query);
+        });
+    }
+    
+    renderGetEquipmentSelectableItems(filtered);
+}
+
+// Select equipment
+function selectGetEquipment(equipment) {
+    // Store selected equipment for confirmation (mark as equipment type)
+    selectedGetItem = { ...equipment, isEquipment: true };
+    
+    // Hide list, show details
+    document.getElementById('getEquipmentSelectableList').style.display = 'none';
+    getItemDetails.style.display = 'block';
+    
+    // Populate details
+    getItemSelectedId.value = equipment.id;
+    getItemSelectedName.textContent = equipment.item_name;
+    
+    const stockText = `Available Qty: ${equipment.quantity}`;
+    getItemSelectedStock.textContent = stockText;
+    
+    // Set max attribute for quantity input
+    if (getItemQuantity) {
+        getItemQuantity.max = equipment.quantity;
+        getItemQuantity.value = ''; // Reset quantity for new selection
+    }
+    
+    // Focus on quantity input
+    setTimeout(() => {
+        if (getItemQuantity) getItemQuantity.focus();
+    }, 100);
+}
+
 function filterGetItemSelectableItems() {
     const query = getItemSearch.value.trim().toLowerCase();
     
@@ -1023,6 +1261,9 @@ function filterGetItemSelectableItems() {
 }
 
 function selectGetItem(item) {
+    // Store selected item for confirmation (mark as NOT equipment)
+    selectedGetItem = { ...item, isEquipment: false };
+    
     // Hide list, show details
     getItemSelectableList.style.display = 'none';
     getItemDetails.style.display = 'block';
@@ -1042,78 +1283,317 @@ function selectGetItem(item) {
     // Set max attribute for quantity input
     if (getItemQuantity) {
         getItemQuantity.max = item.quantity;
+        getItemQuantity.value = ''; // Reset quantity for new selection
     }
     
-    // Focus on person input
+    // Focus on quantity input
     setTimeout(() => {
-        if (getItemPerson) getItemPerson.focus();
+        if (getItemQuantity) getItemQuantity.focus();
     }, 100);
 }
 
 function cancelGetItemSelection() {
     getItemDetails.style.display = 'none';
     getItemSelectableList.style.display = 'block';
-    if (getItemPerson) getItemPerson.value = '';
     if (getItemQuantity) getItemQuantity.value = '';
     if (getItemSelectedId) getItemSelectedId.value = '';
+    selectedGetItem = null;
 }
 
-async function handleGetItemSubmit(event) {
+// Step 3 -> Step 4: Show confirmation table with cart
+function showConfirmationStep(event) {
     event.preventDefault();
     
-    // Prevent double submission
-    if (isSubmitting) {
-        console.log('Submission blocked - already in progress');
-        return false;
-    }
-    
-    const form = event.target;
-    if (form.classList.contains('submitting')) {
-        console.log('Submission blocked - form marked as submitting');
-        return false;
-    }
-    
-    const itemId = getItemSelectedId.value;
-    const person = getItemPerson.value.trim();
     const quantity = parseInt(getItemQuantity.value);
-    const timestamp = getItemTimestamp.value;
+    const itemId = getItemSelectedId.value;
     
-    if (!itemId || !person || isNaN(quantity) || quantity < 1 || !timestamp) {
-        showNotification('Please fill in all required fields', 'error');
+    // Validation
+    if (!itemId || !selectedGetItem) {
+        showNotification('Please select an item first', 'error');
         return false;
     }
     
-    // Get current item data
-    const item = allItems.find(i => i.id === itemId);
-    if (!item) {
-        showNotification('Item not found', 'error');
+    if (isNaN(quantity) || quantity < 1) {
+        showNotification('Please enter a valid quantity', 'error');
+        getItemQuantity.focus();
         return false;
     }
     
     // Validate quantity doesn't exceed available stock
-    if (quantity > item.quantity) {
-        showNotification(`Cannot get ${quantity} units. Only ${item.quantity} units available in stock.`, 'error');
+    if (quantity > selectedGetItem.quantity) {
+        showNotification(`Cannot get ${quantity} units. Only ${selectedGetItem.quantity} units available in stock.`, 'error');
+        getItemQuantity.focus();
         return false;
+    }
+    
+    // Add item to cart (include isEquipment flag)
+    const cartItem = {
+        itemId: selectedGetItem.id,
+        itemName: selectedGetItem.name || selectedGetItem.item_name,
+        category: selectedGetItem.label || selectedGetItem.item_description || 'Equipment',
+        unit: selectedGetItem.unit || 'unit',
+        quantity: quantity,
+        availableStock: selectedGetItem.quantity,
+        isEquipment: selectedGetItem.isEquipment || false
+    };
+    
+    // Check if item already in cart (consider type)
+    const existingIndex = cartItems.findIndex(item => item.itemId === cartItem.itemId && item.isEquipment === cartItem.isEquipment);
+    if (existingIndex >= 0) {
+        // Update quantity if already in cart
+        cartItems[existingIndex].quantity += quantity;
+    } else {
+        cartItems.push(cartItem);
+    }
+    
+    // Update confirmation section
+    document.getElementById('confirmPerson').textContent = requesterName;
+    
+    // Format timestamp for display
+    const timestampDate = new Date(requesterTimestamp);
+    document.getElementById('confirmTimestamp').textContent = timestampDate.toLocaleString();
+    
+    // Render cart items table
+    renderCartItems();
+    
+    // Hide item details, show confirmation
+    getItemDetails.style.display = 'none';
+    document.getElementById('confirmationSection').style.display = 'block';
+    
+    return false;
+}
+
+// Render cart items table
+function renderCartItems() {
+    const tbody = document.getElementById('cartItemsBody');
+    if (!tbody) return;
+    
+    if (cartItems.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="padding: 20px; text-align: center; color: #666;">No items in cart</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = cartItems.map((item, index) => `
+        <tr>
+            <td style="padding: 10px; border-bottom: 1px solid #e0e0e0;">
+                <i class="fa-solid ${item.isEquipment ? 'fa-tools' : 'fa-box'}" style="margin-right: 8px; color: ${item.isEquipment ? '#ff9800' : '#4caf50'};"></i>
+                ${escapeHtml(item.itemName)}
+            </td>
+            <td style="padding: 10px; border-bottom: 1px solid #e0e0e0;">${escapeHtml(item.category)}</td>
+            <td style="padding: 10px; text-align: center; border-bottom: 1px solid #e0e0e0;">${item.quantity} ${escapeHtml(item.unit)}</td>
+            <td style="padding: 10px; text-align: center; border-bottom: 1px solid #e0e0e0;">
+                <button type="button" onclick="removeFromCart(${index})" style="background: #f44336; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">
+                    <i class="fa-solid fa-trash"></i>
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// Remove item from cart
+function removeFromCart(index) {
+    if (index >= 0 && index < cartItems.length) {
+        cartItems.splice(index, 1);
+        renderCartItems();
+    }
+}
+
+// Get another item - go back to item selection
+function getAnotherItem() {
+    // Hide confirmation, show item selection
+    document.getElementById('confirmationSection').style.display = 'none';
+    document.getElementById('getItemSearchContainer').style.display = 'block';
+    getItemDetails.style.display = 'none';
+    
+    // Reset selected item
+    selectedGetItem = null;
+    if (getItemQuantity) getItemQuantity.value = '';
+    
+    // Switch to the current tab (items or equipment)
+    if (currentGetTab === 'equipment') {
+        switchToEquipmentTab();
+    } else {
+        switchToItemsTab();
+    }
+}
+
+// Back from confirmation to item details
+function backToGetItemDetails() {
+    document.getElementById('confirmationSection').style.display = 'none';
+    getItemDetails.style.display = 'block';
+}
+
+// Process all items in cart
+async function processAllItems() {
+    // Prevent double submission
+    if (isSubmitting) {
+        console.log('Submission blocked - already in progress');
+        return;
+    }
+    
+    if (cartItems.length === 0) {
+        showNotification('No items to process', 'error');
+        return;
+    }
+    
+    // Validate all items have valid quantities
+    for (const cartItem of cartItems) {
+        let item;
+        if (cartItem.isEquipment) {
+            item = allEquipmentForGet.find(i => i.id === cartItem.itemId);
+        } else {
+            item = allItems.find(i => i.id === cartItem.itemId);
+        }
+        
+        if (!item) {
+            showNotification(`Item not found: ${cartItem.itemName}`, 'error');
+            return;
+        }
+        if (cartItem.quantity > item.quantity) {
+            showNotification(`Cannot get ${cartItem.quantity} units of ${cartItem.itemName}. Only ${item.quantity} available.`, 'error');
+            return;
+        }
     }
     
     // Set submission lock
     isSubmitting = true;
-    form.classList.add('submitting');
     
-    const submitBtn = form.querySelector('button[type="submit"]');
-    const originalBtnText = submitBtn ? submitBtn.innerHTML : '';
-    const allFormInputs = form.querySelectorAll('input, button, textarea, select');
+    // Disable buttons
+    const processBtn = document.querySelector('#confirmationSection .btn-primary');
+    const getAnotherBtn = document.querySelector('#confirmationSection .btn-secondary');
+    if (processBtn) {
+        processBtn.disabled = true;
+        processBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+    }
+    if (getAnotherBtn) getAnotherBtn.disabled = true;
     
-    // Disable all form inputs
-    allFormInputs.forEach(input => {
-        if (input !== submitBtn) {
-            input.disabled = true;
+    let successCount = 0;
+    let failedItems = [];
+    
+    try {
+        // Process each item in cart
+        for (const cartItem of cartItems) {
+            let item;
+            let tableName;
+            
+            if (cartItem.isEquipment) {
+                item = allEquipmentForGet.find(i => i.id === cartItem.itemId);
+                tableName = 'equipment';
+            } else {
+                item = allItems.find(i => i.id === cartItem.itemId);
+                tableName = 'items';
+            }
+            
+            if (!item) {
+                failedItems.push(cartItem.itemName);
+                continue;
+            }
+            
+            const oldQuantity = item.quantity;
+            const newQuantity = item.quantity - cartItem.quantity;
+            
+            // Update quantity in appropriate table
+            const { error: updateError } = await supabase
+                .from(tableName)
+                .update({ 
+                    quantity: newQuantity,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', cartItem.itemId);
+            
+            if (updateError) {
+                console.error('Error updating quantity:', updateError);
+                failedItems.push(cartItem.itemName);
+                continue;
+            }
+            
+            // Log activity for DISTRIBUTE action
+            // For equipment, item_id is NULL (since equipment is in a different table)
+            // and the equipment ID is stored in details.equipment_id
+            const activityItemId = cartItem.isEquipment ? null : cartItem.itemId;
+            const activityDetails = cartItem.isEquipment 
+                ? { label: cartItem.category, unit: cartItem.unit, equipment_id: cartItem.itemId }
+                : { label: cartItem.category, unit: cartItem.unit };
+            
+            await logActivity(
+                'DISTRIBUTE',
+                activityItemId,
+                cartItem.itemName,
+                -cartItem.quantity,
+                oldQuantity,
+                newQuantity,
+                requesterName,
+                activityDetails,
+                requesterTimestamp
+            );
+            
+            successCount++;
         }
-    });
+        
+        // Close modal and refresh
+        closeGetItemModal();
+        await fetchItems();
+        
+        if (failedItems.length > 0) {
+            showNotification(`Processed ${successCount} items. Failed: ${failedItems.join(', ')}`, 'warning');
+        } else {
+            const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+            showNotification(`Successfully distributed ${totalItems} items to ${requesterName}`);
+        }
+        
+    } catch (error) {
+        console.error('Error processing items:', error);
+        showNotification('Failed to process items. Please try again.', 'error');
+    } finally {
+        // Reset submission lock and button state
+        isSubmitting = false;
+        
+        if (processBtn) {
+            processBtn.disabled = false;
+            processBtn.innerHTML = '<i class="fa-solid fa-check"></i> Process All';
+        }
+        if (getAnotherBtn) getAnotherBtn.disabled = false;
+    }
+}
+
+// Step 4: Actually process the confirmed request
+async function confirmGetItem() {
+    // Prevent double submission
+    if (isSubmitting) {
+        console.log('Submission blocked - already in progress');
+        return;
+    }
     
-    if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+    const itemId = getItemSelectedId.value;
+    const quantity = parseInt(getItemQuantity.value);
+    
+    if (!itemId || !selectedGetItem || isNaN(quantity) || quantity < 1) {
+        showNotification('Invalid request data', 'error');
+        return;
+    }
+    
+    // Get the item from allItems (current state)
+    const item = allItems.find(i => i.id === itemId);
+    if (!item) {
+        showNotification('Item not found', 'error');
+        return;
+    }
+    
+    // Validate quantity doesn't exceed available stock (re-check)
+    if (quantity > item.quantity) {
+        showNotification(`Cannot get ${quantity} units. Only ${item.quantity} units available in stock.`, 'error');
+        return;
+    }
+    
+    // Set submission lock
+    isSubmitting = true;
+    
+    // Disable the confirm button
+    const confirmBtn = document.querySelector('#confirmationSection .btn-primary');
+    const originalBtnText = confirmBtn ? confirmBtn.innerHTML : '';
+    if (confirmBtn) {
+        confirmBtn.disabled = true;
+        confirmBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
     }
     
     try {
@@ -1131,36 +1611,30 @@ async function handleGetItemSubmit(event) {
         if (updateError) {
             console.error('Error updating item quantity:', updateError);
             showNotification('Failed to update item stock. Please try again.', 'error');
-            return false;
+            return;
         }
         
         // Step 2: Try to create distribution record (legacy table)
-
-        // Note: This requires the item_distributions table to exist
-
         try {
             const { error: distError } = await supabase
                 .from('item_distributions')
                 .insert([{
                     item_id: itemId,
                     item_name: item.name,
-                    person: person,
+                    person: requesterName,
                     quantity: quantity,
-                    timestamp: timestamp,
+                    timestamp: requesterTimestamp,
                     created_at: new Date().toISOString()
                 }]);
             
             if (distError) {
-                // If table doesn't exist, log warning but don't fail the operation
                 console.warn('Could not create distribution record (table may not exist):', distError);
-                console.log('To enable distribution tracking, create the item_distributions table in Supabase.');
             }
         } catch (distCatchError) {
-            // Distribution table likely doesn't exist - log but don't fail
             console.warn('Distribution table not available:', distCatchError);
         }
 
-        // Step 3: Log the activity to activity_logs table for logs page display
+        // Step 3: Log the activity to activity_logs table using the custom timestamp
         await logActivity(
             'DISTRIBUTE',
             itemId,
@@ -1168,15 +1642,15 @@ async function handleGetItemSubmit(event) {
             -quantity,  // Negative quantity to indicate removal
             oldQuantity,
             newQuantity,
-            person,
-            { label: item.label, unit: item.unit }
+            requesterName,
+            { label: item.label, unit: item.unit },
+            requesterTimestamp
         );
 
         // Close modal and refresh
-
         closeGetItemModal();
         await fetchItems();
-        showNotification(`Successfully recorded: ${person} got ${quantity} ${item.unit || 'units'} of ${item.name}`);
+        showNotification(`Successfully recorded: ${requesterName} got ${quantity} ${item.unit || 'units'} of ${item.name}`);
         
     } catch (error) {
         console.error('Error distributing item:', error);
@@ -1184,20 +1658,12 @@ async function handleGetItemSubmit(event) {
     } finally {
         // Reset submission lock and button state
         isSubmitting = false;
-        form.classList.remove('submitting');
         
-        // Re-enable form inputs
-        allFormInputs.forEach(input => {
-            input.disabled = false;
-        });
-        
-        if (submitBtn) {
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = originalBtnText || '<i class="fa-solid fa-check"></i> Confirm Get Item';
+        if (confirmBtn) {
+            confirmBtn.disabled = false;
+            confirmBtn.innerHTML = originalBtnText || '<i class="fa-solid fa-check"></i> Confirm & Process';
         }
     }
-    
-    return false;
 }
 
 
@@ -1575,8 +2041,18 @@ window.cancelSelection = cancelSelection;
 // Get Item global functions
 window.openGetItemModal = openGetItemModal;
 window.closeGetItemModal = closeGetItemModal;
-window.handleGetItemSubmit = handleGetItemSubmit;
+window.proceedToItemSelection = proceedToItemSelection;
+window.backToItemSelection = backToItemSelection;
+window.showConfirmationStep = showConfirmationStep;
+window.backToGetItemDetails = backToGetItemDetails;
+window.confirmGetItem = confirmGetItem;
+window.processAllItems = processAllItems;
+window.getAnotherItem = getAnotherItem;
+window.removeFromCart = removeFromCart;
 window.cancelGetItemSelection = cancelGetItemSelection;
+window.switchToItemsTab = switchToItemsTab;
+window.switchToEquipmentTab = switchToEquipmentTab;
+
 // View Item modal globals
 window.openViewItemModal = openViewItemModal;
 window.closeViewItemModal = closeViewItemModal;

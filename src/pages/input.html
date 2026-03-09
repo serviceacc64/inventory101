@@ -335,17 +335,59 @@
                 <button onclick="closeGetItemModal()">&times;</button>
             </div>
             
-            <!-- Search Box -->
-            <div class="form-group">
+            <!-- Step 1: Requester Info Section (Shows first) -->
+            <div id="requesterInfoSection" style="padding: 20px 0;">
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <div style="display: inline-block; background: var(--primary-color); color: white; width: 40px; height: 40px; border-radius: 50%; line-height: 40px; font-weight: bold;">1</div>
+                    <span style="margin-left: 10px; font-weight: 500;">Requester Information</span>
+                </div>
+                
+                <form id="requesterInfoForm" onsubmit="proceedToItemSelection(event)">
+                    <div class="form-group">
+                        <label for="requesterName">Who Gets It *</label>
+                        <input type="text" id="requesterName" required placeholder="Enter person's name">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="requesterTimestamp">Timestamp *</label>
+                        <input type="datetime-local" id="requesterTimestamp" required>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" onclick="closeGetItemModal()" class="btn btn-secondary">Cancel</button>
+                        <button type="submit" class="btn btn-primary">
+                            Next <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Search Box (Hidden initially, shows in Step 2) -->
+            <div id="getItemSearchContainer" class="form-group" style="display: none;">
+                <!-- Tab Buttons for Items/Equipment -->
+                <div style="display: flex; gap: 10px; margin-bottom: 15px; border-bottom: 2px solid #e0e0e0;">
+                    <button type="button" id="tabItems" onclick="switchToItemsTab()" style="flex: 1; padding: 10px; background: var(--primary-color); color: white; border: none; border-radius: 8px 8px 0 0; font-weight: 500; cursor: pointer;">
+                        <i class="fa-solid fa-box"></i> Items
+                    </button>
+                    <button type="button" id="tabEquipment" onclick="switchToEquipmentTab()" style="flex: 1; padding: 10px; background: #f5f5f5; color: #666; border: none; border-radius: 8px 8px 0 0; font-weight: 500; cursor: pointer;">
+                        <i class="fa-solid fa-tools"></i> Equipment
+                    </button>
+                </div>
+                
                 <div class="search-box" style="margin-bottom: 15px;">
                     <input type="search" id="getItemSearch" placeholder="Search available items..." aria-label="Search items">
                     <button type="button" id="clearGetItemSearch" title="Clear search"><i class="fa-solid fa-times"></i></button>
                 </div>
             </div>
             
-            <!-- Selectable Items List -->
-            <div id="getItemSelectableList" class="selectable-items-list">
+            <!-- Selectable Items List (Hidden initially) -->
+            <div id="getItemSelectableList" class="selectable-items-list" style="display: none;">
                 <!-- Items will be rendered here dynamically -->
+            </div>
+            
+            <!-- Selectable Equipment List (Hidden initially) -->
+            <div id="getEquipmentSelectableList" class="selectable-items-list" style="display: none;">
+                <!-- Equipment will be rendered here dynamically -->
             </div>
 
             
@@ -356,31 +398,74 @@
                     <p id="getItemSelectedStock">Available Stock: 0</p>
                 </div>
                 
-                <form id="getItemForm" onsubmit="handleGetItemSubmit(event)">
+                <form id="getItemForm" onsubmit="showConfirmationStep(event)">
                     <input type="hidden" id="getItemSelectedId">
-                    
-                    <div class="form-group">
-                        <label for="getItemPerson">Who Gets It *</label>
-                        <input type="text" id="getItemPerson" required placeholder="Enter person's name">
-                    </div>
                     
                     <div class="form-group">
                         <label for="getItemQuantity">Quantity to Get *</label>
                         <input type="number" id="getItemQuantity" required min="1" placeholder="Enter quantity">
                     </div>
                     
-                    <div class="form-group">
-                        <label for="getItemTimestamp">Timestamp</label>
-                        <input type="datetime-local" id="getItemTimestamp" required>
-                    </div>
-                    
                     <div class="form-actions">
-                        <button type="button" onclick="cancelGetItemSelection()" class="btn btn-secondary">Back</button>
+                        <button type="button" onclick="backToItemSelection()" class="btn btn-secondary">Back</button>
                         <button type="submit" class="btn btn-primary">
-                            <i class="fa-solid fa-check"></i> Confirm Get Item
+                            <i class="fa-solid fa-eye"></i> Review
                         </button>
                     </div>
                 </form>
+            </div>
+
+            <!-- Confirmation Section (Step 4 - Shows after review - with cart support) -->
+            <div id="confirmationSection" style="display: none; margin-top: 20px; padding-top: 20px; border-top: 2px solid #eee;">
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <div style="display: inline-block; background: var(--primary-color); color: white; width: 40px; height: 40px; border-radius: 50%; line-height: 40px; font-weight: bold;">✓</div>
+                    <span style="margin-left: 10px; font-weight: 500;">Confirm Request</span>
+                </div>
+                
+                <!-- Requester Info Summary -->
+                <div style="background: #f9f9f9; border-radius: 8px; padding: 15px; margin-bottom: 15px;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tr>
+                            <td style="padding: 8px 0; color: #666; font-weight: 500; width: 40%;">Who Gets It:</td>
+                            <td style="padding: 8px 0; font-weight: 500;" id="confirmPerson">-</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0; color: #666; font-weight: 500;">Timestamp:</td>
+                            <td style="padding: 8px 0;" id="confirmTimestamp">-</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <!-- Cart Items Table -->
+                <div style="margin-bottom: 15px;">
+                    <h4 style="margin-bottom: 10px; color: #333;">Items to Distribute</h4>
+                    <div style="max-height: 200px; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 8px;">
+                        <table id="cartItemsTable" style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                            <thead style="background: #f5f5f5; position: sticky; top: 0;">
+                                <tr>
+                                    <th style="padding: 10px; text-align: left; border-bottom: 1px solid #e0e0e0;">Item</th>
+                                    <th style="padding: 10px; text-align: left; border-bottom: 1px solid #e0e0e0;">Category</th>
+                                    <th style="padding: 10px; text-align: center; border-bottom: 1px solid #e0e0e0;">Qty</th>
+                                    <th style="padding: 10px; text-align: center; border-bottom: 1px solid #e0e0e0;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cartItemsBody">
+                                <!-- Cart items will be rendered here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="form-actions" style="flex-wrap: wrap; gap: 10px;">
+                    <button type="button" onclick="getAnotherItem()" class="btn btn-secondary">
+                        <i class="fa-solid fa-plus"></i> Get Another Item
+                    </button>
+                    <div style="flex: 1;"></div>
+                    <button type="button" onclick="backToItemSelection()" class="btn btn-secondary">Back</button>
+                    <button type="button" onclick="processAllItems()" class="btn btn-primary">
+                        <i class="fa-solid fa-check"></i> Process All
+                    </button>
+                </div>
             </div>
         </div>
     </div>
