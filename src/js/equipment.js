@@ -853,7 +853,497 @@ document.getElementById('editQuantity')?.addEventListener('input', updateEditAmo
 document.getElementById('editUnitCost')?.addEventListener('input', updateEditAmount);
 
 // ==========================================
-// 10. INITIALIZE - LOAD EQUIPMENT ON PAGE LOAD
+// 10. GET EQUIPMENT FUNCTIONALITY
+// ==========================================
+
+// Get Equipment Flow - Requester Info State
+let equipmentRequesterName = '';
+let equipmentRequesterTimestamp = '';
+let selectedGetEquipment = null;
+let equipmentCartItems = []; // Cart array for multi-item support
+let isEquipmentSubmitting = false; // Prevent double submission
+
+// Get Equipment Modal DOM Elements
+const getEquipmentModal = document.getElementById('getEquipmentModal');
+const getEquipmentSearch = document.getElementById('getEquipmentSearch');
+const clearGetEquipmentSearch = document.getElementById('clearGetEquipmentSearch');
+const getEquipmentSelectableList = document.getElementById('getEquipmentSelectableList');
+const getEquipmentDetails = document.getElementById('getEquipmentDetails');
+const getEquipmentSelectedId = document.getElementById('getEquipmentSelectedId');
+const getEquipmentSelectedName = document.getElementById('getEquipmentSelectedName');
+const getEquipmentSelectedStock = document.getElementById('getEquipmentSelectedStock');
+const getEquipmentQuantity = document.getElementById('getEquipmentQuantity');
+
+// ==========================================
+// ACTIVITY LOGGING HELPER FUNCTION
+// ==========================================
+async function logEquipmentActivity(actionType, equipmentId, equipmentName, quantityChanged, quantityBefore, quantityAfter, person = null, details = null, customTimestamp = null) {
+    try {
+        // Use custom timestamp if provided, otherwise use current time
+        const timestamp = customTimestamp ? new Date(customTimestamp).toISOString() : new Date().toISOString();
+        
+        const { error } = await supabase
+            .from('activity_logs')
+            .insert([{
+                action_type: actionType,
+                item_id: null, // Equipment is tracked separately
+                item_name: equipmentName,
+                quantity_changed: quantityChanged,
+                quantity_before: quantityBefore,
+                quantity_after: quantityAfter,
+                person: person,
+                details: details,
+                timestamp: timestamp
+            }]);
+
+        if (error) {
+            console.warn('Failed to log activity:', error);
+        }
+    } catch (error) {
+        console.warn('Error logging activity:', error);
+    }
+}
+
+// ==========================================
+// GET EQUIPMENT MODAL FUNCTIONS
+// ==========================================
+function openGetEquipmentModal() {
+    getEquipmentModal.classList.add('show');
+    
+    // Reset all states for new flow
+    equipmentRequesterName = '';
+    equipmentRequesterTimestamp = '';
+    selectedGetEquipment = null;
+    equipmentCartItems = [];
+    
+    // Show Step 1: Requester Info Form (always show first)
+    document.getElementById('equipmentRequesterInfoSection').style.display = 'block';
+    document.getElementById('getEquipmentSearchContainer').style.display = 'none';
+    getEquipmentSelectableList.style.display = 'none';
+    getEquipmentDetails.style.display = 'none';
+    document.getElementById('equipmentConfirmationSection').style.display = 'none';
+    
+    // Reset form fields
+    if (document.getElementById('equipmentRequesterName')) document.getElementById('equipmentRequesterName').value = '';
+    if (document.getElementById('equipmentRequesterTimestamp')) {
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        document.getElementById('equipmentRequesterTimestamp').value = now.toISOString().slice(0, 16);
+    }
+    if (getEquipmentSearch) getEquipmentSearch.value = '';
+    if (getEquipmentQuantity) getEquipmentQuantity.value = '';
+    
+    // Focus on requester name input
+    setTimeout(() => {
+        document.getElementById('equipmentRequesterName').focus();
+    }, 100);
+}
+
+function closeGetEquipmentModal() {
+    getEquipmentModal.classList.remove('show');
+    // Reset all flow states
+    equipmentRequesterName = '';
+    equipmentRequesterTimestamp = '';
+    selectedGetEquipment = null;
+    equipmentCartItems = [];
+    isEquipmentSubmitting = false;
+    // Reset form
+    if (getEquipmentQuantity) getEquipmentQuantity.value = '';
+    cancelGetEquipmentSelection();
+}
+
+// Step 1 -> Step 2: Proceed from requester info to equipment selection
+function proceedToEquipmentSelection(event) {
+    event.preventDefault();
+    
+    const nameInput = document.getElementById('equipmentRequesterName');
+    const timestampInput = document.getElementById('equipmentRequesterTimestamp');
+    
+    if (!nameInput.value.trim()) {
+        showNotification('Please enter who gets it', 'error');
+        nameInput.focus();
+        return false;
+    }
+    
+    if (!timestampInput.value) {
+        showNotification('Please select a timestamp', 'error');
+        timestampInput.focus();
+        return false;
+    }
+    
+    // Store requester info
+    equipmentRequesterName = nameInput.value.trim();
+    equipmentRequesterTimestamp = timestampInput.value;
+    
+    // Hide requester form, show equipment selection
+    document.getElementById('equipmentRequesterInfoSection').style.display = 'none';
+    document.getElementById('getEquipmentSearchContainer').style.display = 'block';
+    getEquipmentSelectableList.style.display = 'block';
+    
+    // Render available equipment
+    renderGetEquipmentSelectableItems(allEquipment);
+    
+    return false;
+}
+
+// Back from equipment details to equipment selection
+function backToEquipmentSelection() {
+    // If cart has items, go to confirmation section instead
+    if (equipmentCartItems.length > 0) {
+        getEquipmentDetails.style.display = 'none';
+        document.getElementById('equipmentConfirmationSection').style.display = 'block';
+        return;
+    }
+    
+    getEquipmentDetails.style.display = 'none';
+    getEquipmentSelectableList.style.display = 'block';
+    if (getEquipmentQuantity) getEquipmentQuantity.value = '';
+    selectedGetEquipment = null;
+}
+
+function renderGetEquipmentSelectableItems(equipment) {
+    if (!getEquipmentSelectableList) return;
+    
+    getEquipmentSelectableList.innerHTML = '';
+    
+    // Only show equipment with quantity > 0
+    const availableEquipment = equipment.filter(item => item.quantity > 0);
+    
+    if (availableEquipment.length === 0) {
+        getEquipmentSelectableList.innerHTML = `
+            <div class="empty-state" style="padding: 20px;">
+                <i class="fa-solid fa-tools"></i>
+                <p>No available equipment in stock</p>
+            </div>
+        `;
+        return;
+    }
+    
+    availableEquipment.forEach(item => {
+        const itemEl = document.createElement('div');
+        itemEl.className = 'selectable-item';
+        itemEl.dataset.equipmentId = item.id;
+        itemEl.onclick = () => selectGetEquipment(item);
+        
+        // Format stock text
+        const stockText = `Qty: ${item.quantity}`;
+        
+        itemEl.innerHTML = `
+            <div class="selectable-item-icon">
+                <i class="fa-solid fa-tools"></i>
+            </div>
+            <div class="selectable-item-info">
+                <h4>${escapeHtml(item.item_name)}</h4>
+                <p>${stockText}</p>
+            </div>
+            <div class="selectable-item-action">
+                <i class="fa-solid fa-chevron-right"></i>
+            </div>
+        `;
+        
+        getEquipmentSelectableList.appendChild(itemEl);
+    });
+}
+
+function filterGetEquipmentSelectableItems() {
+    const query = getEquipmentSearch.value.trim().toLowerCase();
+    
+    let filtered = allEquipment.filter(item => item.quantity > 0);
+    
+    if (query) {
+        filtered = filtered.filter(item => {
+            const searchText = (item.item_name + ' ' + (item.item_description || '')).toLowerCase();
+            return searchText.includes(query);
+        });
+    }
+    
+    renderGetEquipmentSelectableItems(filtered);
+}
+
+function selectGetEquipment(equipment) {
+    // Store selected equipment
+    selectedGetEquipment = equipment;
+    
+    // Hide list, show details
+    getEquipmentSelectableList.style.display = 'none';
+    getEquipmentDetails.style.display = 'block';
+    
+    // Populate details
+    getEquipmentSelectedId.value = equipment.id;
+    getEquipmentSelectedName.textContent = equipment.item_name;
+    
+    const stockText = `Available Qty: ${equipment.quantity}`;
+    getEquipmentSelectedStock.textContent = stockText;
+    
+    // Set max attribute for quantity input
+    if (getEquipmentQuantity) {
+        getEquipmentQuantity.max = equipment.quantity;
+        getEquipmentQuantity.value = ''; // Reset quantity for new selection
+    }
+    
+    // Focus on quantity input
+    setTimeout(() => {
+        if (getEquipmentQuantity) getEquipmentQuantity.focus();
+    }, 100);
+}
+
+function cancelGetEquipmentSelection() {
+    getEquipmentDetails.style.display = 'none';
+    getEquipmentSelectableList.style.display = 'block';
+    if (getEquipmentQuantity) getEquipmentQuantity.value = '';
+    if (getEquipmentSelectedId) getEquipmentSelectedId.value = '';
+    selectedGetEquipment = null;
+}
+
+// Step 3 -> Step 4: Show confirmation table with cart
+function showEquipmentConfirmationStep(event) {
+    event.preventDefault();
+    
+    const quantity = parseInt(getEquipmentQuantity.value);
+    const equipmentId = getEquipmentSelectedId.value;
+    
+    // Validation
+    if (!equipmentId || !selectedGetEquipment) {
+        showNotification('Please select an equipment first', 'error');
+        return false;
+    }
+    
+    if (isNaN(quantity) || quantity < 1) {
+        showNotification('Please enter a valid quantity', 'error');
+        getEquipmentQuantity.focus();
+        return false;
+    }
+    
+    // Validate quantity doesn't exceed available stock
+    if (quantity > selectedGetEquipment.quantity) {
+        showNotification(`Cannot get ${quantity} units. Only ${selectedGetEquipment.quantity} units available in stock.`, 'error');
+        getEquipmentQuantity.focus();
+        return false;
+    }
+    
+    // Add equipment to cart
+    const cartItem = {
+        equipmentId: selectedGetEquipment.id,
+        equipmentName: selectedGetEquipment.item_name,
+        category: selectedGetEquipment.item_description || 'Equipment',
+        quantity: quantity,
+        availableStock: selectedGetEquipment.quantity
+    };
+    
+    // Check if equipment already in cart
+    const existingIndex = equipmentCartItems.findIndex(item => item.equipmentId === cartItem.equipmentId);
+    if (existingIndex >= 0) {
+        // Update quantity if already in cart
+        equipmentCartItems[existingIndex].quantity += quantity;
+    } else {
+        equipmentCartItems.push(cartItem);
+    }
+    
+    // Update confirmation section
+    document.getElementById('confirmEquipmentPerson').textContent = equipmentRequesterName;
+    
+    // Format timestamp for display
+    const timestampDate = new Date(equipmentRequesterTimestamp);
+    document.getElementById('confirmEquipmentTimestamp').textContent = timestampDate.toLocaleString();
+    
+    // Render cart equipment table
+    renderEquipmentCartItems();
+    
+    // Hide equipment details, show confirmation
+    getEquipmentDetails.style.display = 'none';
+    document.getElementById('equipmentConfirmationSection').style.display = 'block';
+    
+    return false;
+}
+
+// Render cart equipment table
+function renderEquipmentCartItems() {
+    const tbody = document.getElementById('cartEquipmentBody');
+    if (!tbody) return;
+    
+    if (equipmentCartItems.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="padding: 20px; text-align: center; color: #666;">No equipment in cart</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = equipmentCartItems.map((item, index) => `
+        <tr>
+            <td style="padding: 10px; border-bottom: 1px solid #e0e0e0;">
+                <i class="fa-solid fa-tools" style="margin-right: 8px; color: #ff9800;"></i>
+                ${escapeHtml(item.equipmentName)}
+            </td>
+            <td style="padding: 10px; border-bottom: 1px solid #e0e0e0;">${escapeHtml(item.category)}</td>
+            <td style="padding: 10px; text-align: center; border-bottom: 1px solid #e0e0e0;">${item.quantity}</td>
+            <td style="padding: 10px; text-align: center; border-bottom: 1px solid #e0e0e0;">
+                <button type="button" onclick="removeEquipmentFromCart(${index})" style="background: #f44336; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">
+                    <i class="fa-solid fa-trash"></i>
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// Remove equipment from cart
+function removeEquipmentFromCart(index) {
+    if (index >= 0 && index < equipmentCartItems.length) {
+        equipmentCartItems.splice(index, 1);
+        renderEquipmentCartItems();
+    }
+}
+
+// Get another equipment - go back to equipment selection
+function getAnotherEquipment() {
+    // Hide confirmation, show equipment selection
+    document.getElementById('equipmentConfirmationSection').style.display = 'none';
+    document.getElementById('getEquipmentSearchContainer').style.display = 'block';
+    getEquipmentDetails.style.display = 'none';
+    
+    // Reset selected equipment
+    selectedGetEquipment = null;
+    if (getEquipmentQuantity) getEquipmentQuantity.value = '';
+    
+    // Re-render available equipment
+    renderGetEquipmentSelectableItems(allEquipment);
+}
+
+// Process all equipment in cart
+async function processAllEquipment() {
+    // Prevent double submission
+    if (isEquipmentSubmitting) {
+        console.log('Submission blocked - already in progress');
+        return;
+    }
+    
+    if (equipmentCartItems.length === 0) {
+        showNotification('No equipment to process', 'error');
+        return;
+    }
+    
+    // Validate all items have valid quantities
+    for (const cartItem of equipmentCartItems) {
+        const equipment = allEquipment.find(i => i.id === cartItem.equipmentId);
+        
+        if (!equipment) {
+            showNotification(`Equipment not found: ${cartItem.equipmentName}`, 'error');
+            return;
+        }
+        if (cartItem.quantity > equipment.quantity) {
+            showNotification(`Cannot get ${cartItem.quantity} units of ${cartItem.equipmentName}. Only ${equipment.quantity} available.`, 'error');
+            return;
+        }
+    }
+    
+    // Set submission lock
+    isEquipmentSubmitting = true;
+    
+    // Disable buttons
+    const processBtn = document.querySelector('#equipmentConfirmationSection .btn-primary');
+    const getAnotherBtn = document.querySelector('#equipmentConfirmationSection .btn-secondary');
+    if (processBtn) {
+        processBtn.disabled = true;
+        processBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+    }
+    if (getAnotherBtn) getAnotherBtn.disabled = true;
+    
+    let successCount = 0;
+    let failedItems = [];
+    
+    try {
+        // Process each equipment in cart
+        for (const cartItem of equipmentCartItems) {
+            const equipment = allEquipment.find(i => i.id === cartItem.equipmentId);
+            
+            if (!equipment) {
+                failedItems.push(cartItem.equipmentName);
+                continue;
+            }
+            
+            const oldQuantity = equipment.quantity;
+            const newQuantity = equipment.quantity - cartItem.quantity;
+            
+            // Update quantity in equipment table
+            const { error: updateError } = await supabase
+                .from('equipment')
+                .update({ 
+                    quantity: newQuantity,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', cartItem.equipmentId);
+            
+            if (updateError) {
+                console.error('Error updating quantity:', updateError);
+                failedItems.push(cartItem.equipmentName);
+                continue;
+            }
+            
+            // Log activity for DISTRIBUTE action
+            await logEquipmentActivity(
+                'DISTRIBUTE',
+                cartItem.equipmentId,
+                cartItem.equipmentName,
+                -cartItem.quantity,
+                oldQuantity,
+                newQuantity,
+                equipmentRequesterName,
+                { label: cartItem.category, equipment_id: cartItem.equipmentId },
+                equipmentRequesterTimestamp
+            );
+            
+            successCount++;
+        }
+        
+        // Close modal and refresh
+        closeGetEquipmentModal();
+        await fetchEquipment();
+        
+        if (failedItems.length > 0) {
+            showNotification(`Processed ${successCount} items. Failed: ${failedItems.join(', ')}`, 'warning');
+        } else {
+            const totalItems = equipmentCartItems.reduce((sum, item) => sum + item.quantity, 0);
+            showNotification(`Successfully distributed ${totalItems} equipment items to ${equipmentRequesterName}`);
+        }
+        
+    } catch (error) {
+        console.error('Error processing equipment:', error);
+        showNotification('Failed to process equipment. Please try again.', 'error');
+    } finally {
+        // Reset submission lock and button state
+        isEquipmentSubmitting = false;
+        
+        if (processBtn) {
+            processBtn.disabled = false;
+            processBtn.innerHTML = '<i class="fa-solid fa-check"></i> Process All';
+        }
+        if (getAnotherBtn) getAnotherBtn.disabled = false;
+    }
+}
+
+// ==========================================
+// GET EQUIPMENT MODAL EVENT LISTENERS
+// ==========================================
+if (getEquipmentModal) {
+    getEquipmentModal.addEventListener('click', function(e) {
+        if (e.target === getEquipmentModal) {
+            closeGetEquipmentModal();
+        }
+    });
+}
+
+if (getEquipmentSearch) {
+    getEquipmentSearch.addEventListener('input', filterGetEquipmentSelectableItems);
+}
+
+if (clearGetEquipmentSearch) {
+    clearGetEquipmentSearch.addEventListener('click', function() {
+        getEquipmentSearch.value = '';
+        filterGetEquipmentSelectableItems();
+        getEquipmentSearch.focus();
+    });
+}
+
+
+// ==========================================
+// 11. INITIALIZE - LOAD EQUIPMENT ON PAGE LOAD
 // ==========================================
 fetchEquipment();
 fetchSuppliers();
@@ -873,3 +1363,14 @@ window.handleCreateSupplier = handleCreateSupplier;
 window.deleteSupplier = deleteSupplier;
 window.openManageSuppliersModal = openManageSuppliersModal;
 window.closeManageSuppliersModal = closeManageSuppliersModal;
+
+// Get Equipment global functions
+window.openGetEquipmentModal = openGetEquipmentModal;
+window.closeGetEquipmentModal = closeGetEquipmentModal;
+window.proceedToEquipmentSelection = proceedToEquipmentSelection;
+window.backToEquipmentSelection = backToEquipmentSelection;
+window.showEquipmentConfirmationStep = showEquipmentConfirmationStep;
+window.processAllEquipment = processAllEquipment;
+window.getAnotherEquipment = getAnotherEquipment;
+window.removeEquipmentFromCart = removeEquipmentFromCart;
+window.cancelGetEquipmentSelection = cancelGetEquipmentSelection;

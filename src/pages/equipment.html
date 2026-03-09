@@ -91,6 +91,7 @@
 
                 <div class="header-actions">
                     <button class="btn btn-primary" onclick="openCreateEquipmentModal()"><i class="fa-solid fa-plus"></i> Add Equipment</button>
+                    <button class="btn btn-secondary" onclick="openGetEquipmentModal()"><i class="fa-solid fa-hand-holding"></i> Get Equipment</button>
                 </div>
             </div>
         </header>
@@ -378,6 +379,133 @@
                 <button type="button" id="viewEquipmentEditBtn" class="btn btn-secondary">Edit</button>
                 <button type="button" id="viewEquipmentDeleteBtn" class="btn btn-danger">Delete</button>
                 <button type="button" id="viewEquipmentCloseBtn" class="btn btn-secondary" onclick="window.closeViewEquipmentModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Get Equipment Modal -->
+    <div id="getEquipmentModal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3>Get Equipment from Inventory</h3>
+                <button onclick="closeGetEquipmentModal()">&times;</button>
+            </div>
+            
+            <!-- Step 1: Requester Info Section (Shows first) -->
+            <div id="equipmentRequesterInfoSection" style="padding: 20px 0;">
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <div style="display: inline-block; background: var(--primary-color); color: white; width: 40px; height: 40px; border-radius: 50%; line-height: 40px; font-weight: bold;">1</div>
+                    <span style="margin-left: 10px; font-weight: 500;">Requester Information</span>
+                </div>
+                
+                <form id="equipmentRequesterInfoForm" onsubmit="proceedToEquipmentSelection(event)">
+                    <div class="form-group">
+                        <label for="equipmentRequesterName">Who Gets It *</label>
+                        <input type="text" id="equipmentRequesterName" required placeholder="Enter person's name">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="equipmentRequesterTimestamp">Timestamp *</label>
+                        <input type="datetime-local" id="equipmentRequesterTimestamp" required>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" onclick="closeGetEquipmentModal()" class="btn btn-secondary">Cancel</button>
+                        <button type="submit" class="btn btn-primary">
+                            Next <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Search Box (Hidden initially, shows in Step 2) -->
+            <div id="getEquipmentSearchContainer" class="form-group" style="display: none;">
+                <div class="search-box" style="margin-bottom: 15px;">
+                    <input type="search" id="getEquipmentSearch" placeholder="Search available equipment..." aria-label="Search equipment">
+                    <button type="button" id="clearGetEquipmentSearch" title="Clear search"><i class="fa-solid fa-times"></i></button>
+                </div>
+            </div>
+            
+            <!-- Selectable Equipment List (Hidden initially) -->
+            <div id="getEquipmentSelectableList" class="selectable-items-list" style="display: none;">
+                <!-- Equipment will be rendered here dynamically -->
+            </div>
+            
+            <!-- Selected Equipment Details (hidden initially) -->
+            <div id="getEquipmentDetails" style="display: none; margin-top: 20px; padding-top: 20px; border-top: 2px solid #eee;">
+                <div class="selected-item-info">
+                    <h4 id="getEquipmentSelectedName">Equipment Name</h4>
+                    <p id="getEquipmentSelectedStock">Available Qty: 0</p>
+                </div>
+                
+                <form id="getEquipmentForm" onsubmit="showEquipmentConfirmationStep(event)">
+                    <input type="hidden" id="getEquipmentSelectedId">
+                    
+                    <div class="form-group">
+                        <label for="getEquipmentQuantity">Quantity to Get *</label>
+                        <input type="number" id="getEquipmentQuantity" required min="1" placeholder="Enter quantity">
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" onclick="backToEquipmentSelection()" class="btn btn-secondary">Back</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fa-solid fa-eye"></i> Review
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Confirmation Section (Step 4 - Shows after review - with cart support) -->
+            <div id="equipmentConfirmationSection" style="display: none; margin-top: 20px; padding-top: 20px; border-top: 2px solid #eee;">
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <div style="display: inline-block; background: var(--primary-color); color: white; width: 40px; height: 40px; border-radius: 50%; line-height: 40px; font-weight: bold;">✓</div>
+                    <span style="margin-left: 10px; font-weight: 500;">Confirm Request</span>
+                </div>
+                
+                <!-- Requester Info Summary -->
+                <div style="background: #f9f9f9; border-radius: 8px; padding: 15px; margin-bottom: 15px;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tr>
+                            <td style="padding: 8px 0; color: #666; font-weight: 500; width: 40%;">Who Gets It:</td>
+                            <td style="padding: 8px 0; font-weight: 500;" id="confirmEquipmentPerson">-</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0; color: #666; font-weight: 500;">Timestamp:</td>
+                            <td style="padding: 8px 0;" id="confirmEquipmentTimestamp">-</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <!-- Cart Equipment Table -->
+                <div style="margin-bottom: 15px;">
+                    <h4 style="margin-bottom: 10px; color: #333;">Equipment to Distribute</h4>
+                    <div style="max-height: 200px; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 8px;">
+                        <table id="cartEquipmentTable" style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                            <thead style="background: #f5f5f5; position: sticky; top: 0;">
+                                <tr>
+                                    <th style="padding: 10px; text-align: left; border-bottom: 1px solid #e0e0e0;">Equipment</th>
+                                    <th style="padding: 10px; text-align: left; border-bottom: 1px solid #e0e0e0;">Category</th>
+                                    <th style="padding: 10px; text-align: center; border-bottom: 1px solid #e0e0e0;">Qty</th>
+                                    <th style="padding: 10px; text-align: center; border-bottom: 1px solid #e0e0e0;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cartEquipmentBody">
+                                <!-- Cart equipment will be rendered here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="form-actions" style="flex-wrap: wrap; gap: 10px;">
+                    <button type="button" onclick="getAnotherEquipment()" class="btn btn-secondary">
+                        <i class="fa-solid fa-plus"></i> Get Another Equipment
+                    </button>
+                    <div style="flex: 1;"></div>
+                    <button type="button" onclick="backToEquipmentSelection()" class="btn btn-secondary">Back</button>
+                    <button type="button" onclick="processAllEquipment()" class="btn btn-primary">
+                        <i class="fa-solid fa-check"></i> Process All
+                    </button>
+                </div>
             </div>
         </div>
     </div>
