@@ -81,6 +81,7 @@
                     <button class="btn btn-primary" onclick="openSelectItemModal()"><i class="fa-solid fa-plus"></i> Add Stock</button>
                     <button class="btn btn-secondary" onclick="openGetItemModal()"><i class="fa-solid fa-hand-holding"></i> Get Item</button>
                     <button class="btn btn-secondary" id="filterBtn" onclick="toggleFilterDropdown()"><i class="fa-solid fa-filter"></i> Filter</button>
+                    <button class="btn btn-primary" style="background-color: #4caf50;" onclick="openPOModal()"><i class="fa-solid fa-file-invoice"></i> Add Stock by Receipt</button>
                 </div>
 
 
@@ -546,6 +547,282 @@
             </form>
         </div>
     </div>
+
+    <!-- Purchase Order (Receipt) Modal - Multi-step Workflow -->
+    <div id="poModal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-file-invoice"></i> Add Stock by Receipt</h3>
+                <button onclick="closePOModal()">&times;</button>
+            </div>
+            
+            <!-- Step Progress Indicator -->
+            <div class="po-step-progress" style="display: flex; justify-content: center; margin: 20px 0; gap: 20px;">
+                <div id="poStep1Indicator" class="po-step-indicator active">
+                    <span class="po-step-number">1</span>
+                    <span class="po-step-label">Receipt Info</span>
+                </div>
+                <div class="po-step-line"></div>
+                <div id="poStep2Indicator" class="po-step-indicator">
+                    <span class="po-step-number">2</span>
+                    <span class="po-step-label">Add Items</span>
+                </div>
+                <div class="po-step-line"></div>
+                <div id="poStep3Indicator" class="po-step-indicator">
+                    <span class="po-step-number">3</span>
+                    <span class="po-step-label">Review</span>
+                </div>
+            </div>
+            
+            <!-- Step 1: Receipt Info -->
+            <div id="poStep1" class="po-step-content">
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <h4>Step 1: Enter Receipt Information</h4>
+                    <p style="color: #666; font-size: 14px;">This information will be applied to all items in this receipt.</p>
+                </div>
+                
+                <form id="poReceiptForm" onsubmit="proceedToPOStep2(event)">
+                    <div class="form-group">
+                        <label for="poDate">Date *</label>
+                        <input type="date" id="poDate" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="poNumber">P.O. Number / Receipt Number</label>
+                        <input type="text" id="poNumber" placeholder="e.g., PO-2024-001">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="poSupplier">Supplier</label>
+                        <select id="poSupplier">
+                            <option value="">Select Supplier (Optional)</option>
+                        </select>
+                        <small style="color: #666; font-size: 11px; cursor: pointer; color: #007bff;" onclick="openAddSupplierModal('poSupplier')">+ Add New Supplier</small>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" onclick="closePOModal()" class="btn btn-secondary">Cancel</button>
+                        <button type="submit" class="btn btn-primary">
+                            Next <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Step 2: Add Items -->
+            <div id="poStep2" class="po-step-content" style="display: none;">
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <h4>Step 2: Add Items</h4>
+                    <p style="color: #666; font-size: 14px;">Select existing items or create new ones to add to this receipt.</p>
+                </div>
+                
+                <!-- Receipt Summary Banner -->
+                <div id="poReceiptSummary" style="background: #e8f5e9; border-radius: 8px; padding: 12px 15px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                    <div>
+                        <strong><i class="fa-solid fa-file-invoice"></i> Receipt:</strong>
+                        <span id="poSummaryDate">-</span> | 
+                        <span id="poSummaryPO">-</span> | 
+                        <span id="poSummarySupplier">-</span>
+                    </div>
+                    <button type="button" onclick="backToPOStep1()" class="btn btn-secondary" style="padding: 5px 10px; font-size: 12px;">
+                        <i class="fa-solid fa-edit"></i> Edit
+                    </button>
+                </div>
+                
+                <!-- Search and Add Item Section -->
+                <div style="border: 1px solid #e0e0e0; border-radius: 8px; padding: 15px; margin-bottom: 15px;">
+                    <div class="form-group" style="margin-bottom: 10px;">
+                        <div class="search-box">
+                            <input type="search" id="poItemSearch" placeholder="Search existing items..." aria-label="Search items">
+                            <button type="button" id="clearPOSearch" title="Clear search"><i class="fa-solid fa-times"></i></button>
+                        </div>
+                    </div>
+                    
+                    <!-- Create New Item Button -->
+                    <div style="padding: 10px; text-align: center; border-top: 1px solid #e0e0e0; background: #f9f9f9;">
+                        <p style="margin: 0 0 10px 0; color: #666; font-size: 13px;">Can't find the item?</p>
+                        <button type="button" class="btn btn-secondary" onclick="openPOCreateItemModal()">
+                            <i class="fa-solid fa-plus"></i> Create New Item
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Selectable Items List -->
+                <div id="poSelectableItemsList" class="selectable-items-list" style="max-height: 250px; overflow-y: auto;">
+                    <!-- Items will be rendered here -->
+                </div>
+                
+                <!-- Selected Item Quantity Form (hidden initially) -->
+                <div id="poItemQuantityForm" style="display: none; margin-top: 20px; padding-top: 20px; border-top: 2px solid #eee;">
+                    <div class="selected-item-info">
+                        <h4 id="poSelectedItemName">Item Name</h4>
+                        <p id="poSelectedItemCurrentStock">Current Stock: 0</p>
+                    </div>
+                    
+                    <form onsubmit="addItemToPO(event)">
+                        <input type="hidden" id="poSelectedItemId">
+                        
+                        <div class="form-group">
+                            <label for="poItemQuantity">Quantity to Add *</label>
+                            <input type="number" id="poItemQuantity" required min="1" placeholder="Enter quantity">
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="button" onclick="cancelPOSelection()" class="btn btn-secondary">Cancel</button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fa-solid fa-plus"></i> Add to Receipt
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Items Added to Receipt -->
+                <div id="poAddedItemsSection" style="margin-top: 20px;">
+                    <h4 style="margin-bottom: 10px;"><i class="fa-solid fa-list"></i> Items in this Receipt</h4>
+                    <div id="poAddedItemsList" style="max-height: 200px; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 8px;">
+                        <table id="poAddedItemsTable" style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                            <thead style="background: #f5f5f5; position: sticky; top: 0;">
+                                <tr>
+                                    <th style="padding: 10px; text-align: left; border-bottom: 1px solid #e0e0e0;">Item</th>
+                                    <th style="padding: 10px; text-align: left; border-bottom: 1px solid #e0e0e0;">Category</th>
+                                    <th style="padding: 10px; text-align: center; border-bottom: 1px solid #e0e0e0;">Qty</th>
+                                    <th style="padding: 10px; text-align: center; border-bottom: 1px solid #e0e0e0;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="poAddedItemsBody">
+                                <!-- Items will be rendered here -->
+                            </tbody>
+                        </table>
+                        <div id="poNoItemsMessage" style="padding: 20px; text-align: center; color: #666;">
+                            No items added yet. Search and select items above.
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-actions" style="margin-top: 20px;">
+                    <button type="button" onclick="backToPOStep1()" class="btn btn-secondary">Back</button>
+                    <button type="button" onclick="proceedToPOStep3()" class="btn btn-primary" id="poProceedToReviewBtn" disabled>
+                        Review <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Step 3: Review -->
+            <div id="poStep3" class="po-step-content" style="display: none;">
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <h4>Step 3: Review & Process</h4>
+                    <p style="color: #666; font-size: 14px;">Please review the items before processing.</p>
+                </div>
+                
+                <!-- Receipt Summary -->
+                <div style="background: #e8f5e9; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+                    <h4 style="margin: 0 0 10px 0;"><i class="fa-solid fa-file-invoice"></i> Receipt Summary</h4>
+                    <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                        <tr>
+                            <td style="padding: 5px 0; color: #666; width: 30%;">Date:</td>
+                            <td style="padding: 5px 0; font-weight: 500;" id="reviewDate">-</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 5px 0; color: #666;">P.O. Number:</td>
+                            <td style="padding: 5px 0; font-weight: 500;" id="reviewPONumber">-</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 5px 0; color: #666;">Supplier:</td>
+                            <td style="padding: 5px 0; font-weight: 500;" id="reviewSupplier">-</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 5px 0; color: #666;">Total Items:</td>
+                            <td style="padding: 5px 0; font-weight: 500;" id="reviewTotalItems">0</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <!-- Items Table -->
+                <div style="max-height: 250px; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 8px; margin-bottom: 20px;">
+                    <table id="poReviewTable" style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                        <thead style="background: #f5f5f5; position: sticky; top: 0;">
+                            <tr>
+                                <th style="padding: 10px; text-align: left; border-bottom: 1px solid #e0e0e0;">Item</th>
+                                <th style="padding: 10px; text-align: left; border-bottom: 1px solid #e0e0e0;">Category</th>
+                                <th style="padding: 10px; text-align: center; border-bottom: 1px solid #e0e0e0;">Current Stock</th>
+                                <th style="padding: 10px; text-align: center; border-bottom: 1px solid #e0e0e0;">Adding</th>
+                                <th style="padding: 10px; text-align: center; border-bottom: 1px solid #e0e0e0;">New Stock</th>
+                            </tr>
+                        </thead>
+                        <tbody id="poReviewBody">
+                            <!-- Items will be rendered here -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" onclick="backToPOStep2()" class="btn btn-secondary">Back</button>
+                    <button type="button" onclick="processPOItems()" class="btn btn-primary" id="poProcessBtn">
+                        <i class="fa-solid fa-check"></i> Process All Items
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Success Message (shown after processing) -->
+            <div id="poSuccessMessage" class="po-step-content" style="display: none; text-align: center; padding: 40px 20px;">
+                <div style="font-size: 60px; color: #4caf50; margin-bottom: 20px;">
+                    <i class="fa-solid fa-check-circle"></i>
+                </div>
+                <h3>Stock Added Successfully!</h3>
+                <p style="color: #666; margin-bottom: 20px;">The items have been added to inventory with the receipt information.</p>
+                <div id="poSuccessSummary" style="background: #f5f5f5; border-radius: 8px; padding: 15px; margin-bottom: 20px; text-align: left;">
+                    <!-- Summary will be rendered here -->
+                </div>
+                <button type="button" onclick="closePOModal()" class="btn btn-primary">
+                    Done
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PO Create New Item Modal (within PO workflow) -->
+    <div id="poCreateItemModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Create New Item</h3>
+                <button onclick="closePOCreateItemModal()">&times;</button>
+            </div>
+            
+            <form id="poCreateItemForm" onsubmit="handlePOCreateItem(event)">
+                <div class="form-group">
+                    <label for="poNewItemName">Item Name *</label>
+                    <input type="text" id="poNewItemName" required placeholder="e.g., Ballpoint Pens">
+                </div>
+                
+                <div class="form-group">
+                    <label for="poNewItemLabel">Category *</label>
+                    <select id="poNewItemLabel" required>
+                        <option value="">Select Category</option>
+                        <option value="Janitorial">Janitorial</option>
+                        <option value="Office Supplies">Office Supplies</option>
+                    </select>
+                </div>
+                
+                <div class="form-group" id="poNewItemUnitGroup" style="display: none;">
+                    <label for="poNewItemUnit">Unit *</label>
+                    <input type="text" id="poNewItemUnit" placeholder="e.g., Gallon, Box, Piece, Ream">
+                </div>
+                
+                <div class="form-group">
+                    <label for="poNewItemQuantity">Initial Quantity *</label>
+                    <input type="number" id="poNewItemQuantity" required min="1" placeholder="e.g., 100">
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" onclick="closePOCreateItemModal()" class="btn btn-secondary">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa-solid fa-plus"></i> Add to Receipt
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script type="module" src="../js/input.js"></script>
 
 </body>

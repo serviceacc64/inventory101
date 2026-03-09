@@ -1,4 +1,4 @@
- // Import Supabase client
+  // Import Supabase client
 import { supabase } from './supabase.js';
 // animation utilities
 import { showNotification, pulseElement, fadeIn } from './animate.js';
@@ -48,6 +48,38 @@ const viewItemQuantity = document.getElementById('viewItemQuantity');
 const viewItemPO = document.getElementById('viewItemPO');
 const viewItemSupplier = document.getElementById('viewItemSupplier');
 const viewItemUpdatedAt = document.getElementById('viewItemUpdatedAt');
+
+// Purchase Order Modal Elements
+const poModal = document.getElementById('poModal');
+const poStep1 = document.getElementById('poStep1');
+const poStep2 = document.getElementById('poStep2');
+const poStep3 = document.getElementById('poStep3');
+const poStep1Indicator = document.getElementById('poStep1Indicator');
+const poStep2Indicator = document.getElementById('poStep2Indicator');
+const poStep3Indicator = document.getElementById('poStep3Indicator');
+const poSelectableItemsList = document.getElementById('poSelectableItemsList');
+const poItemQuantityForm = document.getElementById('poItemQuantityForm');
+const poAddedItemsBody = document.getElementById('poAddedItemsBody');
+const poNoItemsMessage = document.getElementById('poNoItemsMessage');
+const poProceedToReviewBtn = document.getElementById('poProceedToReviewBtn');
+const poProcessBtn = document.getElementById('poProcessBtn');
+
+// PO Create Item Modal Elements
+const poCreateItemModal = document.getElementById('poCreateItemModal');
+const poNewItemLabel = document.getElementById('poNewItemLabel');
+const poNewItemUnitGroup = document.getElementById('poNewItemUnitGroup');
+const poNewItemUnit = document.getElementById('poNewItemUnit');
+
+// PO Workflow State
+let poReceiptData = {
+    date: '',
+    poNumber: '',
+    supplierId: '',
+    supplierName: ''
+};
+let poAddedItems = []; // Array to store items added to the receipt
+let selectedPOItem = null; // Currently selected item for quantity entry
+let poIsSubmitting = false; // Prevent double submission
 
 
 // Store all items for search functionality
@@ -1911,6 +1943,47 @@ if (clearModalSearch) {
 }
 
 // ==========================================
+// PO MODAL EVENT LISTENERS
+// ==========================================
+const poItemSearch = document.getElementById('poItemSearch');
+const clearPOSearch = document.getElementById('clearPOSearch');
+
+if (poItemSearch) {
+    poItemSearch.addEventListener('input', filterPOSelectableItems);
+}
+
+if (clearPOSearch) {
+    clearPOSearch.addEventListener('click', function() {
+        poItemSearch.value = '';
+        filterPOSelectableItems();
+        poItemSearch.focus();
+    });
+}
+
+// PO Create Item Modal Event Listeners
+if (poNewItemLabel) {
+    poNewItemLabel.addEventListener('change', togglePONewItemUnitField);
+}
+
+// PO Modal outside click handler
+if (poModal) {
+    poModal.addEventListener('click', function(e) {
+        if (e.target === poModal) {
+            closePOModal();
+        }
+    });
+}
+
+// PO Create Item Modal outside click handler
+if (poCreateItemModal) {
+    poCreateItemModal.addEventListener('click', function(e) {
+        if (e.target === poCreateItemModal) {
+            closePOCreateItemModal();
+        }
+    });
+}
+
+// ==========================================
 // 11. CREATE ITEM EVENT LISTENERS
 // ==========================================
 if (newItemLabel) {
@@ -2062,3 +2135,768 @@ window.fetchItemHistory = fetchItemHistory;
 window.openAddSupplierModal = openAddSupplierModal;
 window.closeAddSupplierModal = closeAddSupplierModal;
 window.handleAddSupplier = handleAddSupplier;
+
+// ==========================================
+// PURCHASE ORDER (RECEIPT) WORKFLOW FUNCTIONS
+// ==========================================
+
+// Open PO Modal
+function openPOModal() {
+    // Reset PO workflow state
+    poReceiptData = {
+        date: '',
+        poNumber: '',
+        supplierId: '',
+        supplierName: ''
+    };
+    poAddedItems = [];
+    selectedPOItem = null;
+    poIsSubmitting = false;
+    
+    // Reset form fields
+    document.getElementById('poDate').value = '';
+    document.getElementById('poNumber').value = '';
+    document.getElementById('poSupplier').value = '';
+    
+    // Set default date to today
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('poDate').value = today;
+    
+    // Populate supplier dropdown
+    populatePOSupplierDropdown();
+    
+    // Show step 1
+    showPOStep(1);
+    
+    // Show modal
+    poModal.classList.add('show');
+    
+    // Focus on date input
+    setTimeout(() => {
+        document.getElementById('poDate').focus();
+    }, 100);
+}
+
+// Close PO Modal
+function closePOModal() {
+    poModal.classList.remove('show');
+    
+    // Reset PO workflow state
+    poReceiptData = {
+        date: '',
+        poNumber: '',
+        supplierId: '',
+        supplierName: ''
+    };
+    poAddedItems = [];
+    selectedPOItem = null;
+    poIsSubmitting = false;
+    
+    // Reset form fields
+    document.getElementById('poDate').value = '';
+    document.getElementById('poNumber').value = '';
+    document.getElementById('poSupplier').value = '';
+    document.getElementById('poItemSearch').value = '';
+}
+
+// Populate PO Supplier Dropdown
+function populatePOSupplierDropdown() {
+    const poSupplier = document.getElementById('poSupplier');
+    if (!poSupplier) return;
+    
+    const defaultOption = '<option value="">Select Supplier (Optional)</option>';
+    const supplierOptions = allSuppliers.map(supplier => 
+        `<option value="${supplier.id}">${escapeHtml(supplier.supplier_name)}</option>`
+    ).join('');
+    
+    poSupplier.innerHTML = defaultOption + supplierOptions;
+}
+
+// Show PO Step
+function showPOStep(step) {
+    // Hide all steps
+    poStep1.style.display = 'none';
+    poStep2.style.display = 'none';
+    poStep3.style.display = 'none';
+    document.getElementById('poSuccessMessage').style.display = 'none';
+    
+    // Reset indicators
+    poStep1Indicator.classList.remove('active', 'completed');
+    poStep2Indicator.classList.remove('active', 'completed');
+    poStep3Indicator.classList.remove('active', 'completed');
+    
+    if (step === 1) {
+        poStep1.style.display = 'block';
+        poStep1Indicator.classList.add('active');
+    } else if (step === 2) {
+        poStep2.style.display = 'block';
+        poStep1Indicator.classList.add('completed');
+        poStep2Indicator.classList.add('active');
+    } else if (step === 3) {
+        poStep3.style.display = 'block';
+        poStep1Indicator.classList.add('completed');
+        poStep2Indicator.classList.add('completed');
+        poStep3Indicator.classList.add('active');
+    }
+}
+
+// Proceed from Step 1 to Step 2
+function proceedToPOStep2(event) {
+    event.preventDefault();
+    
+    const date = document.getElementById('poDate').value;
+    const poNumber = document.getElementById('poNumber').value.trim();
+    const supplierId = document.getElementById('poSupplier').value;
+    
+    if (!date) {
+        showNotification('Please select a date', 'error');
+        return false;
+    }
+    
+    // Get supplier name if selected
+    let supplierName = '';
+    if (supplierId) {
+        const supplier = allSuppliers.find(s => s.id === supplierId);
+        if (supplier) supplierName = supplier.supplier_name;
+    }
+    
+    // Store receipt data
+    poReceiptData = {
+        date: date,
+        poNumber: poNumber,
+        supplierId: supplierId,
+        supplierName: supplierName
+    };
+    
+    // Update receipt summary
+    document.getElementById('poSummaryDate').textContent = date;
+    document.getElementById('poSummaryPO').textContent = poNumber || '(Not specified)';
+    document.getElementById('poSummarySupplier').textContent = supplierName || '(Not specified)';
+    
+    // Reset items list
+    poAddedItems = [];
+    renderPOAddedItems();
+    
+    // Reset item search
+    document.getElementById('poItemSearch').value = '';
+    renderPOSelectableItems(allItems);
+    
+    // Show step 2
+    showPOStep(2);
+    
+    return false;
+}
+
+// Back from Step 2 to Step 1
+function backToPOStep1() {
+    showPOStep(1);
+}
+
+// Proceed from Step 2 to Step 3 (Review)
+function proceedToPOStep3() {
+    if (poAddedItems.length === 0) {
+        showNotification('Please add at least one item to the receipt', 'error');
+        return;
+    }
+    
+    // Populate review section
+    document.getElementById('reviewDate').textContent = poReceiptData.date;
+    document.getElementById('reviewPONumber').textContent = poReceiptData.poNumber || '(Not specified)';
+    document.getElementById('reviewSupplier').textContent = poReceiptData.supplierName || '(Not specified)';
+    document.getElementById('reviewTotalItems').textContent = poAddedItems.length;
+    
+    // Render review table
+    renderPOReviewTable();
+    
+    // Show step 3
+    showPOStep(3);
+}
+
+// Back from Step 3 to Step 2
+function backToPOStep2() {
+    showPOStep(2);
+}
+
+// Render selectable items in PO workflow
+function renderPOSelectableItems(items) {
+    if (!poSelectableItemsList) return;
+    
+    poSelectableItemsList.innerHTML = '';
+    
+    // Filter out items already added to the receipt
+    const addedItemIds = poAddedItems.map(item => item.itemId);
+    const availableItems = items.filter(item => !addedItemIds.includes(item.id));
+    
+    if (availableItems.length === 0) {
+        poSelectableItemsList.innerHTML = `
+            <div class="empty-state" style="padding: 20px;">
+                <i class="fa-solid fa-box-open"></i>
+                <p>No more items available</p>
+                <p style="font-size: 12px;">All items have been added to this receipt</p>
+            </div>
+        `;
+        return;
+    }
+    
+    availableItems.forEach(item => {
+        const itemEl = document.createElement('div');
+        itemEl.className = 'selectable-item';
+        itemEl.dataset.itemId = item.id;
+        itemEl.onclick = () => selectPOItem(item);
+        
+        // Format stock text
+        let stockText = `Stock: ${item.quantity}`;
+        if ((item.label === 'Janitorial' || item.label === 'Office Supplies') && item.unit) {
+            stockText += ` ${escapeHtml(item.unit)}`;
+        } else {
+            stockText += ' units';
+        }
+        
+        itemEl.innerHTML = `
+            <div class="selectable-item-icon">
+                <i class="fa-solid fa-box"></i>
+            </div>
+            <div class="selectable-item-info">
+                <h4>${escapeHtml(item.name)}</h4>
+                <p>${escapeHtml(item.label || 'No Category')} | ${stockText}</p>
+            </div>
+            <div class="selectable-item-action">
+                <i class="fa-solid fa-plus"></i>
+            </div>
+        `;
+        
+        poSelectableItemsList.appendChild(itemEl);
+    });
+}
+
+// Filter PO selectable items
+function filterPOSelectableItems() {
+    const query = document.getElementById('poItemSearch').value.trim().toLowerCase();
+    
+    let filtered = allItems;
+    
+    // Filter out items already added
+    const addedItemIds = poAddedItems.map(item => item.itemId);
+    filtered = filtered.filter(item => !addedItemIds.includes(item.id));
+    
+    if (query) {
+        filtered = filtered.filter(item => {
+            const searchText = (item.name + ' ' + (item.label || '')).toLowerCase();
+            return searchText.includes(query);
+        });
+    }
+    
+    renderPOSelectableItems(filtered);
+}
+
+// Select item in PO workflow
+function selectPOItem(item) {
+    selectedPOItem = item;
+    
+    // Hide list, show quantity form
+    poSelectableItemsList.style.display = 'none';
+    poItemQuantityForm.style.display = 'block';
+    
+    // Populate details
+    document.getElementById('poSelectedItemId').value = item.id;
+    document.getElementById('poSelectedItemName').textContent = item.name;
+    
+    let stockText = `Current Stock: ${item.quantity}`;
+    if ((item.label === 'Janitorial' || item.label === 'Office Supplies') && item.unit) {
+        stockText += ` ${item.unit}`;
+    } else {
+        stockText += ' units';
+    }
+    document.getElementById('poSelectedItemCurrentStock').textContent = stockText;
+    
+    // Reset and focus quantity input
+    document.getElementById('poItemQuantity').value = '';
+    setTimeout(() => {
+        document.getElementById('poItemQuantity').focus();
+    }, 100);
+}
+
+// Cancel PO item selection
+function cancelPOSelection() {
+    poItemQuantityForm.style.display = 'none';
+    poSelectableItemsList.style.display = 'block';
+    selectedPOItem = null;
+}
+
+// Add item to PO receipt
+function addItemToPO(event) {
+    event.preventDefault();
+    
+    if (!selectedPOItem) {
+        showNotification('No item selected', 'error');
+        return false;
+    }
+    
+    const quantity = parseInt(document.getElementById('poItemQuantity').value);
+    
+    if (isNaN(quantity) || quantity < 1) {
+        showNotification('Please enter a valid quantity', 'error');
+        document.getElementById('poItemQuantity').focus();
+        return false;
+    }
+    
+    // Add item to receipt
+    const poItem = {
+        itemId: selectedPOItem.id,
+        itemName: selectedPOItem.name,
+        category: selectedPOItem.label || 'No Category',
+        unit: selectedPOItem.unit || 'unit',
+        currentStock: selectedPOItem.quantity,
+        quantityAdded: quantity,
+        newStock: selectedPOItem.quantity + quantity
+    };
+    
+    poAddedItems.push(poItem);
+    
+    // Reset selection
+    cancelPOSelection();
+    
+    // Re-render selectable items list (to exclude already added items)
+    filterPOSelectableItems();
+    
+    // Update added items table
+    renderPOAddedItems();
+    
+    // Update proceed button state
+    poProceedToReviewBtn.disabled = poAddedItems.length === 0;
+    
+    return false;
+}
+
+// Render items added to receipt
+function renderPOAddedItems() {
+    if (!poAddedItemsBody) return;
+    
+    if (poAddedItems.length === 0) {
+        poAddedItemsBody.innerHTML = '';
+        if (poNoItemsMessage) poNoItemsMessage.style.display = 'block';
+        if (poProceedToReviewBtn) poProceedToReviewBtn.disabled = true;
+        return;
+    }
+    
+    if (poNoItemsMessage) poNoItemsMessage.style.display = 'none';
+    
+    poAddedItemsBody.innerHTML = poAddedItems.map((item, index) => `
+        <tr>
+            <td style="padding: 10px; border-bottom: 1px solid #e0e0e0;">
+                <i class="fa-solid fa-box" style="margin-right: 8px; color: #4caf50;"></i>
+                ${escapeHtml(item.itemName)}
+            </td>
+            <td style="padding: 10px; border-bottom: 1px solid #e0e0e0;">${escapeHtml(item.category)}</td>
+            <td style="padding: 10px; text-align: center; border-bottom: 1px solid #e0e0e0;">${item.quantityAdded} ${escapeHtml(item.unit)}</td>
+            <td style="padding: 10px; text-align: center; border-bottom: 1px solid #e0e0e0;">
+                <button type="button" onclick="removePOItem(${index})" style="background: #f44336; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">
+                    <i class="fa-solid fa-trash"></i>
+                </button>
+            </td>
+        </tr>
+    `).join('');
+    
+    if (poProceedToReviewBtn) poProceedToReviewBtn.disabled = false;
+}
+
+// Remove item from PO receipt
+function removePOItem(index) {
+    if (index >= 0 && index < poAddedItems.length) {
+        poAddedItems.splice(index, 1);
+        renderPOAddedItems();
+        filterPOSelectableItems();
+        
+        // Update button state
+        if (poProceedToReviewBtn) {
+            poProceedToReviewBtn.disabled = poAddedItems.length === 0;
+        }
+    }
+}
+
+// Render review table
+function renderPOReviewTable() {
+    const reviewBody = document.getElementById('poReviewBody');
+    if (!reviewBody) return;
+    
+    reviewBody.innerHTML = poAddedItems.map(item => `
+        <tr>
+            <td style="padding: 10px; border-bottom: 1px solid #e0e0e0;">
+                <i class="fa-solid fa-box" style="margin-right: 8px; color: #4caf50;"></i>
+                ${escapeHtml(item.itemName)}
+            </td>
+            <td style="padding: 10px; border-bottom: 1px solid #e0e0e0;">${escapeHtml(item.category)}</td>
+            <td style="padding: 10px; text-align: center; border-bottom: 1px solid #e0e0e0;">${item.currentStock}</td>
+            <td style="padding: 10px; text-align: center; border-bottom: 1px solid #e0e0e0;" class="quantity-added">+${item.quantityAdded}</td>
+            <td style="padding: 10px; text-align: center; border-bottom: 1px solid #e0e0e0; font-weight: 600;">${item.newStock}</td>
+        </tr>
+    `).join('');
+}
+
+// Process all PO items
+async function processPOItems() {
+    if (poAddedItems.length === 0) {
+        showNotification('No items to process', 'error');
+        return;
+    }
+    
+    // Prevent double submission
+    if (poIsSubmitting) {
+        console.log('Submission blocked - already in progress');
+        return;
+    }
+    
+    // Set submission lock
+    poIsSubmitting = true;
+    
+    // Disable process button
+    if (poProcessBtn) {
+        poProcessBtn.disabled = true;
+        poProcessBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+    }
+    
+    try {
+        // Process each item
+        for (const poItem of poAddedItems) {
+            // Get current item data
+            const item = allItems.find(i => i.id === poItem.itemId);
+            if (!item) {
+                console.warn(`Item not found: ${poItem.itemName}`);
+                continue;
+            }
+            
+            const oldQuantity = item.quantity;
+            const newQuantity = oldQuantity + poItem.quantityAdded;
+            
+            // Update item quantity
+            const updateData = {
+                quantity: newQuantity,
+                updated_at: new Date(poReceiptData.date).toISOString()
+            };
+            
+            // Add P.O. Number if provided
+            if (poReceiptData.poNumber) {
+                updateData.po_number = poReceiptData.poNumber;
+            }
+            
+            // Add Supplier if provided
+            if (poReceiptData.supplierId) {
+                updateData.supplier_id = poReceiptData.supplierId;
+            }
+            
+            const { error } = await supabase
+                .from('items')
+                .update(updateData)
+                .eq('id', poItem.itemId);
+            
+            if (error) {
+                console.error('Error updating item:', error);
+                continue;
+            }
+            
+            // Log activity
+            await logActivity(
+                'UPDATE_QUANTITY',
+                poItem.itemId,
+                poItem.itemName,
+                poItem.quantityAdded,
+                oldQuantity,
+                newQuantity,
+                null,
+                { 
+                    label: poItem.category, 
+                    unit: poItem.unit, 
+                    po_number: poReceiptData.poNumber || null,
+                    supplier: poReceiptData.supplierName || null,
+                    receipt_date: poReceiptData.date
+                },
+                poReceiptData.date
+            );
+        }
+        
+        // Refresh items list
+        await fetchItems();
+        
+        // Show success message
+        showPOSuccessMessage();
+        
+    } catch (error) {
+        console.error('Error processing PO items:', error);
+        showNotification('Failed to process items. Please try again.', 'error');
+    } finally {
+        // Reset submission lock
+        poIsSubmitting = false;
+        
+        if (poProcessBtn) {
+            poProcessBtn.disabled = false;
+            poProcessBtn.innerHTML = '<i class="fa-solid fa-check"></i> Process All Items';
+        }
+    }
+}
+
+// Show PO success message
+function showPOSuccessMessage() {
+    // Hide all steps
+    poStep1.style.display = 'none';
+    poStep2.style.display = 'none';
+    poStep3.style.display = 'none';
+    
+    // Update indicators
+    poStep1Indicator.classList.add('completed');
+    poStep2Indicator.classList.add('completed');
+    poStep3Indicator.classList.add('completed');
+    
+    // Calculate totals
+    const totalItems = poAddedItems.length;
+    const totalQuantity = poAddedItems.reduce((sum, item) => sum + item.quantityAdded, 0);
+    
+    // Populate success summary
+    const successSummary = document.getElementById('poSuccessSummary');
+    if (successSummary) {
+        successSummary.innerHTML = `
+            <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                <tr>
+                    <td style="padding: 5px 0; color: #666; width: 40%;">Date:</td>
+                    <td style="padding: 5px 0; font-weight: 500;">${escapeHtml(poReceiptData.date)}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 5px 0; color: #666;">P.O. Number:</td>
+                    <td style="padding: 5px 0; font-weight: 500;">${escapeHtml(poReceiptData.poNumber) || '(Not specified)'}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 5px 0; color: #666;">Supplier:</td>
+                    <td style="padding: 5px 0; font-weight: 500;">${escapeHtml(poReceiptData.supplierName) || '(Not specified)'}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 5px 0; color: #666;">Items Added:</td>
+                    <td style="padding: 5px 0; font-weight: 500;">${totalItems} items</td>
+                </tr>
+                <tr>
+                    <td style="padding: 5px 0; color: #666;">Total Quantity:</td>
+                    <td style="padding: 5px 0; font-weight: 500;">${totalQuantity} units</td>
+                </tr>
+            </table>
+        `;
+    }
+    
+    // Show success message
+    document.getElementById('poSuccessMessage').style.display = 'block';
+}
+
+// ==========================================
+// PO CREATE NEW ITEM FUNCTIONS
+// ==========================================
+
+// Open PO Create Item Modal
+function openPOCreateItemModal() {
+    // Close the PO item selection first
+    cancelPOSelection();
+    
+    // Reset form
+    document.getElementById('poNewItemName').value = '';
+    document.getElementById('poNewItemLabel').value = '';
+    document.getElementById('poNewItemUnit').value = '';
+    document.getElementById('poNewItemQuantity').value = '';
+    
+    // Reset unit field visibility
+    if (poNewItemUnitGroup) {
+        poNewItemUnitGroup.style.display = 'none';
+        poNewItemUnit.required = false;
+    }
+    
+    poCreateItemModal.classList.add('show');
+}
+
+// Close PO Create Item Modal
+function closePOCreateItemModal() {
+    poCreateItemModal.classList.remove('show');
+    document.getElementById('poCreateItemForm').reset();
+    
+    if (poNewItemUnitGroup) {
+        poNewItemUnitGroup.style.display = 'none';
+    }
+}
+
+// Toggle PO New Item Unit Field
+function togglePONewItemUnitField() {
+    if (poNewItemLabel && poNewItemUnitGroup) {
+        if (poNewItemLabel.value === 'Janitorial' || poNewItemLabel.value === 'Office Supplies') {
+            poNewItemUnitGroup.style.display = 'block';
+            poNewItemUnit.required = true;
+        } else {
+            poNewItemUnitGroup.style.display = 'none';
+            poNewItemUnit.required = false;
+            poNewItemUnit.value = '';
+        }
+    }
+}
+
+// Handle PO Create Item
+async function handlePOCreateItem(event) {
+    event.preventDefault();
+    
+    const name = document.getElementById('poNewItemName').value.trim();
+    const label = document.getElementById('poNewItemLabel').value.trim();
+    const quantity = parseInt(document.getElementById('poNewItemQuantity').value);
+    const unit = document.getElementById('poNewItemUnit').value.trim();
+    
+    if (!name || isNaN(quantity)) {
+        showNotification('Please fill in all required fields', 'error');
+        return;
+    }
+    
+    // Validate unit is provided for Janitorial and Office Supplies items
+    if ((label === 'Janitorial' || label === 'Office Supplies') && !unit) {
+        alert('Please specify the unit for ' + label + ' items');
+        return;
+    }
+    
+    try {
+        const insertData = { 
+            name: name, 
+            label: label, 
+            quantity: quantity 
+        };
+        
+        // Add unit for Janitorial and Office Supplies items
+        if (label === 'Janitorial' || label === 'Office Supplies') {
+            insertData.unit = unit;
+        }
+        
+        // Add P.O. Number if provided
+        if (poReceiptData.poNumber) {
+            insertData.po_number = poReceiptData.poNumber;
+        }
+        
+        // Add Supplier if provided
+        if (poReceiptData.supplierId) {
+            insertData.supplier_id = poReceiptData.supplierId;
+        }
+        
+        // Use receipt date
+        if (poReceiptData.date) {
+            const dateStr = new Date(poReceiptData.date).toISOString();
+            insertData.created_at = dateStr;
+            insertData.updated_at = dateStr;
+        }
+        
+        const { data, error } = await supabase
+            .from('items')
+            .insert([insertData])
+            .select();
+        
+        if (error) throw error;
+        
+        // Log the item creation activity
+        if (data && data.length > 0) {
+            const newItem = data[0];
+            
+            await logActivity(
+                'CREATE',
+                newItem.id,
+                newItem.name,
+                newItem.quantity,
+                0,
+                newItem.quantity,
+                null,
+                { 
+                    label: newItem.label, 
+                    unit: newItem.unit, 
+                    po_number: poReceiptData.poNumber || null,
+                    supplier: poReceiptData.supplierName || null,
+                    receipt_date: poReceiptData.date
+                },
+                poReceiptData.date
+            );
+            
+            // Add the new item to the receipt
+            const poItem = {
+                itemId: newItem.id,
+                itemName: newItem.name,
+                category: newItem.label || 'No Category',
+                unit: newItem.unit || 'unit',
+                currentStock: 0,
+                quantityAdded: newItem.quantity,
+                newStock: newItem.quantity
+            };
+            
+            poAddedItems.push(poItem);
+            
+            // Refresh items list
+            await fetchItems();
+        }
+        
+        // Close modal
+        closePOCreateItemModal();
+        
+        // Update added items table
+        renderPOAddedItems();
+        
+        // Update proceed button state
+        poProceedToReviewBtn.disabled = poAddedItems.length === 0;
+        
+        showNotification('Item created and added to receipt!');
+        
+    } catch (error) {
+        console.error('Error creating item:', error);
+        showNotification('Failed to create item. Please try again.', 'error');
+    }
+}
+
+// Make functions available globally for onclick handlers
+window.openSelectItemModal = openSelectItemModal;
+window.closeSelectItemModal = closeSelectItemModal;
+window.openCreateItemModal = openCreateItemModal;
+window.closeCreateItemModal = closeCreateItemModal;
+window.openEditModal = openEditModal;
+window.closeEditModal = closeEditModal;
+window.handleUpdateQuantity = handleUpdateQuantity;
+window.handleCreateItem = handleCreateItem;
+window.handleEditItem = handleEditItem;
+window.deleteItem = deleteItem;
+window.fetchItems = fetchItems;
+window.toggleFilterDropdown = toggleFilterDropdown;
+window.setFilter = setFilter;
+window.cancelSelection = cancelSelection;
+
+// Get Item global functions
+window.openGetItemModal = openGetItemModal;
+window.closeGetItemModal = closeGetItemModal;
+window.proceedToItemSelection = proceedToItemSelection;
+window.backToItemSelection = backToItemSelection;
+window.showConfirmationStep = showConfirmationStep;
+window.backToGetItemDetails = backToGetItemDetails;
+window.confirmGetItem = confirmGetItem;
+window.processAllItems = processAllItems;
+window.getAnotherItem = getAnotherItem;
+window.removeFromCart = removeFromCart;
+window.cancelGetItemSelection = cancelGetItemSelection;
+window.switchToItemsTab = switchToItemsTab;
+window.switchToEquipmentTab = switchToEquipmentTab;
+
+// View Item modal globals
+window.openViewItemModal = openViewItemModal;
+window.closeViewItemModal = closeViewItemModal;
+window.fetchItemHistory = fetchItemHistory;
+
+// Add Supplier modal globals
+window.openAddSupplierModal = openAddSupplierModal;
+window.closeAddSupplierModal = closeAddSupplierModal;
+window.handleAddSupplier = handleAddSupplier;
+
+// PO Workflow global functions
+window.openPOModal = openPOModal;
+window.closePOModal = closePOModal;
+window.proceedToPOStep2 = proceedToPOStep2;
+window.backToPOStep1 = backToPOStep1;
+window.proceedToPOStep3 = proceedToPOStep3;
+window.backToPOStep2 = backToPOStep2;
+window.selectPOItem = selectPOItem;
+window.cancelPOSelection = cancelPOSelection;
+window.addItemToPO = addItemToPO;
+window.removePOItem = removePOItem;
+window.processPOItems = processPOItems;
+window.openPOCreateItemModal = openPOCreateItemModal;
+window.closePOCreateItemModal = closePOCreateItemModal;
+window.handlePOCreateItem = handlePOCreateItem;
+window.filterPOSelectableItems = filterPOSelectableItems;
