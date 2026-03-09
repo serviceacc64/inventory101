@@ -110,6 +110,30 @@
                 </div>
 
             </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fa-solid fa-boxes"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>Room Items</h3>
+                    <p class="stat-value" id="totalRoomItems">--</p>
+                    <small>Assigned to rooms</small>
+                </div>
+
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fa-solid fa-handshake"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>Suppliers</h3>
+                    <p class="stat-value" id="totalSuppliers">--</p>
+                    <small>Active suppliers</small>
+                </div>
+
+            </div>
         </section>
 
         <!-- Recent Activity & Quick Access -->
@@ -136,6 +160,14 @@
                         <i class="fa-solid fa-clipboard-list"></i>
                         <span>Manage Items</span>
                     </a>
+                    <a href="src/pages/rooms.html" class="quick-link">
+                        <i class="fa-solid fa-door-open"></i>
+                        <span>Rooms</span>
+                    </a>
+                    <a href="src/pages/equipment.html" class="quick-link">
+                        <i class="fa-solid fa-tools"></i>
+                        <span>Equipment</span>
+                    </a>
                     <a href="src/pages/report.html" class="quick-link">
                         <i class="fa-solid fa-calendar-week"></i>
                         <span>Reports</span>
@@ -144,6 +176,33 @@
                         <i class="fa-solid fa-book-open"></i>
                         <span>View Logs</span>
                     </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Category Breakdown & Today's Activity -->
+        <section class="content-section">
+            <div class="category-summary">
+                <h2>supplies by Category</h2>
+                <div id="categoryBreakdown" class="category-cards">
+                    <div class="category-card loading">
+                        <i class="fa-solid fa-spinner fa-spin"></i>
+                        <p>Loading categories...</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="todays-activity">
+                <h2>Today's Activity</h2>
+                <div id="todaysActivityList" class="activity-summary">
+                    <div class="activity-item loading">
+                        <div class="activity-icon">
+                            <i class="fa-solid fa-spinner fa-spin"></i>
+                        </div>
+                        <div class="activity-details">
+                            <p>Loading today's activity...</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -156,15 +215,19 @@
         async function loadDashboardStats() {
             try {
                 // Fetch all data in parallel
-                const [itemsResult, roomsResult, equipmentResult] = await Promise.all([
+                const [itemsResult, roomsResult, equipmentResult, roomItemsResult, suppliersResult] = await Promise.all([
                     supabase.from('items').select('*'),
                     supabase.from('rooms').select('*'),
-                    supabase.from('equipment').select('*')
+                    supabase.from('equipment').select('*'),
+                    supabase.from('room_items').select('*'),
+                    supabase.from('suppliers').select('*')
                 ]);
 
                 const { data: items, error: itemsError } = itemsResult;
                 const { data: rooms, error: roomsError } = roomsResult;
                 const { data: equipment, error: equipmentError } = equipmentResult;
+                const { data: roomItems, error: roomItemsError } = roomItemsResult;
+                const { data: suppliers, error: suppliersError } = suppliersResult;
                 
                 if (itemsError) throw itemsError;
                 
@@ -188,6 +251,8 @@
                 document.getElementById('totalRooms').textContent = (rooms ? rooms.length : 0).toLocaleString();
                 document.getElementById('totalEquipment').textContent = (equipment ? equipment.length : 0).toLocaleString();
                 document.getElementById('thisMonth').textContent = thisMonth.toLocaleString();
+                document.getElementById('totalRoomItems').textContent = (roomItems ? roomItems.length : 0).toLocaleString();
+                document.getElementById('totalSuppliers').textContent = (suppliers ? suppliers.length : 0).toLocaleString();
                 
             } catch (error) {
                 console.error('Error loading dashboard stats:', error);
@@ -196,6 +261,141 @@
                 document.getElementById('totalRooms').textContent = 'Error';
                 document.getElementById('totalEquipment').textContent = 'Error';
                 document.getElementById('thisMonth').textContent = 'Error';
+                document.getElementById('totalRoomItems').textContent = 'Error';
+                document.getElementById('totalSuppliers').textContent = 'Error';
+            }
+        }
+
+        async function loadCategoryBreakdown() {
+            try {
+                const { data: items, error } = await supabase
+                    .from('items')
+                    .select('category, COUNT(*) as count');
+
+                if (error) throw error;
+
+                const categoryList = document.getElementById('categoryBreakdown');
+                
+                if (!items || items.length === 0) {
+                    categoryList.innerHTML = `
+                        <div class="category-card empty">
+                            <i class="fa-solid fa-info-circle"></i>
+                            <p>No categories found</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Group by category and count
+                const categoryMap = {};
+                items.forEach(item => {
+                    const category = item.category || 'Uncategorized';
+                    categoryMap[category] = (categoryMap[category] || 0) + 1;
+                });
+
+                const categoryHTML = Object.entries(categoryMap).map(([category, count]) => {
+                    const icons = {
+                        'Janitorial': 'fa-solid fa-broom',
+                        'Office Supplies': 'fa-solid fa-pen-fancy'
+                    };
+                    const icon = icons[category] || 'fa-solid fa-box';
+                    
+                    return `
+                        <div class="category-card">
+                            <div class="category-icon">
+                                <i class="${icon}"></i>
+                            </div>
+                            <div class="category-info">
+                                <h4>${category}</h4>
+                                <p class="category-count">${count} items</p>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                categoryList.innerHTML = categoryHTML;
+                
+            } catch (error) {
+                console.error('Error loading category breakdown:', error);
+                document.getElementById('categoryBreakdown').innerHTML = `
+                    <div class="category-card error">
+                        <i class="fa-solid fa-exclamation-circle"></i>
+                        <p>Failed to load categories</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function loadTodaysActivity() {
+            try {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const todayString = today.toISOString();
+
+                const { data: logs, error } = await supabase
+                    .from('activity_logs')
+                    .select('*')
+                    .gte('timestamp', todayString)
+                    .order('timestamp', { ascending: false })
+                    .limit(10);
+
+                if (error) throw error;
+
+                const activityList = document.getElementById('todaysActivityList');
+                
+                if (!logs || logs.length === 0) {
+                    activityList.innerHTML = `
+                        <div class="activity-item empty">
+                            <div class="activity-icon">
+                                <i class="fa-solid fa-info-circle"></i>
+                            </div>
+                            <div class="activity-details">
+                                <p>No activity today</p>
+                                <small>Activities from today will appear here</small>
+                            </div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Count by action type for today
+                const actionCounts = {};
+                logs.forEach(log => {
+                    const action = log.action_type || 'OTHER';
+                    actionCounts[action] = (actionCounts[action] || 0) + 1;
+                });
+
+                const summaryHTML = Object.entries(actionCounts).map(([action, count]) => {
+                    const iconClass = getActivityIcon(action);
+                    const badgeClass = action.toLowerCase();
+                    
+                    return `
+                        <div class="activity-summary-item">
+                            <div class="activity-icon ${badgeClass}">
+                                <i class="${iconClass}"></i>
+                            </div>
+                            <div class="activity-summary-details">
+                                <span class="activity-badge ${badgeClass}">${formatActionType(action)}</span>
+                                <span class="count">${count} ${count === 1 ? 'action' : 'actions'}</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                activityList.innerHTML = summaryHTML;
+                
+            } catch (error) {
+                console.error('Error loading today\'s activity:', error);
+                document.getElementById('todaysActivityList').innerHTML = `
+                    <div class="activity-item error">
+                        <div class="activity-icon">
+                            <i class="fa-solid fa-exclamation-circle"></i>
+                        </div>
+                        <div class="activity-details">
+                            <p>Failed to load today's activity</p>
+                        </div>
+                    </div>
+                `;
             }
         }
 
@@ -343,6 +543,8 @@
         // Load stats when page loads
         loadDashboardStats();
         loadRecentActivity();
+        loadCategoryBreakdown();
+        loadTodaysActivity();
     </script>
 </body>
 </html>
