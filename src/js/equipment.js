@@ -1343,7 +1343,287 @@ if (clearGetEquipmentSearch) {
 
 
 // ==========================================
-// 11. INITIALIZE - LOAD EQUIPMENT ON PAGE LOAD
+// 11. ADD STOCK FUNCTIONALITY
+// ==========================================
+
+// Add Stock Modal DOM Elements
+const selectEquipmentModal = document.getElementById('selectEquipmentModal');
+const modalEquipmentSearch = document.getElementById('modalEquipmentSearch');
+const clearModalEquipmentSearch = document.getElementById('clearModalEquipmentSearch');
+const selectableEquipmentList = document.getElementById('selectableEquipmentList');
+const selectedEquipmentDetails = document.getElementById('selectedEquipmentDetails');
+const selectedEquipmentId = document.getElementById('selectedEquipmentId');
+const selectedEquipmentName = document.getElementById('selectedEquipmentName');
+const selectedEquipmentCurrentStock = document.getElementById('selectedEquipmentCurrentStock');
+const addEquipmentStockForm = document.getElementById('addEquipmentStockForm');
+
+// ==========================================
+// ADD STOCK MODAL FUNCTIONS
+// ==========================================
+function openSelectEquipmentModal() {
+    selectEquipmentModal.classList.add('show');
+    
+    // Reset form states
+    document.getElementById('selectEquipmentModal').querySelector('.search-box input').value = '';
+    selectedEquipmentDetails.style.display = 'none';
+    selectableEquipmentList.style.display = 'block';
+    
+    // Render all equipment for selection
+    renderSelectableEquipment(allEquipment);
+    
+    // Populate supplier dropdown
+    populateAddStockSupplierDropdown();
+    
+    // Set default date to today
+    const today = new Date();
+    const dateInput = document.getElementById('addEquipmentDate');
+    if (dateInput) {
+        dateInput.value = today.toISOString().slice(0, 10);
+    }
+    
+    // Focus on search input
+    setTimeout(() => {
+        if (modalEquipmentSearch) modalEquipmentSearch.focus();
+    }, 100);
+}
+
+function closeSelectEquipmentModal() {
+    selectEquipmentModal.classList.remove('show');
+    // Reset form
+    if (addEquipmentStockForm) addEquipmentStockForm.reset();
+    selectedEquipmentDetails.style.display = 'none';
+    selectableEquipmentList.style.display = 'block';
+}
+
+function populateAddStockSupplierDropdown() {
+    const addEquipmentSupplier = document.getElementById('addEquipmentSupplier');
+    if (!addEquipmentSupplier) return;
+    
+    // Get unique suppliers
+    const uniqueSuppliers = getUniqueSuppliers(allSuppliers);
+    
+    let optionsHTML = '<option value="">Select Supplier (Optional)</option>';
+    uniqueSuppliers.forEach(supplier => {
+        optionsHTML += `<option value="${supplier.id}">${escapeHtml(supplier.supplier_name)}</option>`;
+    });
+    
+    addEquipmentSupplier.innerHTML = optionsHTML;
+}
+
+function renderSelectableEquipment(equipment) {
+    if (!selectableEquipmentList) return;
+    
+    selectableEquipmentList.innerHTML = '';
+    
+    if (equipment.length === 0) {
+        selectableEquipmentList.innerHTML = `
+            <div class="empty-state" style="padding: 20px;">
+                <i class="fa-solid fa-tools"></i>
+                <p>No equipment found</p>
+            </div>
+        `;
+        return;
+    }
+    
+    equipment.forEach(item => {
+        const itemEl = document.createElement('div');
+        itemEl.className = 'selectable-item';
+        itemEl.dataset.equipmentId = item.id;
+        itemEl.onclick = () => selectEquipmentForStock(item);
+        
+        const stockText = `Qty: ${item.quantity}`;
+        
+        itemEl.innerHTML = `
+            <div class="selectable-item-icon">
+                <i class="fa-solid fa-tools"></i>
+            </div>
+            <div class="selectable-item-info">
+                <h4>${escapeHtml(item.item_name)}</h4>
+                <p>${stockText}</p>
+            </div>
+            <div class="selectable-item-action">
+                <i class="fa-solid fa-chevron-right"></i>
+            </div>
+        `;
+        
+        selectableEquipmentList.appendChild(itemEl);
+    });
+}
+
+function filterSelectableEquipment() {
+    const query = modalEquipmentSearch.value.trim().toLowerCase();
+    
+    let filtered = allEquipment;
+    
+    if (query) {
+        filtered = filtered.filter(item => {
+            const searchText = (item.item_name + ' ' + (item.item_description || '')).toLowerCase();
+            return searchText.includes(query);
+        });
+    }
+    
+    renderSelectableEquipment(filtered);
+}
+
+function selectEquipmentForStock(equipment) {
+    // Hide list, show details form
+    selectableEquipmentList.style.display = 'none';
+    selectedEquipmentDetails.style.display = 'block';
+    
+    // Populate details
+    selectedEquipmentId.value = equipment.id;
+    selectedEquipmentName.textContent = equipment.item_name;
+    
+    const stockText = `Current Stock: ${equipment.quantity}`;
+    selectedEquipmentCurrentStock.textContent = stockText;
+    
+    // Set max attribute for quantity input
+    const quantityInput = document.getElementById('addEquipmentQuantity');
+    if (quantityInput) {
+        quantityInput.max = 999999; // No upper limit for adding stock
+        quantityInput.value = '';
+    }
+    
+    // Set default date to today
+    const today = new Date();
+    const dateInput = document.getElementById('addEquipmentDate');
+    if (dateInput) {
+        dateInput.value = today.toISOString().slice(0, 10);
+    }
+    
+    // Focus on quantity input
+    setTimeout(() => {
+        if (quantityInput) quantityInput.focus();
+    }, 100);
+}
+
+function cancelEquipmentSelection() {
+    selectedEquipmentDetails.style.display = 'none';
+    selectableEquipmentList.style.display = 'block';
+    if (addEquipmentStockForm) addEquipmentStockForm.reset();
+}
+
+async function handleAddEquipmentStock(event) {
+    event.preventDefault();
+    
+    const equipmentId = selectedEquipmentId.value;
+    const equipmentItem = allEquipment.find(e => e.id === equipmentId);
+    
+    if (!equipmentItem) {
+        showNotification('Equipment not found', 'error');
+        return;
+    }
+    
+    const quantityToAdd = parseInt(document.getElementById('addEquipmentQuantity').value);
+    const date = document.getElementById('addEquipmentDate').value;
+    const poNumber = document.getElementById('addEquipmentPO').value.trim();
+    const supplierId = document.getElementById('addEquipmentSupplier').value;
+    
+    if (isNaN(quantityToAdd) || quantityToAdd < 1) {
+        showNotification('Please enter a valid quantity', 'error');
+        return;
+    }
+    
+    if (!date) {
+        showNotification('Please select a date', 'error');
+        return;
+    }
+    
+    const oldQuantity = equipmentItem.quantity;
+    const newQuantity = oldQuantity + quantityToAdd;
+    
+    try {
+        // Update equipment quantity
+        const { error: updateError } = await supabase
+            .from('equipment')
+            .update({ 
+                quantity: newQuantity,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', equipmentId);
+        
+        if (updateError) throw updateError;
+        
+        // Log activity for CREATE (Add Stock) action
+        const details = {
+            label: equipmentItem.item_description || 'Equipment',
+            po_number: poNumber || null,
+            equipment_id: equipmentId
+        };
+        
+        await logEquipmentActivity(
+            'CREATE',
+            equipmentId,
+            equipmentItem.item_name,
+            quantityToAdd,
+            oldQuantity,
+            newQuantity,
+            null, // person - not required for add stock
+            details,
+            date
+        );
+        
+        closeSelectEquipmentModal();
+        await fetchEquipment();
+        
+        showNotification(`Successfully added ${quantityToAdd} units to ${equipmentItem.item_name}. New stock: ${newQuantity}`);
+        
+    } catch (error) {
+        console.error('Error adding equipment stock:', error);
+        showNotification('Failed to add stock. Please try again.', 'error');
+    }
+}
+
+function openCreateEquipmentFromStockModal() {
+    // Close select modal, open create modal
+    closeSelectEquipmentModal();
+    openCreateEquipmentModal();
+}
+
+// Add Stock modal event listeners
+if (selectEquipmentModal) {
+    selectEquipmentModal.addEventListener('click', function(e) {
+        if (e.target === selectEquipmentModal) {
+            closeSelectEquipmentModal();
+        }
+    });
+}
+
+if (modalEquipmentSearch) {
+    modalEquipmentSearch.addEventListener('input', filterSelectableEquipment);
+}
+
+if (clearModalEquipmentSearch) {
+    clearModalEquipmentSearch.addEventListener('click', function() {
+        modalEquipmentSearch.value = '';
+        filterSelectableEquipment();
+        modalEquipmentSearch.focus();
+    });
+}
+
+// Add Add Stock button handler in View Equipment Modal
+const viewEquipmentAddStockBtn = document.getElementById('viewEquipmentAddStockBtn');
+if (viewEquipmentAddStockBtn) {
+    viewEquipmentAddStockBtn.onclick = () => {
+        const equipmentId = viewEquipmentModal.dataset.itemId;
+        window.closeViewEquipmentModal();
+        
+        // Open select equipment modal with this item pre-selected
+        openSelectEquipmentModal();
+        
+        // Find and select the equipment
+        const equipment = allEquipment.find(e => e.id === equipmentId);
+        if (equipment) {
+            // Wait for modal to render then select
+            setTimeout(() => {
+                selectEquipmentForStock(equipment);
+            }, 200);
+        }
+    };
+}
+
+// ==========================================
+// 12. INITIALIZE - LOAD EQUIPMENT ON PAGE LOAD
 // ==========================================
 fetchEquipment();
 fetchSuppliers();
@@ -1374,3 +1654,10 @@ window.processAllEquipment = processAllEquipment;
 window.getAnotherEquipment = getAnotherEquipment;
 window.removeEquipmentFromCart = removeEquipmentFromCart;
 window.cancelGetEquipmentSelection = cancelGetEquipmentSelection;
+
+// Add Stock global functions
+window.openSelectEquipmentModal = openSelectEquipmentModal;
+window.closeSelectEquipmentModal = closeSelectEquipmentModal;
+window.openCreateEquipmentFromStockModal = openCreateEquipmentFromStockModal;
+window.handleAddEquipmentStock = handleAddEquipmentStock;
+window.cancelEquipmentSelection = cancelEquipmentSelection;

@@ -90,6 +90,7 @@
                 </div>
 
                 <div class="header-actions">
+                    <button class="btn btn-primary" onclick="openSelectEquipmentModal()"><i class="fa-solid fa-plus"></i> Add Stock</button>
                     <button class="btn btn-primary" onclick="openCreateEquipmentModal()"><i class="fa-solid fa-plus"></i> Add Equipment</button>
                     <button class="btn btn-secondary" onclick="openGetEquipmentModal()"><i class="fa-solid fa-hand-holding"></i> Get Equipment</button>
                 </div>
@@ -377,6 +378,7 @@
 
             <div class="form-actions view-item-actions">
                 <button type="button" id="viewEquipmentEditBtn" class="btn btn-secondary">Edit</button>
+                <button type="button" id="viewEquipmentAddStockBtn" class="btn btn-primary">Add Stock</button>
                 <button type="button" id="viewEquipmentDeleteBtn" class="btn btn-danger">Delete</button>
                 <button type="button" id="viewEquipmentCloseBtn" class="btn btn-secondary" onclick="window.closeViewEquipmentModal()">Close</button>
             </div>
@@ -506,6 +508,80 @@
                         <i class="fa-solid fa-check"></i> Process All
                     </button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Select Equipment Modal for Add Stock -->
+    <div id="selectEquipmentModal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3>Add Stock to Equipment</h3>
+                <button onclick="closeSelectEquipmentModal()">&times;</button>
+            </div>
+            
+            <!-- Search Box -->
+            <div class="form-group">
+                <div class="search-box" style="margin-bottom: 15px;">
+                    <input type="search" id="modalEquipmentSearch" placeholder="Search available equipment..." aria-label="Search equipment">
+                    <button type="button" id="clearModalEquipmentSearch" title="Clear search"><i class="fa-solid fa-times"></i></button>
+                </div>
+            </div>
+            
+            <!-- Create New Equipment Button -->
+            <div class="create-new-item-section" style="padding: 15px; text-align: center; border-bottom: 1px solid #e0e0e0; background: #f9f9f9;">
+                <p style="margin: 0 0 10px 0; color: #666; font-size: 14px;">Can't find the equipment you're looking for?</p>
+                <button type="button" class="btn btn-secondary" onclick="openCreateEquipmentFromStockModal()">
+                    <i class="fa-solid fa-plus"></i> Create New Equipment
+                </button>
+            </div>
+            
+            <!-- Selectable Equipment List -->
+            <div id="selectableEquipmentList" class="selectable-items-list">
+                <!-- Equipment will be rendered here dynamically -->
+            </div>
+
+            
+            <!-- Selected Equipment Details (hidden initially) -->
+            <div id="selectedEquipmentDetails" style="display: none; margin-top: 20px; padding-top: 20px; border-top: 2px solid #eee;">
+                <div class="selected-item-info">
+                    <h4 id="selectedEquipmentName">Equipment Name</h4>
+                    <p id="selectedEquipmentCurrentStock">Current Stock: 0</p>
+                </div>
+                
+                <form id="addEquipmentStockForm" onsubmit="handleAddEquipmentStock(event)">
+                    <input type="hidden" id="selectedEquipmentId">
+
+                    <div class="form-group">
+                        <label for="addEquipmentDate">Date *</label>
+                        <input type="date" id="addEquipmentDate" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="addEquipmentPO">P.O. Number</label>
+                        <input type="text" id="addEquipmentPO" placeholder="e.g., PO-2024-001">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="addEquipmentSupplier">Supplier</label>
+                        <select id="addEquipmentSupplier">
+                            <option value="">Select Supplier (Optional)</option>
+                        </select>
+                        <small style="color: #666; font-size: 11px; cursor: pointer; color: #007bff;" onclick="openAddSupplierModal()">+ Add New Supplier</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="addEquipmentQuantity">Quantity to Add *</label>
+                        <input type="number" id="addEquipmentQuantity" required min="1" placeholder="Enter quantity to add">
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" onclick="cancelEquipmentSelection()" class="btn btn-secondary">Back</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fa-solid fa-plus"></i> Add to Stock
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
