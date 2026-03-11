@@ -52,6 +52,7 @@ let selectedEquipment = [];
 let equipmentSearchQuery = '';
 let equipmentDateFrom = '';
 let equipmentDateTo = '';
+let equipmentConsumableFilter = '';
 
 // Store form data for equipment report
 let equipmentReportFormData = null;
@@ -2142,6 +2143,13 @@ async function displayEquipmentReportWithImport() {
             );
         }
         
+        // Consumable filter
+        if (equipmentConsumableFilter === 'consumable') {
+            filteredEquipment = filteredEquipment.filter(item => item.is_consumable === true);
+        } else if (equipmentConsumableFilter === 'non_consumable') {
+            filteredEquipment = filteredEquipment.filter(item => item.is_consumable !== true);
+        }
+        
         // Date range filter
         if (equipmentDateFrom) {
             filteredEquipment = filteredEquipment.filter(item => {
@@ -2181,6 +2189,14 @@ async function displayEquipmentReportWithImport() {
                             <input type="text" id="equipmentSearchInput" placeholder="Search equipment..." value="${equipmentSearchQuery}" 
                                 oninput="window.updateEquipmentSearchInput(this.value)"
                                 style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px;">
+                        </div>
+                        <div class="filter-group" style="flex: 1; min-width: 150px;">
+                            <label style="display: block; margin-bottom: 6px; font-size: 12px; font-weight: 600; color: #666; text-transform: uppercase;">Type</label>
+                            <select id="equipmentConsumableFilter" onchange="window.updateEquipmentFilters()" style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; background: white;">
+                                <option value="">All Equipment</option>
+                                <option value="consumable" ${equipmentConsumableFilter === 'consumable' ? 'selected' : ''}>Consumable</option>
+                                <option value="non_consumable" ${equipmentConsumableFilter === 'non_consumable' ? 'selected' : ''}>Non-Consumable</option>
+                            </select>
                         </div>
                         <div class="filter-group" style="flex: 1; min-width: 150px;">
                             <label style="display: block; margin-bottom: 6px; font-size: 12px; font-weight: 600; color: #666; text-transform: uppercase;">Date From</label>
@@ -2340,10 +2356,11 @@ function updateEquipmentSearchInput(query) {
     displayEquipmentReportWithImport();
 }
 
-// Update equipment filters (search + date range)
+// Update equipment filters (search + date range + consumable)
 function updateEquipmentFilters() {
     equipmentDateFrom = document.getElementById('equipmentDateFrom')?.value || '';
     equipmentDateTo = document.getElementById('equipmentDateTo')?.value || '';
+    equipmentConsumableFilter = document.getElementById('equipmentConsumableFilter')?.value || '';
     displayEquipmentReportWithImport();
 }
 
