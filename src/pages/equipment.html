@@ -205,6 +205,13 @@
                     <label for="dateDelivered">Date Delivered</label>
                     <input type="date" id="dateDelivered">
                 </div>
+                <div class="form-group">
+                    <label for="isConsumable">Is Consumable?</label>
+                    <select id="isConsumable">
+                        <option value="false">No</option>
+                        <option value="true">Yes</option>
+                    </select>
+                </div>
                 
                 <div class="modal-footer">
                     <button type="button" onclick="closeCreateEquipmentModal()" class="btn btn-secondary">Cancel</button>
@@ -286,6 +293,14 @@
                 <div class="form-group">
                     <label for="editDateDelivered">Date Delivered</label>
                     <input type="date" id="editDateDelivered">
+                </div>
+                
+                <div class="form-group">
+                    <label for="editIsConsumable">Is Consumable?</label>
+                    <select id="editIsConsumable">
+                        <option value="false">No</option>
+                        <option value="true">Yes</option>
+                    </select>
                 </div>
                 
                 <div class="modal-footer">
@@ -372,6 +387,7 @@
                         <div><strong>Accountable:</strong> <span id="viewEquipmentAccountable">-</span></div>
                         <div><strong>Received By:</strong> <span id="viewEquipmentReceivedBy">-</span></div>
                         <div><strong>Date Delivered:</strong> <span id="viewEquipmentDate">-</span></div>
+                        <div><strong>Consumable:</strong> <span id="viewEquipmentConsumable">-</span></div>
                     </div>
                 </div>
             </div>

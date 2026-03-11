@@ -186,7 +186,7 @@ function renderEquipment(equipment) {
     paginatedEquipment.forEach(item => {
         const itemEl = document.createElement('div');
         itemEl.className = 'equipment-card';
-        itemEl.dataset.equipmentId = item.id;
+        itemEl.dataset .equipmentId = item.id;
         // animate card appearance
         fadeIn(itemEl);
 
@@ -301,6 +301,7 @@ async function handleCreateEquipment(event) {
     const accountable = document.getElementById('accountable').value.trim();
     const receivedBy = document.getElementById('receivedBy').value.trim();
     const dateDelivered = document.getElementById('dateDelivered').value;
+    const isConsumable = document.getElementById('isConsumable').value === 'true';
     
     if (!itemName || isNaN(quantity)) {
         showNotification('Please fill in all required fields', 'error');
@@ -333,6 +334,9 @@ async function handleCreateEquipment(event) {
         if (dateDelivered) {
             equipmentData.date_delivered = dateDelivered;
         }
+        
+        // Add is_consumable field
+        equipmentData.is_consumable = isConsumable;
         
         const { data, error } = await supabase
             .from('equipment')
@@ -371,6 +375,12 @@ function openEditEquipmentModal(equipmentId) {
     document.getElementById('editReceivedBy').value = item.received_by || '';
     document.getElementById('editDateDelivered').value = item.date_delivered || '';
     
+    // Set is_consumable dropdown
+    const editIsConsumable = document.getElementById('editIsConsumable');
+    if (editIsConsumable) {
+        editIsConsumable.value = item.is_consumable ? 'true' : 'false';
+    }
+    
     // Set supplier dropdown after a short delay to allow suppliers to load
     setTimeout(() => {
         const editSupplierSelect = document.getElementById('editSupplier');
@@ -405,6 +415,12 @@ function openViewEquipmentModal(equipmentId) {
     if (viewEquipmentAccountable) viewEquipmentAccountable.textContent = item.accountable || '-';
     if (viewEquipmentReceivedBy) viewEquipmentReceivedBy.textContent = item.received_by || '-';
     if (viewEquipmentDate) viewEquipmentDate.textContent = item.date_delivered ? formatDate(item.date_delivered) : '-';
+    
+    // Display consumable status
+    const viewEquipmentConsumable = document.getElementById('viewEquipmentConsumable');
+    if (viewEquipmentConsumable) {
+        viewEquipmentConsumable.textContent = item.is_consumable ? 'Yes' : 'No';
+    }
 
     if (viewEquipmentModal) {
         viewEquipmentModal.classList.add('show');
@@ -444,6 +460,7 @@ async function handleEditEquipment(event) {
     const accountable = document.getElementById('editAccountable').value.trim();
     const receivedBy = document.getElementById('editReceivedBy').value.trim();
     const dateDelivered = document.getElementById('editDateDelivered').value;
+    const editIsConsumable = document.getElementById('editIsConsumable').value === 'true';
     
     if (!itemName || isNaN(quantity)) {
         showNotification('Please fill in all required fields', 'error');
@@ -479,6 +496,9 @@ async function handleEditEquipment(event) {
         } else {
             updateData.date_delivered = null;
         }
+        
+        // Add is_consumable field
+        updateData.is_consumable = editIsConsumable;
         
         const { error } = await supabase
             .from('equipment')
