@@ -153,8 +153,10 @@ body {
     position: absolute;
     right: 12px;
     cursor: pointer;
-    pointer-events: auto;
+    pointer-events: auto !important;
     transition: 0.3s;
+    color: #666;
+    z-index: 10;
 }
 
 .toggle-password:hover {
@@ -400,6 +402,52 @@ body {
 
 .modal .form-group input::placeholder {
     color: #999;
+}
+
+/* Modal inputs with toggle password button */
+.modal .input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background-color: #fff;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    transition: 0.3s;
+    overflow: hidden;
+}
+
+.modal .input-wrapper:focus-within {
+    border-color: var(--hover);
+    box-shadow: 0 0 0 3px rgba(137, 22, 35, 0.1);
+}
+
+.modal .input-wrapper input {
+    flex: 1;
+    border: none;
+    padding: 12px 40px 12px 16px;
+    font-family: "Poppins", sans-serif;
+    font-size: 14px;
+    color: var(--textcolor2);
+    outline: none;
+    background: transparent;
+}
+
+.modal .input-wrapper input::placeholder {
+    color: #999;
+}
+
+.modal .toggle-password {
+    position: absolute;
+    right: 12px;
+    cursor: pointer;
+    pointer-events: auto !important;
+    transition: 0.3s;
+    color: #666;
+    z-index: 10;
+}
+
+.modal .toggle-password:hover {
+    color: var(--hover);
 }
 
 /* Form Actions */

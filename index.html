@@ -39,7 +39,6 @@
                 <div class="form-group">
                     <label for="password">Password</label>
                     <div class="input-wrapper">
-                        <i class="fa-solid fa-unlock"></i>
                         <input 
                             type="password" 
                             id="password" 
@@ -105,12 +104,18 @@
                         </div>
                         <div class="form-group">
                             <label for="signupPassword"><i class="fa-solid fa-lock"></i> Password</label>
-                            <input type="password" id="signupPassword" required minlength="8" placeholder="Min 8 characters">
+                            <div class="input-wrapper">
+                                <input type="password" id="signupPassword" required minlength="8" placeholder="Min 8 characters">
+                                <i class="fa-solid fa-eye toggle-password" id="toggleSignupPassword"></i>
+                            </div>
                             <span class="password-hint"><i class="fa-solid fa-info-circle"></i> Must be at least 8 characters</span>
                         </div>
                         <div class="form-group">
                             <label for="signupConfirmPassword"><i class="fa-solid fa-lock"></i> Confirm Password</label>
-                            <input type="password" id="signupConfirmPassword" required placeholder="Confirm your password">
+                            <div class="input-wrapper">
+                                <input type="password" id="signupConfirmPassword" required placeholder="Confirm your password">
+                                <i class="fa-solid fa-eye toggle-password" id="toggleSignupConfirmPassword"></i>
+                            </div>
                         </div>
                         <div class="form-actions">
                             <button type="button" onclick="closeSignup()" class="btn btn-secondary"><i class="fa-solid fa-times"></i> Cancel</button>
@@ -141,12 +146,18 @@
             <form id="passwordResetForm" onsubmit="handlePasswordReset(event)">
                 <div class="form-group">
                     <label for="newPassword"><i class="fa-solid fa-key"></i> New Password</label>
-                    <input type="password" id="newPassword" required minlength="8" placeholder="Min 8 characters">
+                    <div class="input-wrapper">
+                        <input type="password" id="newPassword" required minlength="8" placeholder="Min 8 characters">
+                        <i class="fa-solid fa-eye toggle-password" id="toggleNewPassword"></i>
+                    </div>
                     <span class="password-hint"><i class="fa-solid fa-info-circle"></i> Must be at least 8 characters</span>
                 </div>
                 <div class="form-group">
                     <label for="confirmNewPassword"><i class="fa-solid fa-key"></i> Confirm Password</label>
-                    <input type="password" id="confirmNewPassword" required placeholder="Confirm your password">
+                    <div class="input-wrapper">
+                        <input type="password" id="confirmNewPassword" required placeholder="Confirm your password">
+                        <i class="fa-solid fa-eye toggle-password" id="toggleConfirmNewPassword"></i>
+                    </div>
                 </div>
                 <div class="form-actions">
                     <button type="button" onclick="closePasswordReset()" class="btn btn-secondary"><i class="fa-solid fa-arrow-left"></i> Back</button>
@@ -322,6 +333,58 @@
             togglePassword.classList.toggle('fa-eye');
             togglePassword.classList.toggle('fa-eye-slash');
         });
+
+        // Toggle signup password visibility
+        const toggleSignupPassword = document.getElementById('toggleSignupPassword');
+        const signupPasswordInput = document.getElementById('signupPassword');
+
+        if (toggleSignupPassword && signupPasswordInput) {
+            toggleSignupPassword.addEventListener('click', () => {
+                const type = signupPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                signupPasswordInput.setAttribute('type', type);
+                toggleSignupPassword.classList.toggle('fa-eye');
+                toggleSignupPassword.classList.toggle('fa-eye-slash');
+            });
+        }
+
+        // Toggle signup confirm password visibility
+        const toggleSignupConfirmPassword = document.getElementById('toggleSignupConfirmPassword');
+        const signupConfirmPasswordInput = document.getElementById('signupConfirmPassword');
+
+        if (toggleSignupConfirmPassword && signupConfirmPasswordInput) {
+            toggleSignupConfirmPassword.addEventListener('click', () => {
+                const type = signupConfirmPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                signupConfirmPasswordInput.setAttribute('type', type);
+                toggleSignupConfirmPassword.classList.toggle('fa-eye');
+                toggleSignupConfirmPassword.classList.toggle('fa-eye-slash');
+            });
+        }
+
+        // Toggle new password visibility (password reset)
+        const toggleNewPassword = document.getElementById('toggleNewPassword');
+        const newPasswordInput = document.getElementById('newPassword');
+
+        if (toggleNewPassword && newPasswordInput) {
+            toggleNewPassword.addEventListener('click', () => {
+                const type = newPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                newPasswordInput.setAttribute('type', type);
+                toggleNewPassword.classList.toggle('fa-eye');
+                toggleNewPassword.classList.toggle('fa-eye-slash');
+            });
+        }
+
+        // Toggle confirm new password visibility (password reset)
+        const toggleConfirmNewPassword = document.getElementById('toggleConfirmNewPassword');
+        const confirmNewPasswordInput = document.getElementById('confirmNewPassword');
+
+        if (toggleConfirmNewPassword && confirmNewPasswordInput) {
+            toggleConfirmNewPassword.addEventListener('click', () => {
+                const type = confirmNewPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                confirmNewPasswordInput.setAttribute('type', type);
+                toggleConfirmNewPassword.classList.toggle('fa-eye');
+                toggleConfirmNewPassword.classList.toggle('fa-eye-slash');
+            });
+        }
 
         // Check if already logged in (skip if in password reset flow)
         async function checkAuth() {
