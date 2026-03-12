@@ -35,6 +35,10 @@
                     <i class="fa-solid fa-door-open"></i>
                     <span>Rooms</span>
                 </a></li>
+                <li><a href="src/pages/buildings.html">
+                    <i class="fa-solid fa-building"></i>
+                    <span>Buildings</span>
+                </a></li>
                 <li><a href="src/pages/equipment.html">
                     <i class="fa-solid fa-tools"></i>
                     <span>Equipment</span>
@@ -268,9 +272,11 @@
 
         async function loadCategoryBreakdown() {
             try {
+                // Note: We select only 'category' - COUNT(*) is not supported in Supabase select()
+                // The grouping is done client-side below
                 const { data: items, error } = await supabase
                     .from('items')
-                    .select('category, COUNT(*) as count');
+                    .select('category');
 
                 if (error) throw error;
 
