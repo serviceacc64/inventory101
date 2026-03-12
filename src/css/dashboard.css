@@ -257,6 +257,26 @@ nav .options a i {
     transform: translateY(-2px);
 }
 
+.btn-success {
+    background-color: #4caf50;
+    color: white;
+}
+
+.btn-success:hover {
+    background-color: #45a049;
+    transform: translateY(-2px);
+}
+
+.btn-danger {
+    background-color: #f44336;
+    color: white;
+}
+
+.btn-danger:hover {
+    background-color: #da190b;
+    transform: translateY(-2px);
+}
+
 /* STATS SECTION */
 .stats-section {
     display: grid;
