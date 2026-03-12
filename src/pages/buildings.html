@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,300;0,500;0,600;1,100&display=swap" rel="stylesheet">
+    <title>Buildings - Inventory System</title>
+    <link rel="stylesheet" href="../css/dashboard.css">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/animations.css">
+    <link rel="stylesheet" href="../css/rooms.css">
+    <link rel="icon" href="data:,">
+    <!-- SheetJS for Excel Export -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script type="module" src="../js/auth.js"></script>
+    <!-- Supabase Client -->
+    <script type="module" src="../js/supabase.js"></script>
+
+</head>
+<body>
+    <script>
+        // Check if user is logged in (works with both old and new auth)
+        if (!localStorage.getItem('isLoggedIn')) {
+            window.location.href = '../../index.html';
+        }
+    </script>
+    
+    <!-- Navigation -->
+    <nav class="navigation" id="navbar">
+        <div class="logo">
+            <img src="../img/logo.png" alt="Logo">
+            <span id="label">RMNHS <br> Supplies Inventory</span>
+        </div>
+        <hr>
+        <div class="options">
+            <ul>
+                <li><a href="../../dashboard.html">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>Dashboard</span>
+                </a></li>
+                <li><a href="input.html">
+                    <i class="fa-solid fa-clipboard-list"></i>
+                    <span>Items</span>
+                </a></li>
+                <li><a href="rooms.html">
+                    <i class="fa-solid fa-door-open"></i>
+                    <span>Rooms</span>
+                </a></li>
+                <li><a href="buildings.html" class="active">
+                    <i class="fa-solid fa-building"></i>
+                    <span>Buildings</span>
+                </a></li>
+                <li><a href="equipment.html">
+                    <i class="fa-solid fa-tools"></i>
+                    <span>Equipment</span>
+                </a></li>
+                <li><a href="report.html">
+                    <i class="fa-solid fa-calendar-week"></i>
+                    <span>Reports</span>
+                </a></li>
+                <li><a href="logs.html">
+                    <i class="fa-solid fa-book-open"></i>
+                    <span>Logs</span>
+                </a></li>
+                <li class="logout"><a href="#" data-logout>
+                    <i class="fa-solid fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="dashboard">
+        <header class="dashboard-header">
+            <h1>Building Inventory</h1>
+
+            <div class="header-right">
+                <div class="search-box" role="search" aria-label="Search buildings">
+                    <input type="search" id="buildingSearch" placeholder="Search buildings..." aria-label="Search buildings">
+                    <button type="button" id="clearSearch" title="Clear search"><i class="fa-solid fa-times"></i></button>
+                </div>
+
+                <div class="header-actions">
+                    <button class="btn btn-primary" onclick="window.openCreateBuildingModal()"><i class="fa-solid fa-plus"></i> New Building</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Buildings Section -->
+        <section class="recent-activity">
+            <!-- Loading State -->
+            <div id="loadingState" class="loading-state">
+                <i class="fa-solid fa-spinner fa-spin"></i>
+                <p>Loading buildings...</p>
+            </div>
+            
+            <!-- Error State -->
+            <div id="errorState" class="error-state">
+                <i class="fa-solid fa-exclamation-circle"></i>
+                <p id="errorMessage">Failed to load buildings</p>
+                <button onclick="window.fetchBuildings()" class="btn btn-primary">Retry</button>
+            </div>
+            
+            <!-- Empty State -->
+            <div id="emptyState" class="empty-state">
+                <i class="fa-solid fa-building"></i>
+                <p>No buildings found</p>
+                <p>Click "New Building" to create your first building.</p>
+            </div>
+
+            <!-- Dynamic Buildings Container -->
+            <div id="buildingsContainer" class="rooms-grid">
+                <!-- Buildings will be rendered here dynamically -->
+            </div>
+
+            <!-- Pagination Controls -->
+            <div id="paginationContainer" class="pagination-controls" style="display: none;">
+                <button id="prevBtn" class="pagination-btn" onclick="window.previousPage()">
+                    <i class="fa-solid fa-chevron-left"></i> Previous
+                </button>
+                <div class="pagination-info">
+                    <span id="pageIndicator">Page 1</span>
+                </div>
+                <button id="nextBtn" class="pagination-btn" onclick="window.nextPage()">
+                    Next <i class="fa-solid fa-chevron-right"></i>
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <!-- Create Building Modal -->
+    <div id="createBuildingModal" class="modal">
+        <div class="modal-content modal-medium">
+            <div class="modal-header">
+                <h3>Create New Building</h3>
+                <button onclick="window.closeCreateBuildingModal()">&times;</button>
+            </div>
+            
+            <form id="createBuildingForm" onsubmit="window.handleCreateBuilding(event)">
+                <div class="form-group">
+                    <label for="buildingName">Building Name *</label>
+                    <input type="text" id="buildingName" placeholder="e.g., Main Building, Science Lab" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="buildingDescription">Description (Optional)</label>
+                    <textarea id="buildingDescription" placeholder="e.g., Main campus building, 3 stories" rows="2"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="createBuildingExcel">Excel File (Optional)</label>
+                    <input type="file" id="createBuildingExcel" accept=".xlsx,.xls" style="padding: 12px; border: 2px dashed #ccc; border-radius: 8px; background: #f8f9fa; text-align: center;">
+                    <p id="createBuildingExcelName" style="margin-top: 8px; color: #666; font-size: 12px; font-style: italic;">No file selected</p>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" onclick="window.closeCreateBuildingModal()" class="btn btn-secondary">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="createBuildingBtn">
+                        <i class="fa-solid fa-plus"></i> Create Building
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Building Details Modal -->
+    <div id="buildingDetailsModal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3 id="buildingDetailsTitle">Building Details</h3>
+                <button onclick="window.closeBuildingDetailsModal()">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                <!-- Building Info Section -->
+                <div id="buildingInfoSection" style="margin-bottom: 20px; padding: 15px; background: #f9f9f9; border-radius: 8px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div>
+                            <label style="font-weight: 600; color: #666; font-size: 12px;">Building Name</label>
+                            <p id="detailBuildingName" style="margin: 5px 0; font-size: 16px; font-weight: 500;">-</p>
+                        </div>
+                        <div>
+                            <label style="font-weight: 600; color: #666; font-size: 12px;">Description</label>
+                            <p id="detailBuildingDescription" style="margin: 5px 0; font-size: 16px;">-</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Excel File Section -->
+                <div style="border: 2px dashed #ccc; border-radius: 8px; padding: 30px; text-align: center; background: #fafafa;">
+                    <div id="excelStatusSection">
+                        <div id="noExcelState" style="display: none;">
+                            <i class="fa-solid fa-file-excel" style="font-size: 48px; color: #ccc; margin-bottom: 15px;"></i>
+                            <p style="margin-bottom: 15px; color: #666;">No Excel file uploaded for this building</p>
+                        </div>
+                        
+                        <div id="hasExcelState" style="display: none;">
+                            <i class="fa-solid fa-file-excel" style="font-size: 48px; color: #217346; margin-bottom: 15px;"></i>
+                            <p id="excelFileName" style="margin-bottom: 5px; font-weight: 500;">-</p>
+                            <p id="excelUploadDate" style="margin-bottom: 15px; color: #666; font-size: 12px;">Uploaded: -</p>
+                        </div>
+                    </div>
+
+                    <!-- Upload Excel Form -->
+                    <form id="uploadExcelForm" onsubmit="window.handleUploadExcel(event)" style="margin-top: 15px;">
+                        <input type="hidden" id="excelBuildingId">
+                        <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                            <label for="excelFileInput" class="btn btn-primary" style="cursor: pointer; display: inline-flex; align-items: center; gap: 8px;">
+                                <i class="fa-solid fa-upload"></i> 
+                                <span id="uploadBtnText">Upload Excel</span>
+                                <input type="file" id="excelFileInput" accept=".xlsx,.xls" style="display: none;" onchange="window.handleFileSelect(event)">
+                            </label>
+                            <button type="button" id="downloadExcelBtn" class="btn btn-success" onclick="window.downloadExcel()" style="display: none;">
+                                <i class="fa-solid fa-download"></i> Download Excel
+                            </button>
+                            <button type="button" id="removeExcelBtn" class="btn btn-danger" onclick="window.removeExcel()" style="display: none;">
+                                <i class="fa-solid fa-trash"></i> Remove
+                            </button>
+                        </div>
+                        <p id="selectedFileName" style="margin-top: 10px; color: #666; font-size: 12px;"></p>
+                    </form>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" onclick="window.openEditBuildingModal()" class="btn btn-secondary">
+                    <i class="fa-solid fa-edit"></i> Edit Building
+                </button>
+                <button type="button" onclick="window.closeBuildingDetailsModal()" class="btn btn-secondary">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Building Modal -->
+    <div id="editBuildingModal" class="modal">
+        <div class="modal-content modal-medium">
+            <div class="modal-header">
+                <h3>Edit Building</h3>
+                <button onclick="window.closeEditBuildingModal()">&times;</button>
+            </div>
+            
+            <form id="editBuildingForm" onsubmit="window.handleEditBuilding(event)">
+                <input type="hidden" id="editBuildingId">
+                
+                <div class="form-group">
+                    <label for="editBuildingName">Building Name *</label>
+                    <input type="text" id="editBuildingName" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="editBuildingDescription">Description (Optional)</label>
+                    <textarea id="editBuildingDescription" placeholder="e.g., Main campus building, 3 stories" rows="2"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="editBuildingLocation">Location (Optional)</label>
+                    <input type="text" id="editBuildingLocation" placeholder="e.g., North Campus, Near Gate 1">
+                </div>
+
+                <div class="form-group">
+                    <label for="editBuildingAccountable">Accountable Person (Optional)</label>
+                    <input type="text" id="editBuildingAccountable" placeholder="e.g., Mr. John Smith">
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" onclick="window.closeEditBuildingModal()" class="btn btn-secondary">Cancel</button>
+                    <button type="button" onclick="window.handleDeleteBuilding()" class="btn btn-danger" style="margin-right: auto;">
+                        <i class="fa-solid fa-trash"></i> Delete Building
+                    </button>
+                    <button type="submit" class="btn btn-primary" id="editBuildingBtn">
+                        <i class="fa-solid fa-save"></i> Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script type="module" src="../js/buildings.js"></script>
+</body>
+</html>
+
