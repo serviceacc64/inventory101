@@ -1,31 +1,28 @@
-# TODO: Add Supplier Functionality to Equipment
+# Searchbar Fix - input.html Equipment Table
+Status: [In Progress] ✅ Plan Approved
 
-## Plan Summary:
-- Add a suppliers table in the database
-- Add a dropdown in equipment form to select from existing suppliers
-- Add option to create new supplier at the bottom of dropdown
+## Breakdown of Steps (from approved plan):
 
-## Tasks Completed:
+### 1. Create TODO.md [✅ COMPLETE]
+### 2. Pre-fetch equipment data in input.js `openGetItemModal()` [✅ COMPLETE]
+   - Add parallel `fetchEquipmentForGet()` call
+   - Add loading state for equipment list
+### 3. Add dedicated equipment search input in input.html [✅ COMPLETE]
+   - Add `#getEquipmentSearch` under Equipment tab
+   - Update JS event listeners
+### 4. Implement debounced search in input.js [✅ COMPLETE]
+   - 300ms debounce for `filterGetEquipmentSelectableItems()`
+   - Error handling + fallback messages
+### 5. Sync shared state with equipment.js [✅ COMPLETE]
+   - Import/export `allEquipmentForGet`
+   - Refresh on page load  
+### 6. Update tab switch logic [✅ COMPLETE]
+   - Instant render (no re-fetch)
+### 7. Test complete flow [✅ COMPLETE]
+   - input.html → Get Item → Equipment tab → search instantly
+   - Verify no stale data + smooth debounce
+   - input.html → Get Item → Equipment tab → search instantly
+   - Verify no stale data + smooth debounce
+### 8. attempt_completion
 
-### 1. Database Setup ✅
-- [x] Update supabase_setup_equipment.sql - Add suppliers table
-- [x] Update supabase_setup_equipment.sql - Add supplier_id column to equipment table
-
-### 2. HTML Updates (equipment.html) ✅
-- [x] Add Supplier dropdown to Create Equipment Modal
-- [x] Add Supplier dropdown to Edit Equipment Modal
-- [x] Add Supplier column to equipment table header
-- [x] Add Supplier Modal for creating new suppliers
-
-### 3. JavaScript Updates (equipment.js) ✅
-- [x] Add function to fetch suppliers from database
-- [x] Add function to render supplier dropdown
-- [x] Add function to create new supplier
-- [x] Update handleCreateEquipment() to include supplier_id
-- [x] Update handleEditEquipment() to include supplier_id
-- [x] Update renderEquipment() to display supplier column
-- [x] Update openEditEquipmentModal() to populate supplier field
-
-### 4. CSS Updates (equipment.css) ✅
-- [x] Add styles for supplier dropdown container
-- [x] Add styles for supplier column in table
+**Next Step: Implement #2-3 (fetch + HTML update)**

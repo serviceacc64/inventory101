@@ -379,9 +379,15 @@
                     </button>
                 </div>
                 
-                <div class="search-box" style="margin-bottom: 15px;">
+                <!-- Items Tab Search -->
+                <div class="search-box" id="itemsSearchBox" style="margin-bottom: 15px;">
                     <input type="search" id="getItemSearch" placeholder="Search available items..." aria-label="Search items">
                     <button type="button" id="clearGetItemSearch" title="Clear search"><i class="fa-solid fa-times"></i></button>
+                </div>
+                <!-- Equipment Tab Search (Hidden initially) -->
+                <div class="search-box" id="equipmentSearchBox" style="display: none; margin-bottom: 15px;">
+                    <input type="search" id="getEquipmentSearch" placeholder="Search available equipment..." aria-label="Search equipment">
+                    <button type="button" id="clearGetEquipmentSearch" title="Clear search"><i class="fa-solid fa-times"></i></button>
                 </div>
             </div>
             

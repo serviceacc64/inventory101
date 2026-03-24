@@ -32,6 +32,10 @@ const newItemUnit = document.getElementById('newItemUnit');
 const getItemModal = document.getElementById('getItemModal');
 const getItemSearch = document.getElementById('getItemSearch');
 const clearGetItemSearch = document.getElementById('clearGetItemSearch');
+const getEquipmentSearch = document.getElementById('getEquipmentSearch');
+const clearGetEquipmentSearch = document.getElementById('clearGetEquipmentSearch');
+const itemsSearchBox = document.getElementById('itemsSearchBox');
+const equipmentSearchBox = document.getElementById('equipmentSearchBox');
 const getItemSelectableList = document.getElementById('getItemSelectableList');
 const getItemDetails = document.getElementById('getItemDetails');
 const getItemSelectedId = document.getElementById('getItemSelectedId');
@@ -89,13 +93,15 @@ let currentFilter = 'all'; // Track current category filter
 let isSubmitting = false; // Prevent double submission
 
 // Get Item Flow - Requester Info State
+import { fetchEquipmentForGet, getEquipmentForGet, isEquipmentLoadingState } from './equipmentForGet.js';
+
 let requesterName = '';
 let requesterTimestamp = '';
 let selectedGetItem = null; // Store selected item object for confirmation
 let preSelectedItem = null; // For when item is pre-selected from view modal
 let cartItems = []; // Cart array for multi-item support
 let currentGetTab = 'items'; // Track current tab: 'items' or 'equipment'
-let allEquipmentForGet = []; // Store equipment for get item modal
+let allEquipmentForGet = []; // Store equipment for get item modal (populated by equipmentForGet.js)
 
 
 
@@ -972,7 +978,7 @@ async function handleEditItem(event) {
 // ==========================================
 // 5b. GET ITEM FUNCTIONS
 // ==========================================
-function openGetItemModal(preSelectedItemFromView = null) {
+async function openGetItemModal(preSelectedItemFromView = null) {
     getItemModal.classList.add('show');
     
     // Reset all states for new flow
@@ -980,6 +986,15 @@ function openGetItemModal(preSelectedItemFromView = null) {
     requesterTimestamp = '';
     selectedGetItem = null;
     preSelectedItem = preSelectedItemFromView;
+    
+    // PRE-FETCH EQUIPMENT DATA IMMEDIATELY (Fix #1)
+    try {
+        await fetchEquipmentForGet();
+        allEquipmentForGet = getEquipmentForGet();
+    } catch (error) {
+        console.warn('Equipment pre-fetch failed:', error);
+        allEquipmentForGet = [];
+    }
     
     // Show Step 1: Requester Info Form (always show first)
     document.getElementById('requesterInfoSection').style.display = 'block';
@@ -1139,19 +1154,23 @@ function switchToItemsTab() {
     document.getElementById('tabEquipment').style.background = '#f5f5f5';
     document.getElementById('tabEquipment').style.color = '#666';
     
-    // Update search placeholder
-    document.getElementById('getItemSearch').placeholder = 'Search available items...';
+    // Show Items search box, hide Equipment search
+    if (itemsSearchBox) itemsSearchBox.style.display = 'block';
+    if (equipmentSearchBox) equipmentSearchBox.style.display = 'none';
     
     // Show/hide lists
     document.getElementById('getItemSelectableList').style.display = 'block';
     document.getElementById('getEquipmentSelectableList').style.display = 'none';
+    
+    // Clear equipment search value
+    if (getEquipmentSearch) getEquipmentSearch.value = '';
     
     // Re-render items
     filterGetItemSelectableItems();
 }
 
 // Switch to Equipment tab
-async function switchToEquipmentTab() {
+function switchToEquipmentTab() {
     currentGetTab = 'equipment';
     
     // Update tab button styles
@@ -1160,31 +1179,30 @@ async function switchToEquipmentTab() {
     document.getElementById('tabEquipment').style.background = 'var(--primary-color)';
     document.getElementById('tabEquipment').style.color = 'white';
     
-    // Update search placeholder
-    document.getElementById('getItemSearch').placeholder = 'Search available equipment...';
+    // Show Equipment search box, hide Items search
+    if (itemsSearchBox) itemsSearchBox.style.display = 'none';
+    if (equipmentSearchBox) equipmentSearchBox.style.display = 'block';
     
     // Show/hide lists
     document.getElementById('getItemSelectableList').style.display = 'none';
     document.getElementById('getEquipmentSelectableList').style.display = 'block';
     
-    // Fetch equipment if not already loaded
-    if (allEquipmentForGet.length === 0) {
-        try {
-            const { data: equipment, error } = await supabase
-                .from('equipment')
-                .select('*')
-                .order('created_at', { ascending: false });
-            
-            if (!error && equipment) {
-                allEquipmentForGet = equipment;
-            }
-        } catch (e) {
-            console.error('Error fetching equipment:', e);
-        }
+    // Clear items search value
+    if (getItemSearch) getItemSearch.value = '';
+    
+    // INSTANT RENDER - data already pre-fetched in openGetItemModal()
+    // Show loading if still fetching
+    const equipmentList = document.getElementById('getEquipmentSelectableList');
+    if (isEquipmentLoadingState() && equipmentList) {
+        equipmentList.innerHTML = '<div class="loading-state" style="padding: 40px; text-align: center;"><i class="fa-solid fa-spinner fa-spin"></i><p>Loading equipment...</p></div>';
     }
     
-    // Render equipment
     renderGetEquipmentSelectableItems(allEquipmentForGet);
+    
+    // Focus equipment search
+    setTimeout(() => {
+        if (getEquipmentSearch) getEquipmentSearch.focus();
+    }, 100);
 }
 
 // Render equipment selectable list
@@ -1235,7 +1253,7 @@ function renderGetEquipmentSelectableItems(equipment) {
 
 // Filter equipment selectable items
 function filterGetEquipmentSelectableItems() {
-    const query = getItemSearch.value.trim().toLowerCase();
+    const query = getEquipmentSearch ? getEquipmentSearch.value.trim().toLowerCase() : '';
     
     let filtered = allEquipmentForGet.filter(item => item.quantity > 0);
     
@@ -1914,8 +1932,42 @@ if (getItemModal) {
     });
 }
 
+// Shared search input handlers - will be updated by tab functions
 if (getItemSearch) {
-    getItemSearch.addEventListener('input', filterGetItemSelectableItems);
+    getItemSearch.addEventListener('input', debounce(filterGetItemSelectableItems, 300));
+}
+
+if (getEquipmentSearch) {
+    getEquipmentSearch.addEventListener('input', debounce(filterGetEquipmentSelectableItems, 300));
+}
+
+if (clearGetItemSearch) {
+    clearGetItemSearch.addEventListener('click', function() {
+        getItemSearch.value = '';
+        filterGetItemSelectableItems();
+        getItemSearch.focus();
+    });
+}
+
+if (clearGetEquipmentSearch) {
+    clearGetEquipmentSearch.addEventListener('click', function() {
+        getEquipmentSearch.value = '';
+        filterGetEquipmentSelectableItems();
+        getEquipmentSearch.focus();
+    });
+}
+
+// Debounce utility for search inputs
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
 }
 
 if (clearGetItemSearch) {
