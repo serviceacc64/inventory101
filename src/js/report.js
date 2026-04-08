@@ -54,6 +54,16 @@ let equipmentDateFrom = '';
 let equipmentDateTo = '';
 let equipmentConsumableFilter = '';
 
+// Store item history report state
+let selectedItemHistoryItemId = '';
+let selectedItemHistoryItemName = '';
+let itemHistoryFromDate = '';
+let itemHistoryToDate = '';
+let itemHistoryLogs = [];
+let itemHistorySearchQuery = '';
+let itemHistorySource = [];
+let itemHistorySummaryData = null;
+
 // Store form data for equipment report
 let equipmentReportFormData = null;
 
@@ -1137,6 +1147,438 @@ async function displayItemsListReportWithImport() {
     } catch (error) {
         console.error('Error displaying items list report with import:', error);
         showError('Failed to load items list report');
+    } finally {
+        showLoading(false);
+    }
+}
+
+// Display item history report
+async function displayItemHistoryReport() {
+    showLoading(true);
+    hideError();
+    hideEmpty();
+
+    try {
+        if (allItems.length === 0) {
+            await fetchItems();
+        }
+
+        let itemsSource = allItems;
+        if (itemsSource.length === 0) {
+            const logs = await fetchActivityLogs();
+            const uniqueNames = new Map();
+            (logs || []).forEach(log => {
+                const itemName = log.item_name?.trim();
+                if (itemName && !uniqueNames.has(itemName)) {
+                    uniqueNames.set(itemName, itemName);
+                }
+            });
+            itemsSource = Array.from(uniqueNames.keys()).sort().map(name => ({ id: name, name, label: '' }));
+        }
+
+        const query = itemHistorySearchQuery.trim().toLowerCase();
+        itemHistorySource = itemsSource;
+
+        reportContainer.innerHTML = `
+            <div class="report-card">
+                <div class="report-header">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <button class="btn btn-ghost" onclick="window.showReportSelection()" title="Back to Reports" style="padding: 8px 12px;">
+                            <i class="fa-solid fa-arrow-left"></i>
+                        </button>
+                        <h2><i class="fa-solid fa-history"></i> Item History Report</h2>
+                    </div>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+                        <button class="btn btn-secondary" onclick="window.generateItemHistoryReport()"><i class="fa-solid fa-filter"></i> Generate</button>
+                        
+                    </div>
+                </div>
+
+                <div class="report-info">
+                    <p><i class="fa-solid fa-info-circle"></i> Select an item and set a from/to date range to display stock additions and distributions for that item.</p>
+                </div>
+
+                <div style="padding: 0 0 20px 0;">
+                    <div class="items-filters" style="display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end;">
+                        <div class="filter-group" style="flex: 2; min-width: 220px;">
+                            <label style="display: block; margin-bottom: 6px; font-size: 12px; font-weight: 600; color: #666; text-transform: uppercase;">Search Item</label>
+                            <input type="text" id="itemHistorySearch" value="${escapeHtml(itemHistorySearchQuery)}" oninput="window.updateItemHistorySearch(this.value)" placeholder="Search items..." style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; background: white;" />
+                        </div>
+                        <div class="filter-group" style="flex: 1; min-width: 150px;">
+                            <label style="display: block; margin-bottom: 6px; font-size: 12px; font-weight: 600; color: #666; text-transform: uppercase;">From</label>
+                            <input type="date" id="itemHistoryFromDate" onchange="window.updateItemHistoryFromDate(this.value)" style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; background: white;" />
+                        </div>
+                        <div class="filter-group" style="flex: 1; min-width: 150px;">
+                            <label style="display: block; margin-bottom: 6px; font-size: 12px; font-weight: 600; color: #666; text-transform: uppercase;">To</label>
+                            <input type="date" id="itemHistoryToDate" onchange="window.updateItemHistoryToDate(this.value)" style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; background: white;" />
+                        </div>
+                    </div>
+                </div>
+
+                <div style="padding: 0 0 20px 0;">
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        <label style="display: block; margin-bottom: 6px; font-size: 12px; font-weight: 600; color: #666; text-transform: uppercase;">Select item</label>
+                        <div id="itemHistoryList" style="max-height: 280px; overflow-y: auto; padding-right: 4px;">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="itemHistorySummary" class="report-stats" style="margin-bottom: 20px;">
+                    <div class="stat-box">
+                        <span class="stat-number" id="itemHistoryAdded">-</span>
+                        <span class="stat-label">Stock Added</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-number" id="itemHistoryDistributed">-</span>
+                        <span class="stat-label">Stock Distributed</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-number" id="itemHistoryNetChange">-</span>
+                        <span class="stat-label">Net Change</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-number" id="itemHistoryTransactions">-</span>
+                        <span class="stat-label">Transactions</span>
+                    </div>
+                </div>
+
+                <div class="report-table-container">
+                    <table class="report-table" id="itemHistoryTable">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Action</th>
+                                <th>Qty Changed</th>
+                                <th>Before</th>
+                                <th>After</th>
+                                <th>Person</th>
+                                <th>Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="7" style="text-align: center; padding: 20px; color: #666;">Please select an item and date range, then click Generate.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+
+        renderItemHistoryList();
+    } catch (error) {
+        console.error('Error displaying item history report:', error);
+        showError('Failed to load item history report');
+    } finally {
+        showLoading(false);
+    }
+}
+
+function updateItemHistoryItem(select) {
+    selectedItemHistoryItemId = select.value;
+    selectedItemHistoryItemName = select.selectedOptions?.[0]?.dataset.name || '';
+}
+
+function updateItemHistoryFromDate(value) {
+    itemHistoryFromDate = value;
+}
+
+function updateItemHistoryToDate(value) {
+    itemHistoryToDate = value;
+}
+
+function renderItemHistoryList() {
+    const listContainer = document.getElementById('itemHistoryList');
+    if (!listContainer) return;
+
+    const query = itemHistorySearchQuery.trim().toLowerCase();
+    const filteredItems = (itemHistorySource || []).filter(item => {
+        return !query || item.name.toLowerCase().includes(query) || (item.label && item.label.toLowerCase().includes(query));
+    });
+
+    const itemListRows = filteredItems.length > 0 ? filteredItems.map(item => {
+        const label = item.label ? ` (${escapeHtml(item.label)})` : '';
+        const itemId = escapeHtml(String(item.id));
+        const isChecked = selectedItemHistoryItemId && String(item.id) === String(selectedItemHistoryItemId);
+        return `
+            <label class="item-history-row" style="display: flex; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid #e8e8e8; border-radius: 8px; margin-bottom: 8px; background: white; cursor: pointer;">
+                <input type="checkbox" class="item-history-checkbox" value="${itemId}" data-name="${escapeHtml(item.name)}" ${isChecked ? 'checked' : ''} onchange="window.toggleItemHistorySelection(this)" />
+                <span style="font-weight: 600;">${escapeHtml(item.name)}</span>
+                <span style="color: #666;">${label}</span>
+            </label>
+        `;
+    }).join('') : '<div style="padding: 20px; color: #666;">No items match your search.</div>';
+
+    listContainer.innerHTML = itemListRows;
+}
+
+function updateItemHistorySearch(value) {
+    itemHistorySearchQuery = value;
+    renderItemHistoryList();
+}
+
+function toggleItemHistorySelection(checkbox) {
+    const itemId = checkbox.value;
+    const itemName = checkbox.dataset.name || '';
+
+    if (checkbox.checked) {
+        selectedItemHistoryItemId = itemId;
+        selectedItemHistoryItemName = itemName;
+    } else {
+        selectedItemHistoryItemId = '';
+        selectedItemHistoryItemName = '';
+    }
+
+    // Deselect all other checkboxes
+    document.querySelectorAll('.item-history-checkbox').forEach(element => {
+        if (element !== checkbox) {
+            element.checked = false;
+        }
+    });
+}
+
+async function generateItemHistoryReport() {
+    if (!selectedItemHistoryItemId) {
+        alert('Please select an item to generate the history report.');
+        return;
+    }
+
+    if (!itemHistoryFromDate || !itemHistoryToDate) {
+        alert('Please select both a from and to date for the history report.');
+        return;
+    }
+
+    const fromDate = new Date(itemHistoryFromDate);
+    const toDate = new Date(itemHistoryToDate);
+    toDate.setHours(23, 59, 59, 999);
+
+    if (fromDate > toDate) {
+        alert('The from date must be before or equal to the to date.');
+        return;
+    }
+
+    showLoading(true);
+    hideError();
+    hideEmpty();
+
+    try {
+        const { data: logs, error } = await supabase
+            .from('activity_logs')
+            .select('*')
+            .gte('timestamp', fromDate.toISOString())
+            .lte('timestamp', toDate.toISOString())
+            .order('timestamp', { ascending: false });
+
+        if (error) throw error;
+
+        const normalizedItemName = selectedItemHistoryItemName.trim().toLowerCase();
+        itemHistoryLogs = (logs || []).filter(log => {
+            const matchesById = log.item_id && String(log.item_id) === String(selectedItemHistoryItemId);
+            const matchesByName = log.item_name && log.item_name.trim().toLowerCase() === normalizedItemName;
+            return matchesById || matchesByName;
+        });
+
+        itemHistorySummaryData = calculateItemHistorySummary(itemHistoryLogs);
+        renderItemHistoryResults();
+        renderItemHistoryPreview();
+        openItemHistoryPreviewModal();
+    } catch (error) {
+        console.error('Error loading item history data:', error);
+        alert('Failed to load item history data. Please try again.');
+    } finally {
+        showLoading(false);
+    }
+}
+
+function calculateItemHistorySummary(logs) {
+    const itemsAdded = logs
+        .filter(log => log.action_type === 'CREATE' || (log.action_type === 'UPDATE_QUANTITY' && log.quantity_changed > 0))
+        .reduce((sum, log) => sum + (log.quantity_changed || 0), 0);
+
+    const itemsDistributed = logs
+        .filter(log => log.action_type === 'DISTRIBUTE' || (log.action_type === 'UPDATE_QUANTITY' && log.quantity_changed < 0))
+        .reduce((sum, log) => sum + Math.abs(log.quantity_changed || 0), 0);
+
+    const transactions = logs.length;
+    const netChange = itemsAdded - itemsDistributed;
+
+    const sortedLogs = [...logs].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+    const initialLog = sortedLogs[0];
+    const finalLog = sortedLogs[sortedLogs.length - 1];
+
+    return {
+        itemsAdded,
+        itemsDistributed,
+        netChange,
+        transactions,
+        initialQuantity: initialLog?.quantity_before ?? '-',
+        finalQuantity: finalLog?.quantity_after ?? '-'
+    };
+}
+
+function renderItemHistoryResults() {
+    const addedEl = document.getElementById('itemHistoryAdded');
+    const distributedEl = document.getElementById('itemHistoryDistributed');
+    const netChangeEl = document.getElementById('itemHistoryNetChange');
+    const transactionsEl = document.getElementById('itemHistoryTransactions');
+    const tableBody = document.querySelector('#itemHistoryTable tbody');
+    const exportBtn = document.getElementById('exportItemHistoryBtn');
+
+    if (!itemHistorySummaryData || !tableBody) return;
+
+    if (addedEl) addedEl.textContent = itemHistorySummaryData.itemsAdded.toLocaleString();
+    if (distributedEl) distributedEl.textContent = itemHistorySummaryData.itemsDistributed.toLocaleString();
+    if (transactionsEl) transactionsEl.textContent = itemHistorySummaryData.transactions.toLocaleString();
+    if (netChangeEl) {
+        netChangeEl.textContent = (itemHistorySummaryData.netChange >= 0 ? '+' : '') + itemHistorySummaryData.netChange.toLocaleString();
+        netChangeEl.className = `stat-number ${itemHistorySummaryData.netChange >= 0 ? 'text-success' : 'text-danger'}`;
+    }
+
+    if (itemHistoryLogs.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px; color: #666;">No item history found for this date range.</td></tr>';
+        if (exportBtn) exportBtn.disabled = true;
+        return;
+    }
+
+    tableBody.innerHTML = itemHistoryLogs.map(log => `
+        <tr>
+            <td>${log.timestamp ? new Date(log.timestamp).toLocaleString() : '-'}</td>
+            <td>${escapeHtml(log.action_type || '-')}</td>
+            <td>${log.quantity_changed || 0}</td>
+            <td>${log.quantity_before != null ? log.quantity_before : '-'}</td>
+            <td>${log.quantity_after != null ? log.quantity_after : '-'}</td>
+            <td>${escapeHtml(log.person || '-')}</td>
+            <td>${escapeHtml(log.notes || log.details?.notes || log.details?.description || '')}</td>
+        </tr>
+    `).join('');
+
+    if (exportBtn) exportBtn.disabled = false;
+    renderItemHistoryPreview();
+}
+
+function renderItemHistoryPreview() {
+    const nameEl = document.getElementById('previewItemHistoryName');
+    const rangeEl = document.getElementById('previewItemHistoryRange');
+    const addedEl = document.getElementById('previewItemHistoryAdded');
+    const distributedEl = document.getElementById('previewItemHistoryDistributed');
+    const netChangeEl = document.getElementById('previewItemHistoryNetChange');
+    const transactionsEl = document.getElementById('previewItemHistoryTransactions');
+    const previewBody = document.getElementById('itemHistoryPreviewBody');
+    const exportBtn = document.getElementById('itemHistoryPreviewExportBtn');
+
+    if (nameEl) nameEl.textContent = selectedItemHistoryItemName || '-';
+    if (rangeEl) rangeEl.textContent = `${itemHistoryFromDate || '-'} → ${itemHistoryToDate || '-'}`;
+    if (addedEl) addedEl.textContent = itemHistorySummaryData?.itemsAdded?.toLocaleString() || '0';
+    if (distributedEl) distributedEl.textContent = itemHistorySummaryData?.itemsDistributed?.toLocaleString() || '0';
+    if (netChangeEl) netChangeEl.textContent = (itemHistorySummaryData?.netChange >= 0 ? '+' : '') + (itemHistorySummaryData?.netChange?.toLocaleString() || '0');
+    if (transactionsEl) transactionsEl.textContent = itemHistorySummaryData?.transactions?.toLocaleString() || '0';
+
+    if (!previewBody) return;
+
+    if (!itemHistoryLogs || itemHistoryLogs.length === 0) {
+        previewBody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px; color: #666;">No item updates found for the selected range.</td></tr>';
+        if (exportBtn) exportBtn.disabled = true;
+        return;
+    }
+
+    previewBody.innerHTML = itemHistoryLogs.map(log => `
+        <tr>
+            <td>${log.timestamp ? new Date(log.timestamp).toLocaleString() : '-'}</td>
+            <td>${escapeHtml(log.action_type || '-')}</td>
+            <td>${log.quantity_changed || 0}</td>
+            <td>${log.quantity_before != null ? log.quantity_before : '-'}</td>
+            <td>${log.quantity_after != null ? log.quantity_after : '-'}</td>
+            <td>${escapeHtml(log.person || '-')}</td>
+            <td>${escapeHtml(log.notes || log.details?.notes || log.details?.description || '')}</td>
+        </tr>
+    `).join('');
+
+    if (exportBtn) exportBtn.disabled = false;
+}
+
+function openItemHistoryPreviewModal() {
+    const modal = document.getElementById('itemHistoryPreviewModal');
+    if (!modal) return;
+    modal.style.display = 'flex';
+}
+
+function closeItemHistoryPreviewModal() {
+    const modal = document.getElementById('itemHistoryPreviewModal');
+    if (!modal) return;
+    modal.style.display = 'none';
+}
+
+async function exportItemHistoryReport(format) {
+    if (!itemHistorySummaryData || itemHistoryLogs.length === 0) {
+        alert('Please generate the item history report first.');
+        return;
+    }
+
+    const selectedFormat = format || document.getElementById('reportFormat')?.value || 'xlsx';
+
+    showLoading(true);
+    try {
+        const historyRows = itemHistoryLogs.map(log => ({
+            Date: log.timestamp ? new Date(log.timestamp).toLocaleString() : '',
+            Action: log.action_type || '',
+            'Qty Changed': log.quantity_changed || 0,
+            'Quantity Before': log.quantity_before != null ? log.quantity_before : '',
+            'Quantity After': log.quantity_after != null ? log.quantity_after : '',
+            Person: log.person || '',
+            Notes: log.notes || log.details?.notes || log.details?.description || ''
+        }));
+
+        const summarySheetData = [
+            { A: 'Report', B: `Item History - ${selectedItemHistoryItemName}` },
+            { A: 'Date Range', B: `${itemHistoryFromDate} to ${itemHistoryToDate}` },
+            {},
+            {
+                A: 'Stock Added',
+                B: itemHistorySummaryData.itemsAdded,
+                C: 'Stock Distributed',
+                D: itemHistorySummaryData.itemsDistributed,
+                E: 'Net Change',
+                F: itemHistorySummaryData.netChange,
+                G: 'Transactions',
+                H: itemHistorySummaryData.transactions
+            },
+            {},
+            {
+                A: 'Date',
+                B: 'Action',
+                C: 'Qty Changed',
+                D: 'Quantity Before',
+                E: 'Quantity After',
+                F: 'Person',
+                G: 'Notes'
+            },
+            ...historyRows.map(row => ({
+                A: row.Date,
+                B: row.Action,
+                C: row['Qty Changed'],
+                D: row['Quantity Before'],
+                E: row['Quantity After'],
+                F: row.Person,
+                G: row.Notes
+            }))
+        ];
+
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.json_to_sheet(summarySheetData, { skipHeader: true });
+        XLSX.utils.book_append_sheet(wb, ws, 'Item History');
+
+        const safeItemName = selectedItemHistoryItemName.replace(/[^a-zA-Z0-9-_]/g, '_').toLowerCase();
+        const filenameBase = `item_history_${safeItemName}_${itemHistoryFromDate}_${itemHistoryToDate}`;
+
+        if (selectedFormat === 'csv') {
+            const csv = XLSX.utils.sheet_to_csv(ws);
+            downloadCSV(csv, `${filenameBase}.csv`);
+        } else {
+            XLSX.writeFile(wb, `${filenameBase}.xlsx`);
+        }
+    } catch (error) {
+        console.error('Error exporting item history report:', error);
+        alert('Failed to export item history report.');
     } finally {
         showLoading(false);
     }
@@ -3365,6 +3807,9 @@ function handleCreateReportSubmit(e) {
         case 'equipment':
             displayEquipmentReportWithImport();
             break;
+        case 'item_history':
+            displayItemHistoryReport();
+            break;
         case 'logs':
             displayLogsReportWithImport();
             break;
@@ -3847,6 +4292,16 @@ window.handleCreateItemsListReportSubmit = handleCreateItemsListReportSubmit;
 window.updateItemsListSearch = updateItemsListSearch;
 window.updateItemsListCategoryFilter = updateItemsListCategoryFilter;
 window.selectItemsByMonth = selectItemsByMonth;
+window.displayItemHistoryReport = displayItemHistoryReport;
+window.updateItemHistoryItem = updateItemHistoryItem;
+window.updateItemHistorySearch = updateItemHistorySearch;
+window.toggleItemHistorySelection = toggleItemHistorySelection;
+window.updateItemHistoryFromDate = updateItemHistoryFromDate;
+window.updateItemHistoryToDate = updateItemHistoryToDate;
+window.generateItemHistoryReport = generateItemHistoryReport;
+window.exportItemHistoryReport = exportItemHistoryReport;
+window.openItemHistoryPreviewModal = openItemHistoryPreviewModal;
+window.closeItemHistoryPreviewModal = closeItemHistoryPreviewModal;
 
 // Rooms report globals
 window.displayRoomsReportWithImport = displayRoomsReportWithImport;

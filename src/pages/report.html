@@ -414,6 +414,7 @@
                         <option value="items_lost">Items - Lost/Stolen/Damaged/Destroyed</option>
                         <option value="rooms">Rooms - Classroom Inventory</option>
                         <option value="equipment">Equipment - Equipment Inventory</option>
+                        <option value="item_history">Item History - Stock Added / Distributed</option>
                         <option value="logs">Logs - Activity Logs</option>
                     </select>
                 </div>
@@ -432,6 +433,67 @@
                     <button type="submit" class="btn btn-primary" id="generateReportBtn">Generate</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Item History Preview Modal -->
+    <div id="itemHistoryPreviewModal" class="modal" style="display:none;">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-history"></i> Item History Preview</h3>
+                <button onclick="window.closeItemHistoryPreviewModal()">&times;</button>
+            </div>
+
+            <div class="modal-body">
+                <div id="itemHistoryPreviewHeader" style="margin-bottom: 16px; color: #333;">
+                    <p style="margin: 0; font-weight: 600;">Selected item: <span id="previewItemHistoryName">-</span></p>
+                    <p style="margin: 4px 0 0 0; color: #666;">Date range: <span id="previewItemHistoryRange">-</span></p>
+                </div>
+
+                <div class="report-stats" style="display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px;">
+                    <div class="stat-box">
+                        <span class="stat-number" id="previewItemHistoryAdded">-</span>
+                        <span class="stat-label">Stock Added</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-number" id="previewItemHistoryDistributed">-</span>
+                        <span class="stat-label">Stock Distributed</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-number" id="previewItemHistoryNetChange">-</span>
+                        <span class="stat-label">Net Change</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-number" id="previewItemHistoryTransactions">-</span>
+                        <span class="stat-label">Transactions</span>
+                    </div>
+                </div>
+
+                <div class="report-table-container" style="max-height: 400px; overflow-y: auto;">
+                    <table class="report-table" id="itemHistoryPreviewTable">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Action</th>
+                                <th>Qty Changed</th>
+                                <th>Before</th>
+                                <th>After</th>
+                                <th>Person</th>
+                                <th>Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody id="itemHistoryPreviewBody">
+                            <tr>
+                                <td colspan="7" style="text-align: center; padding: 20px; color: #666;">No updates loaded yet.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" onclick="window.closeItemHistoryPreviewModal()" class="btn btn-secondary">Close</button>
+            </div>
         </div>
     </div>
 
