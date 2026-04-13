@@ -117,6 +117,16 @@ function getDateRanges() {
     };
 }
 
+function getQuantityDelta(log) {
+    if (typeof log.quantity_after === 'number' && typeof log.quantity_before === 'number') {
+        return log.quantity_after - log.quantity_before;
+    }
+    if (typeof log.quantity_changed === 'number') {
+        return log.quantity_changed;
+    }
+    return 0;
+}
+
 // Calculate summary for a specific time period
 function calculatePeriodSummary(logs, startDate, endDate, prevStartDate, prevEndDate) {
     // Filter logs for current period
@@ -132,25 +142,29 @@ function calculatePeriodSummary(logs, startDate, endDate, prevStartDate, prevEnd
     });
     
     // Calculate metrics for current period
-    const itemsAdded = periodLogs
-        .filter(log => log.action_type === 'CREATE' || (log.action_type === 'UPDATE_QUANTITY' && log.quantity_changed > 0))
-        .reduce((sum, log) => sum + (log.quantity_changed || 0), 0);
+    const itemsAdded = periodLogs.reduce((sum, log) => {
+        const delta = getQuantityDelta(log);
+        return sum + Math.max(delta, 0);
+    }, 0);
     
-    const itemsRemoved = periodLogs
-        .filter(log => log.action_type === 'DISTRIBUTE' || (log.action_type === 'UPDATE_QUANTITY' && log.quantity_changed < 0))
-        .reduce((sum, log) => sum + Math.abs(log.quantity_changed || 0), 0);
+    const itemsRemoved = periodLogs.reduce((sum, log) => {
+        const delta = getQuantityDelta(log);
+        return sum + Math.abs(Math.min(delta, 0));
+    }, 0);
     
     const transactions = periodLogs.length;
     const netChange = itemsAdded - itemsRemoved;
     
     // Calculate metrics for previous period (for trends)
-    const prevItemsAdded = prevPeriodLogs
-        .filter(log => log.action_type === 'CREATE' || (log.action_type === 'UPDATE_QUANTITY' && log.quantity_changed > 0))
-        .reduce((sum, log) => sum + (log.quantity_changed || 0), 0);
+    const prevItemsAdded = prevPeriodLogs.reduce((sum, log) => {
+        const delta = getQuantityDelta(log);
+        return sum + Math.max(delta, 0);
+    }, 0);
     
-    const prevItemsRemoved = prevPeriodLogs
-        .filter(log => log.action_type === 'DISTRIBUTE' || (log.action_type === 'UPDATE_QUANTITY' && log.quantity_changed < 0))
-        .reduce((sum, log) => sum + Math.abs(log.quantity_changed || 0), 0);
+    const prevItemsRemoved = prevPeriodLogs.reduce((sum, log) => {
+        const delta = getQuantityDelta(log);
+        return sum + Math.abs(Math.min(delta, 0));
+    }, 0);
     
     const prevTransactions = prevPeriodLogs.length;
     
@@ -172,10 +186,11 @@ function calculatePeriodSummary(logs, startDate, endDate, prevStartDate, prevEnd
                 removed: 0 
             };
         }
-        if (log.action_type === 'CREATE' || (log.action_type === 'UPDATE_QUANTITY' && log.quantity_changed > 0)) {
-            itemActivity[itemName].added += log.quantity_changed || 0;
-        } else if (log.action_type === 'DISTRIBUTE' || (log.action_type === 'UPDATE_QUANTITY' && log.quantity_changed < 0)) {
-            itemActivity[itemName].removed += Math.abs(log.quantity_changed || 0);
+        const delta = getQuantityDelta(log);
+        if (delta > 0) {
+            itemActivity[itemName].added += delta;
+        } else if (delta < 0) {
+            itemActivity[itemName].removed += Math.abs(delta);
         }
     });
     
@@ -1390,19 +1405,36 @@ async function generateItemHistoryReport() {
     }
 }
 
+function getActionTypeLabel(actionType) {
+    const labels = {
+        'CREATE': 'CREATED',
+        'UPDATE_QUANTITY': 'ADDED',
+        'DISTRIBUTE': 'DISTRIBUTED',
+        'EDIT': 'EDITED',
+        'DELETE': 'DELETED'
+    };
+    return labels[actionType] || actionType;
+}
+
 function calculateItemHistorySummary(logs) {
-    const itemsAdded = logs
-        .filter(log => log.action_type === 'CREATE' || (log.action_type === 'UPDATE_QUANTITY' && log.quantity_changed > 0))
-        .reduce((sum, log) => sum + (log.quantity_changed || 0), 0);
+    // CRITICAL: Sort logs chronologically FIRST to handle out-of-order receipts
+    const sortedLogs = [...logs].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+    
+    // Calculate totals based on chronological order
+    const itemsAdded = sortedLogs.reduce((sum, log) => {
+        const delta = getQuantityDelta(log);
+        return sum + Math.max(delta, 0);
+    }, 0);
 
-    const itemsDistributed = logs
-        .filter(log => log.action_type === 'DISTRIBUTE' || (log.action_type === 'UPDATE_QUANTITY' && log.quantity_changed < 0))
-        .reduce((sum, log) => sum + Math.abs(log.quantity_changed || 0), 0);
+    const itemsDistributed = sortedLogs.reduce((sum, log) => {
+        const delta = getQuantityDelta(log);
+        return sum + Math.abs(Math.min(delta, 0));
+    }, 0);
 
-    const transactions = logs.length;
+    const transactions = sortedLogs.length;
     const netChange = itemsAdded - itemsDistributed;
 
-    const sortedLogs = [...logs].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+    // Get timestamps from chronologically ordered logs
     const initialLog = sortedLogs[0];
     const finalLog = sortedLogs[sortedLogs.length - 1];
 
@@ -1412,7 +1444,8 @@ function calculateItemHistorySummary(logs) {
         netChange,
         transactions,
         initialQuantity: initialLog?.quantity_before ?? '-',
-        finalQuantity: finalLog?.quantity_after ?? '-'
+        finalQuantity: finalLog?.quantity_after ?? '-',
+        sortedLogs: sortedLogs  // Return sorted logs for rendering
     };
 }
 
@@ -1440,10 +1473,13 @@ function renderItemHistoryResults() {
         return;
     }
 
-    tableBody.innerHTML = itemHistoryLogs.map(log => `
+    // Display in reverse chronological order (newest first) for better UX, but calculations are based on chronological order
+    const displayLogs = itemHistorySummaryData.sortedLogs ? [...itemHistorySummaryData.sortedLogs].reverse() : itemHistoryLogs;
+    
+    tableBody.innerHTML = displayLogs.map(log => `
         <tr>
             <td>${log.timestamp ? new Date(log.timestamp).toLocaleString() : '-'}</td>
-            <td>${escapeHtml(log.action_type || '-')}</td>
+            <td>${escapeHtml(getActionTypeLabel(log.action_type) || '-')}</td>
             <td>${log.quantity_changed || 0}</td>
             <td>${log.quantity_before != null ? log.quantity_before : '-'}</td>
             <td>${log.quantity_after != null ? log.quantity_after : '-'}</td>
@@ -1484,7 +1520,7 @@ function renderItemHistoryPreview() {
     previewBody.innerHTML = itemHistoryLogs.map(log => `
         <tr>
             <td>${log.timestamp ? new Date(log.timestamp).toLocaleString() : '-'}</td>
-            <td>${escapeHtml(log.action_type || '-')}</td>
+            <td>${escapeHtml(getActionTypeLabel(log.action_type) || '-')}</td>
             <td>${log.quantity_changed || 0}</td>
             <td>${log.quantity_before != null ? log.quantity_before : '-'}</td>
             <td>${log.quantity_after != null ? log.quantity_after : '-'}</td>
@@ -1518,7 +1554,9 @@ async function exportItemHistoryReport(format) {
 
     showLoading(true);
     try {
-        const historyRows = itemHistoryLogs.map(log => ({
+        // Use sorted logs (newest first) for export, same as display
+        const logsForExport = itemHistorySummaryData.sortedLogs ? [...itemHistorySummaryData.sortedLogs].reverse() : itemHistoryLogs;
+        const historyRows = logsForExport.map(log => ({
             Date: log.timestamp ? new Date(log.timestamp).toLocaleString() : '',
             Action: log.action_type || '',
             'Qty Changed': log.quantity_changed || 0,
@@ -3285,7 +3323,7 @@ async function displayLogsReport() {
                         <span class="stat-label">Distributed</span>
                     </div>
                     <div class="stat-box">
-                        <span class="stat-number">${filteredLogs.filter(l => l.action_type === 'UPDATE_QUANTITY').length}</span>
+                        <span class="stat-number">${filteredLogs.filter(l => l.action_type === 'ADDED').length}</span>
                         <span class="stat-label">Updated</span>
                     </div>
                 </div>

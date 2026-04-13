@@ -5,6 +5,16 @@
 let selectedCustomMonth = null;
 let customMonthSummaryData = null;
 
+function getQuantityDelta(log) {
+    if (typeof log.quantity_after === 'number' && typeof log.quantity_before === 'number') {
+        return log.quantity_after - log.quantity_before;
+    }
+    if (typeof log.quantity_changed === 'number') {
+        return log.quantity_changed;
+    }
+    return 0;
+}
+
 // Initialize custom month selector when page loads
 document.addEventListener('DOMContentLoaded', async () => {
     await populateMonthSelector();
@@ -211,25 +221,29 @@ async function loadCustomMonthData() {
 // Calculate summary for custom month
 function calculateCustomMonthSummary(logs, prevLogs) {
     // Calculate metrics for current month
-    const itemsAdded = logs
-        .filter(log => log.action_type === 'CREATE' || (log.action_type === 'UPDATE_QUANTITY' && log.quantity_changed > 0))
-        .reduce((sum, log) => sum + (log.quantity_changed || 0), 0);
+    const itemsAdded = logs.reduce((sum, log) => {
+        const delta = getQuantityDelta(log);
+        return sum + Math.max(delta, 0);
+    }, 0);
     
-    const itemsRemoved = logs
-        .filter(log => log.action_type === 'DISTRIBUTE' || (log.action_type === 'UPDATE_QUANTITY' && log.quantity_changed < 0))
-        .reduce((sum, log) => sum + Math.abs(log.quantity_changed || 0), 0);
+    const itemsRemoved = logs.reduce((sum, log) => {
+        const delta = getQuantityDelta(log);
+        return sum + Math.abs(Math.min(delta, 0));
+    }, 0);
     
     const transactions = logs.length;
     const netChange = itemsAdded - itemsRemoved;
     
     // Calculate metrics for previous month (for trends)
-    const prevItemsAdded = prevLogs
-        .filter(log => log.action_type === 'CREATE' || (log.action_type === 'UPDATE_QUANTITY' && log.quantity_changed > 0))
-        .reduce((sum, log) => sum + (log.quantity_changed || 0), 0);
+    const prevItemsAdded = prevLogs.reduce((sum, log) => {
+        const delta = getQuantityDelta(log);
+        return sum + Math.max(delta, 0);
+    }, 0);
     
-    const prevItemsRemoved = prevLogs
-        .filter(log => log.action_type === 'DISTRIBUTE' || (log.action_type === 'UPDATE_QUANTITY' && log.quantity_changed < 0))
-        .reduce((sum, log) => sum + Math.abs(log.quantity_changed || 0), 0);
+    const prevItemsRemoved = prevLogs.reduce((sum, log) => {
+        const delta = getQuantityDelta(log);
+        return sum + Math.abs(Math.min(delta, 0));
+    }, 0);
     
     const prevTransactions = prevLogs.length;
     
@@ -251,10 +265,11 @@ function calculateCustomMonthSummary(logs, prevLogs) {
                 removed: 0 
             };
         }
-        if (log.action_type === 'CREATE' || (log.action_type === 'UPDATE_QUANTITY' && log.quantity_changed > 0)) {
-            itemActivity[itemName].added += log.quantity_changed || 0;
-        } else if (log.action_type === 'DISTRIBUTE' || (log.action_type === 'UPDATE_QUANTITY' && log.quantity_changed < 0)) {
-            itemActivity[itemName].removed += Math.abs(log.quantity_changed || 0);
+        const delta = getQuantityDelta(log);
+        if (delta > 0) {
+            itemActivity[itemName].added += delta;
+        } else if (delta < 0) {
+            itemActivity[itemName].removed += Math.abs(delta);
         }
     });
     
@@ -265,15 +280,17 @@ function calculateCustomMonthSummary(logs, prevLogs) {
     // Get recent activity (last 10)
     const recentActivity = logs
         .slice(0, 10)
-        .map(log => ({
-            type: log.action_type === 'CREATE' || (log.action_type === 'UPDATE_QUANTITY' && log.quantity_changed > 0) ? 'added' : 
-                  log.action_type === 'DISTRIBUTE' || (log.action_type === 'UPDATE_QUANTITY' && log.quantity_changed < 0) ? 'removed' : 'updated',
-            itemName: log.item_name || 'Unknown',
-            quantity: Math.abs(log.quantity_changed || 0),
-            person: log.person || '-',
-            timestamp: log.timestamp,
-            action: log.action_type
-        }));
+        .map(log => {
+            const delta = getQuantityDelta(log);
+            return {
+                type: delta > 0 ? 'added' : delta < 0 ? 'removed' : 'updated',
+                itemName: log.item_name || 'Unknown',
+                quantity: Math.abs(delta),
+                person: log.person || '-',
+                timestamp: log.timestamp,
+                action: log.action_type
+            };
+        });
     
     return {
         itemsAdded,
