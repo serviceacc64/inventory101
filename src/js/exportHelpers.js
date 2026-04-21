@@ -61,7 +61,8 @@ export function buildRoomWorkbook(items, title) {
 
     const ws = XLSX.utils.json_to_sheet(exportData);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, title);
+const sheetName = title.length > 31 ? title.slice(0, 31) : title;
+    XLSX.utils.book_append_sheet(wb, ws, sheetName);
 
     // optional column widths for each column
     const cols = [

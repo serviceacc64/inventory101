@@ -857,6 +857,11 @@ window.exportRoomItemsToExcel = async function() {
         if (error) throw error;
 
         const items = roomItems || [];
+        console.log(`Fetched ${items.length} items for room "${room.name}"`);
+        if (items.length === 0) {
+            showNotification('No items to export (empty room)', 'warning');
+            return;
+        }
 
         // Try to use template-based export first
         let workbook = null;
@@ -920,13 +925,19 @@ window.exportRoomItemsToExcel = async function() {
 
         // Generate filename with room name and timestamp
         const timestamp = new Date().toISOString().split('T')[0];
-        const filename = `${room.name}_items_${timestamp}.xlsx`;
-
-        console.log('Attempting to export file:', filename);
+        let filename = `${room.name}_items_${timestamp}.xlsx`;
+        // Sanitize filename for FS
+        filename = filename.replace(/[<>:"/\\|?*]/g, '_');
+        console.log('Export filename:', filename);
         console.log('Used template:', usedTemplate);
 
         // Write the file
-        XLSX.writeFile(workbook, filename);
+        try {
+            XLSX.writeFile(workbook, filename);
+        } catch (writeError) {
+            console.error('XLSX.writeFile failed:', writeError);
+            throw new Error(`Download failed: ${writeError.message}`);
+        }
 
         console.log('Export successful:', filename);
         showNotification(`Exported ${items.length} item(s) to ${filename}${usedTemplate ? ' (using template)' : ''}`);
