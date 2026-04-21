@@ -993,8 +993,9 @@ window.handleAddCustomItemToRoom = async function(event) {
         if (fetchError) throw fetchError;
 
         // Find custom item (no item_id) with matching name AND description
-        // Only combine items if they have the same description (or both have no description)
+// Only combine items if they have the same name+description+condition+remarks
         const normalizedDescription = description ? description.trim().toLowerCase() : '';
+        const normalizedRemarks = remarks ? remarks.trim().toLowerCase() : '';
         const existing = existingItems && existingItems.length > 0 
             ? existingItems.find(item => {
                 // Only match custom items (item_id is null)
@@ -1002,7 +1003,12 @@ window.handleAddCustomItemToRoom = async function(event) {
                 
                 // Compare descriptions - treat null and empty as equivalent
                 const existingDesc = item.description ? item.description.trim().toLowerCase() : '';
-                return existingDesc === normalizedDescription;
+                const existingRemarks = item.remarks ? item.remarks.trim().toLowerCase() : '';
+                return (
+                    existingDesc === normalizedDescription &&
+                    item.condition === condition &&
+                    existingRemarks === normalizedRemarks
+                );
             })
             : null;
 
@@ -1014,15 +1020,13 @@ window.handleAddCustomItemToRoom = async function(event) {
                 .from('room_items')
                 .update({ 
                     quantity: newTotal,
-                    description: description || existing.description,
-                    units: units || existing.units,
-                    condition: condition || existing.condition,
-                    remarks: remarks || existing.remarks
+                    // Preserve existing values except quantity
+                    units: units || existing.units
                 })
                 .eq('id', existing.id);
 
             if (error) throw error;
-            showNotification(`Updated "${itemName}" quantity to ${newTotal}`);
+            showNotification(`Added ${quantity} "${units}" to existing "${itemName}" (total: ${newTotal})`);
         } else {
             // Insert new custom room item (item_id is null)
             const { error } = await supabase
@@ -1041,7 +1045,7 @@ window.handleAddCustomItemToRoom = async function(event) {
                 }]);
 
             if (error) throw error;
-            showNotification(`Created custom item "${itemName}" (${quantity} ${units}) in room`);
+            showNotification(`Created new "${itemName}" (${quantity} ${units}, ${condition}) in room`);
         }
 
         // Clear inputs

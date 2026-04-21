@@ -1,28 +1,24 @@
-# Searchbar Fix - input.html Equipment Table
-Status: [In Progress] ✅ Plan Approved
+# Fix Room Item Merging Issue - Make Merging Unique by Name+Desc+Condition+Remarks
 
-## Breakdown of Steps (from approved plan):
+## Status: [x] Completed
 
-### 1. Create TODO.md [✅ COMPLETE]
-### 2. Pre-fetch equipment data in input.js `openGetItemModal()` [✅ COMPLETE]
-   - Add parallel `fetchEquipmentForGet()` call
-   - Add loading state for equipment list
-### 3. Add dedicated equipment search input in input.html [✅ COMPLETE]
-   - Add `#getEquipmentSearch` under Equipment tab
-   - Update JS event listeners
-### 4. Implement debounced search in input.js [✅ COMPLETE]
-   - 300ms debounce for `filterGetEquipmentSelectableItems()`
-   - Error handling + fallback messages
-### 5. Sync shared state with equipment.js [✅ COMPLETE]
-   - Import/export `allEquipmentForGet`
-   - Refresh on page load  
-### 6. Update tab switch logic [✅ COMPLETE]
-   - Instant render (no re-fetch)
-### 7. Test complete flow [✅ COMPLETE]
-   - input.html → Get Item → Equipment tab → search instantly
-   - Verify no stale data + smooth debounce
-   - input.html → Get Item → Equipment tab → search instantly
-   - Verify no stale data + smooth debounce
-### 8. attempt_completion
+## Steps:
 
-**Next Step: Implement #2-3 (fetch + HTML update)**
+1. [x] **Edit src/js/rooms.js** - Update `handleAddCustomItemToRoom()` merge logic:
+   - Add `condition` and `remarks` to merge criteria (normalize empty/null)
+   - Update merge notification: `"Added X units to existing..."`
+   - Preserve existing condition/desc/remarks on merge (update quantity+units only)
+
+2. [ ] **Test Fix**
+
+3. [ ] **Verify**
+
+4. [ ] **Complete**
+
+**Current Progress**: 1/4 steps complete
+
+**Changes**:
+- Merge now requires: name + desc + condition + remarks exact match
+- Better notifications distinguish merge vs create
+- No DB schema changes needed
+
