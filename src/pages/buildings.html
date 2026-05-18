@@ -12,17 +12,17 @@
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/animations.css">
     <link rel="stylesheet" href="../css/rooms.css">
+    <link rel="stylesheet" href="../css/buildings.css">
     <link rel="icon" href="data:,">
-    <!-- SheetJS for Excel Export -->
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script type="module" src="../js/auth.js"></script>
     <!-- Supabase Client -->
     <script type="module" src="../js/supabase.js"></script>
-
+    <!-- SheetJS for Excel Export -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body>
     <script>
-        // Check if user is logged in (works with both old and new auth)
+        // Check if user is logged in
         if (!localStorage.getItem('isLoggedIn')) {
             window.location.href = '../../index.html';
         }
@@ -76,7 +76,7 @@
     <!-- Main Content -->
     <main class="dashboard">
         <header class="dashboard-header">
-            <h1>Building Inventory</h1>
+            <h1>Buildings Management</h1>
 
             <div class="header-right">
                 <div class="search-box" role="search" aria-label="Search buildings">
@@ -99,14 +99,14 @@
             </div>
             
             <!-- Error State -->
-            <div id="errorState" class="error-state">
+            <div id="errorState" class="error-state" style="display: none;">
                 <i class="fa-solid fa-exclamation-circle"></i>
                 <p id="errorMessage">Failed to load buildings</p>
                 <button onclick="window.fetchBuildings()" class="btn btn-primary">Retry</button>
             </div>
             
             <!-- Empty State -->
-            <div id="emptyState" class="empty-state">
+            <div id="emptyState" class="empty-state" style="display: none;">
                 <i class="fa-solid fa-building"></i>
                 <p>No buildings found</p>
                 <p>Click "New Building" to create your first building.</p>
@@ -115,19 +115,6 @@
             <!-- Dynamic Buildings Container -->
             <div id="buildingsContainer" class="rooms-grid">
                 <!-- Buildings will be rendered here dynamically -->
-            </div>
-
-            <!-- Pagination Controls -->
-            <div id="paginationContainer" class="pagination-controls" style="display: none;">
-                <button id="prevBtn" class="pagination-btn" onclick="window.previousPage()">
-                    <i class="fa-solid fa-chevron-left"></i> Previous
-                </button>
-                <div class="pagination-info">
-                    <span id="pageIndicator">Page 1</span>
-                </div>
-                <button id="nextBtn" class="pagination-btn" onclick="window.nextPage()">
-                    Next <i class="fa-solid fa-chevron-right"></i>
-                </button>
             </div>
         </section>
     </main>
@@ -143,18 +130,12 @@
             <form id="createBuildingForm" onsubmit="window.handleCreateBuilding(event)">
                 <div class="form-group">
                     <label for="buildingName">Building Name *</label>
-                    <input type="text" id="buildingName" placeholder="e.g., Main Building, Science Lab" required>
+                    <input type="text" id="buildingName" placeholder="e.g., Building 1, Main Building" required>
                 </div>
 
                 <div class="form-group">
                     <label for="buildingDescription">Description (Optional)</label>
-                    <textarea id="buildingDescription" placeholder="e.g., Main campus building, 3 stories" rows="2"></textarea>
-                </div>
-
-                <div class="form-group">
-                    <label for="createBuildingExcel">Excel File (Optional)</label>
-                    <input type="file" id="createBuildingExcel" accept=".xlsx,.xls" style="padding: 12px; border: 2px dashed #ccc; border-radius: 8px; background: #f8f9fa; text-align: center;">
-                    <p id="createBuildingExcelName" style="margin-top: 8px; color: #666; font-size: 12px; font-style: italic;">No file selected</p>
+                    <textarea id="buildingDescription" placeholder="e.g., Senior High School Building" rows="2"></textarea>
                 </div>
 
                 <div class="modal-footer">
@@ -167,7 +148,7 @@
         </div>
     </div>
 
-    <!-- Building Details Modal -->
+    <!-- Building Details & Structures Modal -->
     <div id="buildingDetailsModal" class="modal">
         <div class="modal-content modal-large">
             <div class="modal-header">
@@ -176,59 +157,83 @@
             </div>
             
             <div class="modal-body">
-                <!-- Building Info Section -->
-                <div id="buildingInfoSection" style="margin-bottom: 20px; padding: 15px; background: #f9f9f9; border-radius: 8px;">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                        <div>
-                            <label style="font-weight: 600; color: #666; font-size: 12px;">Building Name</label>
-                            <p id="detailBuildingName" style="margin: 5px 0; font-size: 16px; font-weight: 500;">-</p>
-                        </div>
-                        <div>
-                            <label style="font-weight: 600; color: #666; font-size: 12px;">Description</label>
-                            <p id="detailBuildingDescription" style="margin: 5px 0; font-size: 16px;">-</p>
-                        </div>
-                    </div>
+                <div class="building-info-section" style="margin-bottom: 20px; padding: 15px; background: #f9f9f9; border-radius: 8px;">
+                    <h4 style="margin-bottom: 5px;" id="detailBuildingName">Building Name</h4>
+                    <p style="color: #666;" id="detailBuildingDescription">Description</p>
                 </div>
 
-                <!-- Excel File Section -->
-                <div style="border: 2px dashed #ccc; border-radius: 8px; padding: 30px; text-align: center; background: #fafafa;">
-                    <div id="excelStatusSection">
-                        <div id="noExcelState" style="display: none;">
-                            <i class="fa-solid fa-file-excel" style="font-size: 48px; color: #ccc; margin-bottom: 15px;"></i>
-                            <p style="margin-bottom: 15px; color: #666;">No Excel file uploaded for this building</p>
-                        </div>
+                <!-- Add Structure Section -->
+                <div style="margin-bottom: 20px;">
+                    <button type="button" id="showAddStructureBtn" onclick="window.showAddStructureForm()" class="btn btn-primary" style="width: 100%;">
+                        <i class="fa-solid fa-plus"></i> Add Structure
+                    </button>
+                    
+                    <form id="addStructureForm" class="add-item-section" style="padding: 15px; background: #fff0f0; border-radius: 8px; border-left: 4px solid #f32121; display: none; margin-top: 10px;" onsubmit="window.handleAddStructure(event)">
+                        <input type="hidden" id="structureBuildingId">
                         
-                        <div id="hasExcelState" style="display: none;">
-                            <i class="fa-solid fa-file-excel" style="font-size: 48px; color: #217346; margin-bottom: 15px;"></i>
-                            <p id="excelFileName" style="margin-bottom: 5px; font-weight: 500;">-</p>
-                            <p id="excelUploadDate" style="margin-bottom: 15px; color: #666; font-size: 12px;">Uploaded: -</p>
+                        <div class="form-group">
+                            <label for="structureType">Structure Type *</label>
+                            <select id="structureType" onchange="window.handleStructureTypeChange()" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid rgba(85, 0, 0, 0.2);">
+                                <option value="" disabled selected>Select Type</option>
+                                <option value="Instructional">Instructional</option>
+                                <option value="Non-Instructional">Non-Instructional</option>
+                                <option value="Others">Others</option>
+                            </select>
                         </div>
-                    </div>
 
-                    <!-- Upload Excel Form -->
-                    <form id="uploadExcelForm" onsubmit="window.handleUploadExcel(event)" style="margin-top: 15px;">
-                        <input type="hidden" id="excelBuildingId">
-                        <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
-                            <label for="excelFileInput" class="btn btn-primary" style="cursor: pointer; display: inline-flex; align-items: center; gap: 8px;">
-                                <i class="fa-solid fa-upload"></i> 
-                                <span id="uploadBtnText">Upload Excel</span>
-                                <input type="file" id="excelFileInput" accept=".xlsx,.xls" style="display: none;" onchange="window.handleFileSelect(event)">
-                            </label>
-                            <button type="button" id="downloadExcelBtn" class="btn btn-success" onclick="window.downloadExcel()" style="display: none;">
-                                <i class="fa-solid fa-download"></i> Download Excel
-                            </button>
-                            <button type="button" id="removeExcelBtn" class="btn btn-danger" onclick="window.removeExcel()" style="display: none;">
-                                <i class="fa-solid fa-trash"></i> Remove
-                            </button>
+                        <!-- Conditional Fields for Instructional -->
+                        <div id="instructionalFields" style="display: none;">
+                            <div class="form-group">
+                                <label for="structureRoomsCount">Number of Rooms *</label>
+                                <input type="number" id="structureRoomsCount" min="1" placeholder="e.g., 4">
+                            </div>
+                            <div class="form-group">
+                                <label style="font-size: 12px; color: #666;">Room Names *</label>
+                                <div id="roomNamesContainer" style="display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto; padding-right: 5px;">
+                                    <!-- Dynamic inputs will be inserted here -->
+                                </div>
+                            </div>
                         </div>
-                        <p id="selectedFileName" style="margin-top: 10px; color: #666; font-size: 12px;"></p>
+
+                        <!-- Conditional Fields for Non-Instructional -->
+                        <div id="nonInstructionalFields" style="display: none;">
+                            <div class="form-group">
+                                <label for="structurePurpose">Purpose *</label>
+                                <input type="text" id="structurePurpose" placeholder="e.g., Faculty, Library, Music Room">
+                            </div>
+                        </div>
+
+                        <!-- Conditional Fields for Others -->
+                        <div id="othersFields" style="display: none;">
+                            <div class="form-group">
+                                <label for="structureFunction">Function *</label>
+                                <input type="text" id="structureFunction" placeholder="e.g., CR, Storage">
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 10px; margin-top: 15px;">
+                            <button type="submit" class="btn btn-primary" style="flex: 1;">Save Structure</button>
+                            <button type="button" onclick="window.hideAddStructureForm()" class="btn btn-secondary">Cancel</button>
+                        </div>
                     </form>
+                </div>
+
+                <!-- Structures List -->
+                <div class="structures-container">
+                    <h4>Structures</h4>
+                    <div id="structuresList" class="structures-list" style="margin-top: 10px;">
+                        <!-- Structures will be rendered here -->
+                    </div>
+                    <div id="noStructuresState" class="empty-state" style="display: none; padding: 20px;">
+                        <i class="fa-solid fa-cubes"></i>
+                        <p>No structures added yet</p>
+                    </div>
                 </div>
             </div>
 
             <div class="modal-footer">
-                <button type="button" onclick="window.openEditBuildingModal()" class="btn btn-secondary">
-                    <i class="fa-solid fa-edit"></i> Edit Building
+                <button type="button" onclick="window.exportBuildingToExcel()" class="btn btn-success" style="margin-right: auto; background-color: #217346; color: white;">
+                    <i class="fa-solid fa-file-excel"></i> Export to Excel
                 </button>
                 <button type="button" onclick="window.closeBuildingDetailsModal()" class="btn btn-secondary">Close</button>
             </div>
@@ -253,17 +258,7 @@
 
                 <div class="form-group">
                     <label for="editBuildingDescription">Description (Optional)</label>
-                    <textarea id="editBuildingDescription" placeholder="e.g., Main campus building, 3 stories" rows="2"></textarea>
-                </div>
-
-                <div class="form-group">
-                    <label for="editBuildingLocation">Location (Optional)</label>
-                    <input type="text" id="editBuildingLocation" placeholder="e.g., North Campus, Near Gate 1">
-                </div>
-
-                <div class="form-group">
-                    <label for="editBuildingAccountable">Accountable Person (Optional)</label>
-                    <input type="text" id="editBuildingAccountable" placeholder="e.g., Mr. John Smith">
+                    <textarea id="editBuildingDescription" rows="2"></textarea>
                 </div>
 
                 <div class="modal-footer">
@@ -279,7 +274,52 @@
         </div>
     </div>
 
+    <!-- View Structure Modal -->
+    <div id="viewStructureModal" class="modal">
+        <div class="modal-content modal-medium">
+            <div class="modal-header">
+                <h3>Structure Details</h3>
+                <button onclick="window.closeViewStructureModal()">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="form-group">
+                    <label style="font-size: 12px; color: #666;">Type</label>
+                    <p id="viewStructureType" style="font-weight: 600; font-size: 14px;"></p>
+                </div>
+
+                <div id="viewInstructionalInfo" style="display: none;">
+                    <div class="form-group">
+                        <label style="font-size: 12px; color: #666;">Number of Rooms</label>
+                        <p id="viewStructureRoomsCount" style="font-size: 14px;"></p>
+                    </div>
+                    <div class="form-group">
+                        <label style="font-size: 12px; color: #666;">Room Names</label>
+                        <p id="viewStructureRoomNames" style="font-size: 14px;"></p>
+                    </div>
+                </div>
+
+                <div id="viewNonInstructionalInfo" style="display: none;">
+                    <div class="form-group">
+                        <label style="font-size: 12px; color: #666;">Purpose</label>
+                        <p id="viewStructurePurpose" style="font-size: 14px;"></p>
+                    </div>
+                </div>
+
+                <div id="viewOthersInfo" style="display: none;">
+                    <div class="form-group">
+                        <label style="font-size: 12px; color: #666;">Function</label>
+                        <p id="viewStructureFunction" style="font-size: 14px;"></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" onclick="window.closeViewStructureModal()" class="btn btn-secondary">Close</button>
+            </div>
+        </div>
+    </div>
+
     <script type="module" src="../js/buildings.js"></script>
 </body>
 </html>
-
