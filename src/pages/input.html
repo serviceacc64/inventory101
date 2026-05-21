@@ -94,36 +94,31 @@
 
     <!-- Select Item Modal -->
     <div id="selectItemModal" class="modal">
-        <div class="modal-content modal-large">
+        <div class="modal-content modal-large select-stock-modal">
             <div class="modal-header">
                 <h3>Add Stock to Item</h3>
                 <button class="modal-close" onclick="closeSelectItemModal()">&times;</button>
             </div>
-            
-            <!-- Search Box -->
-            <div class="form-group">
-                <div class="search-box" style="margin-bottom: 15px;">
+
+            <div class="select-stock-modal-body">
+                <div class="modal-search">
                     <input type="search" id="modalItemSearch" placeholder="Search available items..." aria-label="Search items">
                     <button type="button" id="clearModalSearch" title="Clear search"><i class="fa-solid fa-times"></i></button>
                 </div>
-            </div>
-            
-            <!-- Create New Item Button -->
-            <div class="create-new-item-section" style="padding: 15px; text-align: center; border-bottom: 1px solid #e0e0e0; background: #f9f9f9;">
-                <p style="margin: 0 0 10px 0; color: #666; font-size: 14px;">Can't find the item you're looking for?</p>
-                <button type="button" class="btn btn-secondary" onclick="openCreateItemModal()">
-                    <i class="fa-solid fa-plus"></i> Create New Item
-                </button>
-            </div>
-            
-            <!-- Selectable Items List -->
-            <div id="selectableItemsList" class="selectable-items-list">
-                <!-- Items will be rendered here dynamically -->
-            </div>
 
-            
+                <div class="create-new-item-section">
+                    <p>Can't find the item you're looking for?</p>
+                    <button type="button" class="btn btn-secondary" onclick="openCreateItemModal()">
+                        <i class="fa-solid fa-plus"></i> Create New Item
+                    </button>
+                </div>
+
+                <div id="selectableItemsList" class="selectable-items-list">
+                    <!-- Items will be rendered here dynamically -->
+                </div>
+
             <!-- Selected Item Details (hidden initially) -->
-            <div id="selectedItemDetails" style="display: none; margin-top: 20px; padding-top: 20px; border-top: 2px solid #eee;">
+            <div id="selectedItemDetails" class="selected-item-panel" style="display: none;">
                 <div class="selected-item-info">
                     <h4 id="selectedItemName">Item Name</h4>
                     <p id="selectedItemCurrentStock">Current Stock: 0</p>
@@ -162,6 +157,7 @@
                         </button>
                     </div>
                 </form>
+            </div>
             </div>
         </div>
     </div>

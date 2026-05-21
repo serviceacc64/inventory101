@@ -191,7 +191,7 @@ body {
 /* Options (Remember me & Forgot password) */
 .form-options {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-start;
     align-items: center;
     font-size: 13px;
     margin-top: var(--space-2xs);

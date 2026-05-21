@@ -47,7 +47,6 @@
                         <input type="checkbox" name="remember" id="remember">
                         <span>Remember me</span>
                     </label>
-                    <a href="#" class="forgot-password" onclick="showForgotPassword()">Forgot Password?</a>
                 </div>
 
                 <button type="submit" class="login-btn" id="loginBtn">
@@ -61,73 +60,8 @@
                 </div>
             </form>
 
-            <!-- Add Forgot Password Modal -->
-            <div id="forgotPasswordModal" class="modal" style="display: none;">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h3>Reset Password</h3>
-                        <button onclick="closeForgotPassword()">&times;</button>
-                    </div>
-                    <form id="forgotPasswordForm" onsubmit="handleForgotPassword(event)">
-                        <div class="form-group">
-                            <label for="resetEmail">Enter your email</label>
-                            <input type="email" id="resetEmail" required placeholder="your@email.com">
-                        </div>
-                        <div class="form-actions">
-                            <button type="button" onclick="closeForgotPassword()"
-                                class="btn btn-secondary">Cancel</button>
-                            <button type="submit" id="resetPasswordBtn" class="btn btn-primary">Send Reset Link</button>
-                        </div>
-                        <div id="resetCountdown" class="countdown-message"
-                            style="display: none; margin-top: 10px; color: #666; font-size: 0.9em;"></div>
-                    </form>
-                </div>
-            </div>
-
-            <!-- Add Sign Up Modal -->
-            <div id="signupModal" class="modal" style="display: none;">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h3><i class="fa-solid fa-user-plus"></i> Create Admin Account</h3>
-                        <button onclick="closeSignup()">&times;</button>
-                    </div>
-                    <form id="signupForm" onsubmit="handleSignup(event)">
-                        <div class="form-group">
-                            <label for="signupEmail"><i class="fa-solid fa-envelope"></i> Email</label>
-                            <input type="email" id="signupEmail" required placeholder="your@email.com">
-                        </div>
-                        <div class="form-group">
-                            <label for="signupPassword"><i class="fa-solid fa-lock"></i> Password</label>
-                            <div class="input-wrapper">
-                                <input type="password" id="signupPassword" required minlength="8"
-                                    placeholder="Min 8 characters">
-                                <i class="fa-solid fa-eye toggle-password" id="toggleSignupPassword"></i>
-                            </div>
-                            <span class="password-hint"><i class="fa-solid fa-info-circle"></i> Must be at least 8
-                                characters</span>
-                        </div>
-                        <div class="form-group">
-                            <label for="signupConfirmPassword"><i class="fa-solid fa-lock"></i> Confirm Password</label>
-                            <div class="input-wrapper">
-                                <input type="password" id="signupConfirmPassword" required
-                                    placeholder="Confirm your password">
-                                <i class="fa-solid fa-eye toggle-password" id="toggleSignupConfirmPassword"></i>
-                            </div>
-                        </div>
-                        <div class="form-actions">
-                            <button type="button" onclick="closeSignup()" class="btn btn-secondary"><i
-                                    class="fa-solid fa-times"></i> Cancel</button>
-                            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-user-plus"></i> Create
-                                Account</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
             <div class="login-footer">
                 <p>© 2026 RMNHS Supplies Inventory System. All rights reserved.</p>
-                <p style="margin-top: 10px;">Don't have an account? <a href="#" onclick="showSignup()">Create
-                        Account</a></p>
             </div>
         </div>
 
@@ -171,7 +105,7 @@
     </div>
 
     <script type="module">
-        import { signIn, getCurrentUser, resetPassword, signUp, updatePassword } from './src/js/supabaseAuth.js';
+        import { signIn, getCurrentUser, updatePassword } from './src/js/supabaseAuth.js';
 
         // Also import supabase client directly for session handling
         import { supabase } from './src/js/supabase.js';
@@ -337,32 +271,6 @@
             togglePassword.classList.toggle('fa-eye-slash');
         });
 
-        // Toggle signup password visibility
-        const toggleSignupPassword = document.getElementById('toggleSignupPassword');
-        const signupPasswordInput = document.getElementById('signupPassword');
-
-        if (toggleSignupPassword && signupPasswordInput) {
-            toggleSignupPassword.addEventListener('click', () => {
-                const type = signupPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-                signupPasswordInput.setAttribute('type', type);
-                toggleSignupPassword.classList.toggle('fa-eye');
-                toggleSignupPassword.classList.toggle('fa-eye-slash');
-            });
-        }
-
-        // Toggle signup confirm password visibility
-        const toggleSignupConfirmPassword = document.getElementById('toggleSignupConfirmPassword');
-        const signupConfirmPasswordInput = document.getElementById('signupConfirmPassword');
-
-        if (toggleSignupConfirmPassword && signupConfirmPasswordInput) {
-            toggleSignupConfirmPassword.addEventListener('click', () => {
-                const type = signupConfirmPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-                signupConfirmPasswordInput.setAttribute('type', type);
-                toggleSignupConfirmPassword.classList.toggle('fa-eye');
-                toggleSignupConfirmPassword.classList.toggle('fa-eye-slash');
-            });
-        }
-
         // Toggle new password visibility (password reset)
         const toggleNewPassword = document.getElementById('toggleNewPassword');
         const newPasswordInput = document.getElementById('newPassword');
@@ -460,141 +368,6 @@
             }
         });
 
-        // Forgot Password Functions
-        window.showForgotPassword = function () {
-            document.getElementById('forgotPasswordModal').style.display = 'flex';
-        }
-
-        window.closeForgotPassword = function () {
-            document.getElementById('forgotPasswordModal').style.display = 'none';
-        }
-
-        // Rate limiting configuration
-        const RESET_COOLDOWN_SECONDS = 60;
-        const RESET_STORAGE_KEY = 'lastPasswordResetRequest';
-
-        // Check if user is in cooldown period on page load
-        function checkResetCooldown() {
-            const lastRequest = localStorage.getItem(RESET_STORAGE_KEY);
-            if (lastRequest) {
-                const elapsed = Date.now() - parseInt(lastRequest);
-                const remaining = RESET_COOLDOWN_SECONDS * 1000 - elapsed;
-                if (remaining > 0) {
-                    startResetCooldown(Math.ceil(remaining / 1000));
-                }
-            }
-        }
-
-        // Start cooldown timer
-        function startResetCooldown(seconds) {
-            const submitBtn = document.getElementById('resetPasswordBtn');
-            const countdownDiv = document.getElementById('resetCountdown');
-
-            submitBtn.disabled = true;
-            countdownDiv.style.display = 'block';
-
-            let remaining = seconds;
-
-            const updateCountdown = () => {
-                if (remaining > 0) {
-                    countdownDiv.textContent = `Please wait ${remaining} seconds before requesting another reset link.`;
-                    remaining--;
-                    setTimeout(updateCountdown, 1000);
-                } else {
-                    submitBtn.disabled = false;
-                    countdownDiv.style.display = 'none';
-                    localStorage.removeItem(RESET_STORAGE_KEY);
-                }
-            };
-
-            updateCountdown();
-        }
-
-        window.handleForgotPassword = async function (e) {
-            e.preventDefault();
-
-            // Check cooldown
-            const lastRequest = localStorage.getItem(RESET_STORAGE_KEY);
-            if (lastRequest) {
-                const elapsed = Date.now() - parseInt(lastRequest);
-                if (elapsed < RESET_COOLDOWN_SECONDS * 1000) {
-                    const remaining = Math.ceil((RESET_COOLDOWN_SECONDS * 1000 - elapsed) / 1000);
-                    alert(`Please wait ${remaining} seconds before requesting another reset link.`);
-                    return;
-                }
-            }
-
-            const email = document.getElementById('resetEmail').value;
-            const submitBtn = document.getElementById('resetPasswordBtn');
-
-            // Disable button and show loading
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sending...';
-
-            try {
-                const { error } = await resetPassword(email);
-
-                if (error) {
-                    // Check for rate limit error
-                    if (error.status === 429 || error.message?.includes('rate limit') || error.message?.includes('too many requests')) {
-                        alert('Too many requests. Please wait a minute before trying again.');
-                    } else {
-                        alert('Error: ' + error.message);
-                    }
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = 'Send Reset Link';
-                } else {
-                    // Store timestamp and start cooldown
-                    localStorage.setItem(RESET_STORAGE_KEY, Date.now().toString());
-                    alert('Password reset link sent to your email!');
-                    startResetCooldown(RESET_COOLDOWN_SECONDS);
-                    document.getElementById('resetEmail').value = '';
-                }
-            } catch (error) {
-                console.error('Password reset error:', error);
-                alert('An unexpected error occurred. Please try again.');
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = 'Send Reset Link';
-            }
-        }
-
-        // Check cooldown on page load
-        checkResetCooldown();
-
-        // Sign Up Functions
-        window.showSignup = function () {
-            document.getElementById('signupModal').style.display = 'flex';
-        }
-
-        window.closeSignup = function () {
-            document.getElementById('signupModal').style.display = 'none';
-        }
-
-        window.handleSignup = async function (e) {
-            e.preventDefault();
-            const email = document.getElementById('signupEmail').value;
-            const password = document.getElementById('signupPassword').value;
-            const confirmPassword = document.getElementById('signupConfirmPassword').value;
-
-            if (password !== confirmPassword) {
-                alert('Passwords do not match!');
-                return;
-            }
-
-            if (password.length < 8) {
-                alert('Password must be at least 8 characters long!');
-                return;
-            }
-
-            const { data, error } = await signUp(email, password);
-
-            if (error) {
-                alert('Error: ' + error.message);
-            } else {
-                alert('Account created successfully! Please check your email to confirm your account.');
-                closeSignup();
-            }
-        }
     </script>
 </body>
 

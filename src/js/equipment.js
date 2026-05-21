@@ -1380,13 +1380,23 @@ const addEquipmentStockForm = document.getElementById('addEquipmentStockForm');
 // ==========================================
 // ADD STOCK MODAL FUNCTIONS
 // ==========================================
+function setSelectStockModalBrowseMode(showBrowse) {
+    const createSection = selectEquipmentModal?.querySelector('.create-new-item-section');
+    const modalSearch = selectEquipmentModal?.querySelector('.modal-search');
+    const display = showBrowse ? '' : 'none';
+    if (createSection) createSection.style.display = display;
+    if (modalSearch) modalSearch.style.display = display;
+}
+
 function openSelectEquipmentModal() {
     selectEquipmentModal.classList.add('show');
     
     // Reset form states
-    document.getElementById('selectEquipmentModal').querySelector('.search-box input').value = '';
+    const searchInput = selectEquipmentModal?.querySelector('.modal-search input');
+    if (searchInput) searchInput.value = '';
     selectedEquipmentDetails.style.display = 'none';
     selectableEquipmentList.style.display = 'block';
+    setSelectStockModalBrowseMode(true);
     
     // Render all equipment for selection
     renderSelectableEquipment(allEquipment);
@@ -1413,6 +1423,7 @@ function closeSelectEquipmentModal() {
     if (addEquipmentStockForm) addEquipmentStockForm.reset();
     selectedEquipmentDetails.style.display = 'none';
     selectableEquipmentList.style.display = 'block';
+    setSelectStockModalBrowseMode(true);
 }
 
 function populateAddStockSupplierDropdown() {
@@ -1489,6 +1500,7 @@ function selectEquipmentForStock(equipment) {
     // Hide list, show details form
     selectableEquipmentList.style.display = 'none';
     selectedEquipmentDetails.style.display = 'block';
+    setSelectStockModalBrowseMode(false);
     
     // Populate details
     selectedEquipmentId.value = equipment.id;
@@ -1520,6 +1532,7 @@ function selectEquipmentForStock(equipment) {
 function cancelEquipmentSelection() {
     selectedEquipmentDetails.style.display = 'none';
     selectableEquipmentList.style.display = 'block';
+    setSelectStockModalBrowseMode(true);
     if (addEquipmentStockForm) addEquipmentStockForm.reset();
 }
 

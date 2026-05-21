@@ -325,13 +325,96 @@
     width: 95%;
 }
 
+/* Add Stock modal — compact layout, no extra vertical gaps */
+.select-stock-modal {
+    padding: var(--space-lg, 1.25rem);
+}
+
+.select-stock-modal .modal-header {
+    margin-bottom: var(--space-sm, 0.75rem);
+    padding-bottom: var(--space-sm, 0.75rem);
+    border-bottom: 1px solid var(--border-color, #e0e0e0);
+}
+
+.select-stock-modal-body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm, 0.75rem);
+}
+
+.select-stock-modal .modal-search {
+    position: relative;
+    width: 100%;
+}
+
+.select-stock-modal .modal-search input {
+    width: 100%;
+    padding: 10px 36px 10px 14px;
+    border: 1.5px solid var(--border-color, #e0e0e0);
+    border-radius: var(--radius-md, 8px);
+    font-size: 14px;
+    font-family: inherit;
+    box-sizing: border-box;
+}
+
+.select-stock-modal .modal-search input:focus {
+    outline: none;
+    border-color: var(--brand-primary, #891623);
+}
+
+.select-stock-modal .modal-search button {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--text-muted, #999);
+    cursor: pointer;
+    padding: 4px 6px;
+}
+
+.select-stock-modal .create-new-item-section {
+    padding: var(--space-sm, 0.75rem) var(--space-md, 1rem);
+    text-align: center;
+    border: 1px solid var(--border-color, #e0e0e0);
+    border-radius: var(--radius-md, 8px);
+    background: var(--bg-app, #f9f9f9);
+}
+
+.select-stock-modal .create-new-item-section p {
+    margin: 0 0 var(--space-xs, 0.5rem) 0;
+    color: var(--text-muted, #666);
+    font-size: 13px;
+}
+
+.select-stock-modal .selected-item-panel {
+    margin-top: 0;
+    padding-top: var(--space-sm, 0.75rem);
+    border-top: 1px solid var(--border-color, #e0e0e0);
+}
+
+.select-stock-modal .selected-item-panel .form-group {
+    margin-bottom: var(--space-sm, 0.75rem);
+}
+
+.select-stock-modal .selected-item-panel .form-group:last-of-type {
+    margin-bottom: 0;
+}
+
 /* Selectable Items List */
 .selectable-items-list {
-    max-height: 400px;
+    max-height: min(320px, 45vh);
+    min-height: 0;
     overflow-y: auto;
     border: 1px solid #e0e0e0;
     border-radius: 8px;
     background: #fafafa;
+}
+
+.select-stock-modal .selectable-items-list {
+    flex: 0 1 auto;
+    margin: 0;
 }
 
 /* Individual Selectable Item */

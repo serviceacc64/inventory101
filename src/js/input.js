@@ -321,6 +321,10 @@ function openSelectItemModal() {
     // Reset selection view
     selectedItemDetails.style.display = 'none';
     selectableItemsList.style.display = 'block';
+    const createSection = selectItemModal.querySelector('.create-new-item-section');
+    const modalSearch = selectItemModal.querySelector('.modal-search');
+    if (createSection) createSection.style.display = '';
+    if (modalSearch) modalSearch.style.display = '';
     if (modalItemSearch) modalItemSearch.value = '';
 }
 
@@ -400,6 +404,10 @@ function selectItem(item) {
     // Hide list, show details
     selectableItemsList.style.display = 'none';
     selectedItemDetails.style.display = 'block';
+    const createSection = selectItemModal.querySelector('.create-new-item-section');
+    const modalSearch = selectItemModal.querySelector('.modal-search');
+    if (createSection) createSection.style.display = 'none';
+    if (modalSearch) modalSearch.style.display = 'none';
 
     // Populate details
     selectedItemId.value = item.id;
@@ -429,6 +437,10 @@ function selectItem(item) {
 function cancelSelection() {
     selectedItemDetails.style.display = 'none';
     selectableItemsList.style.display = 'block';
+    const createSection = selectItemModal.querySelector('.create-new-item-section');
+    const modalSearch = selectItemModal.querySelector('.modal-search');
+    if (createSection) createSection.style.display = '';
+    if (modalSearch) modalSearch.style.display = '';
     if (addQuantity) addQuantity.value = '';
     if (selectedItemId) selectedItemId.value = '';
 }

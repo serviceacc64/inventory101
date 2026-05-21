@@ -280,8 +280,20 @@ a:hover {
 .header-right {
     display: flex;
     align-items: center;
+    justify-content: flex-end;
     gap: var(--space-md);
+    flex-wrap: nowrap;
+    flex: 1;
+    min-width: 0;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--space-sm);
     flex-wrap: wrap;
+    flex-shrink: 0;
 }
 
 /* ==========================================================================
@@ -435,8 +447,10 @@ a:hover {
     position: relative;
     display: flex;
     align-items: center;
+    flex: 0 1 280px;
+    width: 280px;
+    min-width: 200px;
     max-width: 320px;
-    width: 100%;
 }
 
 .search-box input {
@@ -461,6 +475,29 @@ a:hover {
     right: 14px;
     color: var(--text-muted);
     pointer-events: none;
+}
+
+@media (max-width: 900px) {
+    .dashboard-header {
+        align-items: flex-start;
+    }
+
+    .header-right {
+        flex-wrap: wrap;
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .search-box {
+        flex: 1 1 100%;
+        width: 100%;
+        max-width: none;
+    }
+
+    .header-actions {
+        width: 100%;
+        justify-content: flex-start;
+    }
 }
 
 /* ==========================================================================
