@@ -8,12 +8,14 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,300;0,500;0,600;1,100&display=swap" rel="stylesheet">
     <title>Equipment - Inventory System</title>
+    <link rel="stylesheet" href="../css/design-system.css">
     <link rel="stylesheet" href="../css/dashboard.css">
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/animations.css">
     <link rel="stylesheet" href="../css/equipment.css">
     <link rel="icon" href="data:,">
     <script type="module" src="../js/auth.js"></script>
+    <script src="../js/navigation.js" defer></script>
 
     <!-- Supabase Client -->
     <script type="module" src="../js/supabase.js"></script>
@@ -30,52 +32,10 @@
 
     
     <!-- Navigation -->
-    <nav class="navigation" id="navbar">
-        <div class="logo">
-            <img src="../img/logo.png" alt="Logo">
-            <span id="label">RMNHS <br> Supplies Inventory</span>
-        </div>
-        <hr>
-        <div class="options">
-            <ul>
-                <li><a href="../../dashboard.html">
-                    <i class="fa-solid fa-chart-line"></i>
-                    <span>Dashboard</span>
-                </a></li>
-                <li><a href="input.html">
-                    <i class="fa-solid fa-clipboard-list"></i>
-                    <span>Items</span>
-                </a></li>
-                <li><a href="rooms.html">
-                    <i class="fa-solid fa-door-open"></i>
-                    <span>Rooms</span>
-                </a></li>
-                <li><a href="buildings.html">
-                    <i class="fa-solid fa-building"></i>
-                    <span>Buildings</span>
-                </a></li>
-                <li><a href="equipment.html" class="active">
-                    <i class="fa-solid fa-tools"></i>
-                    <span>Equipment</span>
-                </a></li>
-                <li><a href="report.html">
-                    <i class="fa-solid fa-calendar-week"></i>
-                    <span>Reports</span>
-                </a></li>
-                <li><a href="logs.html">
-                    <i class="fa-solid fa-book-open"></i>
-                    <span>Logs</span>
-                </a></li>
-                <li class="logout"><a href="#" data-logout>
-                    <i class="fa-solid fa-sign-out-alt"></i>
-                    <span>Logout</span>
-                </a></li>
-            </ul>
-        </div>
-    </nav>
+    <nav class="navigation" id="navbar"></nav>
 
     <!-- Main Content -->
-    <main class="dashboard">
+    <main class="dashboard main-content">
         <header class="dashboard-header">
             <h1>Equipment Inventory</h1>
 
@@ -150,39 +110,39 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Add New Equipment</h3>
-                <button onclick="closeCreateEquipmentModal()">&times;</button>
+                <button class="modal-close" onclick="closeCreateEquipmentModal()">&times;</button>
             </div>
             
             <form id="createEquipmentForm" onsubmit="handleCreateEquipment(event)">
                 <div class="form-group">
-                    <label for="receiptNumber">P.O. No: (Receipt Number)</label>
-                    <input type="text" id="receiptNumber" placeholder="e.g., REC-001">
+                    <label class="form-label" for="receiptNumber">P.O. No: (Receipt Number)</label>
+                    <input class="form-input" type="text" id="receiptNumber" placeholder="e.g., REC-001">
                 </div>
                 
                 <div class="form-group">
-                    <label for="itemName">Item Name *</label>
-                    <input type="text" id="itemName" placeholder="e.g., Office Chair, Computer Set" required>
+                    <label class="form-label" for="itemName">Item Name *</label>
+                    <input class="form-input" type="text" id="itemName" placeholder="e.g., Office Chair, Computer Set" required>
                 </div>
                 
                 <div class="form-group">
-                    <label for="itemDescription">Item Description/Location</label>
-                    <textarea id="itemDescription" placeholder="e.g., Ergonomic chair / Lab 1" rows="3"></textarea>
+                    <label class="form-label" for="itemDescription">Item Description/Location</label>
+                    <textarea class="form-input" id="itemDescription" placeholder="e.g., Ergonomic chair / Lab 1" rows="3"></textarea>
                 </div>
                 
                 <div class="form-group">
-                    <label for="quantity">Quantity *</label>
-                    <input type="number" id="quantity" min="1" value="1" required>
+                    <label class="form-label" for="quantity">Quantity *</label>
+                    <input class="form-input" type="number" id="quantity" min="1" value="1" required>
                 </div>
                 
                 <div class="form-group">
-                    <label for="unitCost">Unit Cost (₱)</label>
-                    <input type="number" id="unitCost" min="0" step="0.01" placeholder="0.00">
+                    <label class="form-label" for="unitCost">Unit Cost (₱)</label>
+                    <input class="form-input" type="number" id="unitCost" min="0" step="0.01" placeholder="0.00">
                 </div>
                 
                 <div class="form-group">
-                    <label for="supplier">Supplier</label>
+                    <label class="form-label" for="supplier">Supplier</label>
                     <div class="supplier-dropdown-container">
-                        <select id="supplier" class="supplier-select">
+                        <select id="supplier" class="form-input supplier-select">
                             <option value="">Select a supplier</option>
                         </select>
                         <button type="button" class="btn btn-secondary btn-small" onclick="openAddSupplierModal()">
@@ -196,22 +156,22 @@
 
                 
                 <div class="form-group">
-                    <label for="accountable">Accountable</label>
-                    <input type="text" id="accountable" placeholder="Person responsible for the equipment">
+                    <label class="form-label" for="accountable">Accountable</label>
+                    <input class="form-input" type="text" id="accountable" placeholder="Person responsible for the equipment">
                 </div>
                 
                 <div class="form-group">
-                    <label for="receivedBy">Received By</label>
-                    <input type="text" id="receivedBy" placeholder="Person who received the equipment">
+                    <label class="form-label" for="receivedBy">Received By</label>
+                    <input class="form-input" type="text" id="receivedBy" placeholder="Person who received the equipment">
                 </div>
                 
                 <div class="form-group">
-                    <label for="dateDelivered">Date Delivered</label>
-                    <input type="date" id="dateDelivered">
+                    <label class="form-label" for="dateDelivered">Date Delivered</label>
+                    <input class="form-input" type="date" id="dateDelivered">
                 </div>
                 <div class="form-group">
-                    <label for="isConsumable">Is Consumable?</label>
-                    <select id="isConsumable">
+                    <label class="form-label" for="isConsumable">Is Consumable?</label>
+                    <select class="form-input" id="isConsumable">
                         <option value="false">No</option>
                         <option value="true">Yes</option>
                     </select>
@@ -232,46 +192,46 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Edit Equipment</h3>
-                <button onclick="closeEditEquipmentModal()">&times;</button>
+                <button class="modal-close" onclick="closeEditEquipmentModal()">&times;</button>
             </div>
             
             <form id="editEquipmentForm" onsubmit="handleEditEquipment(event)">
                 <input type="hidden" id="editEquipmentId">
                 
                 <div class="form-group">
-                    <label for="editReceiptNumber">P.O. No: (Receipt Number)</label>
-                    <input type="text" id="editReceiptNumber" placeholder="e.g., REC-001">
+                    <label class="form-label" for="editReceiptNumber">P.O. No: (Receipt Number)</label>
+                    <input class="form-input" type="text" id="editReceiptNumber" placeholder="e.g., REC-001">
                 </div>
                 
                 <div class="form-group">
-                    <label for="editItemName">Item Name *</label>
-                    <input type="text" id="editItemName" required>
+                    <label class="form-label" for="editItemName">Item Name *</label>
+                    <input class="form-input" type="text" id="editItemName" required>
                 </div>
                 
                 <div class="form-group">
-                    <label for="editItemDescription">Item Description/Location</label>
-                    <textarea id="editItemDescription" rows="3"></textarea>
+                    <label class="form-label" for="editItemDescription">Item Description/Location</label>
+                    <textarea class="form-input" id="editItemDescription" rows="3"></textarea>
                 </div>
                 
                 <div class="form-group">
-                    <label for="editQuantity">Quantity *</label>
-                    <input type="number" id="editQuantity" min="1" required>
+                    <label class="form-label" for="editQuantity">Quantity *</label>
+                    <input class="form-input" type="number" id="editQuantity" min="1" required>
                 </div>
                 
                 <div class="form-group">
-                    <label for="editUnitCost">Unit Cost (₱)</label>
-                    <input type="number" id="editUnitCost" min="0" step="0.01">
+                    <label class="form-label" for="editUnitCost">Unit Cost (₱)</label>
+                    <input class="form-input" type="number" id="editUnitCost" min="0" step="0.01">
                 </div>
                 
                 <div class="form-group">
-                    <label>Amount</label>
-                    <div id="editAmountDisplay" style="font-size: 18px; font-weight: 600; color: var(--equipment-hover);">₱0.00</div>
+                    <label class="form-label">Amount</label>
+                    <div id="editAmountDisplay" style="font-size: 18px; font-weight: 600; color: var(--primary);">₱0.00</div>
                 </div>
                 
                 <div class="form-group">
-                    <label for="editSupplier">Supplier</label>
+                    <label class="form-label" for="editSupplier">Supplier</label>
                     <div class="supplier-dropdown-container">
-                        <select id="editSupplier" class="supplier-select">
+                        <select id="editSupplier" class="form-input supplier-select">
                             <option value="">Select a supplier</option>
                         </select>
                         <button type="button" class="btn btn-secondary btn-small" onclick="openAddSupplierModal()">
@@ -285,23 +245,23 @@
 
                 
                 <div class="form-group">
-                    <label for="editAccountable">Accountable</label>
-                    <input type="text" id="editAccountable" placeholder="Person responsible for the equipment">
+                    <label class="form-label" for="editAccountable">Accountable</label>
+                    <input class="form-input" type="text" id="editAccountable" placeholder="Person responsible for the equipment">
                 </div>
                 
                 <div class="form-group">
-                    <label for="editReceivedBy">Received By</label>
-                    <input type="text" id="editReceivedBy" placeholder="Person who received the equipment">
+                    <label class="form-label" for="editReceivedBy">Received By</label>
+                    <input class="form-input" type="text" id="editReceivedBy" placeholder="Person who received the equipment">
                 </div>
                 
                 <div class="form-group">
-                    <label for="editDateDelivered">Date Delivered</label>
-                    <input type="date" id="editDateDelivered">
+                    <label class="form-label" for="editDateDelivered">Date Delivered</label>
+                    <input class="form-input" type="date" id="editDateDelivered">
                 </div>
                 
                 <div class="form-group">
-                    <label for="editIsConsumable">Is Consumable?</label>
-                    <select id="editIsConsumable">
+                    <label class="form-label" for="editIsConsumable">Is Consumable?</label>
+                    <select class="form-input" id="editIsConsumable">
                         <option value="false">No</option>
                         <option value="true">Yes</option>
                     </select>
@@ -322,18 +282,18 @@
         <div class="modal-content modal-small">
             <div class="modal-header">
                 <h3>Add New Supplier</h3>
-                <button onclick="closeAddSupplierModal()">&times;</button>
+                <button class="modal-close" onclick="closeAddSupplierModal()">&times;</button>
             </div>
             
             <form id="addSupplierForm" onsubmit="handleCreateSupplier(event)">
                 <div class="form-group">
-                    <label for="supplierName">Supplier Name *</label>
-                    <input type="text" id="supplierName" placeholder="e.g., ABC Corporation" required>
+                    <label class="form-label" for="supplierName">Supplier Name *</label>
+                    <input class="form-input" type="text" id="supplierName" placeholder="e.g., ABC Corporation" required>
                 </div>
                 
                 <div class="form-group">
-                    <label for="supplierContact">Contact Info</label>
-                    <textarea id="supplierContact" placeholder="e.g., Phone, Email, Address" rows="2"></textarea>
+                    <label class="form-label" for="supplierContact">Contact Info</label>
+                    <textarea class="form-input" id="supplierContact" placeholder="e.g., Phone, Email, Address" rows="2"></textarea>
                 </div>
                 
                 <div class="modal-footer">
@@ -351,7 +311,7 @@
         <div class="modal-content modal-small">
             <div class="modal-header">
                 <h3>Manage Suppliers</h3>
-                <button onclick="closeManageSuppliersModal()">&times;</button>
+                <button class="modal-close" onclick="closeManageSuppliersModal()">&times;</button>
             </div>
             
             <div class="modal-body">
@@ -371,12 +331,12 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Equipment Details</h3>
-                <button onclick="window.closeViewEquipmentModal()">&times;</button>
+                <button class="modal-close" onclick="window.closeViewEquipmentModal()">&times;</button>
             </div>
 
             <div class="view-item-grid">
                 <div class="view-item-icon">
-                    <div class="stat-icon" style="width:70px; height:70px; border-radius:12px; background: rgba(85,0,0,0.06); color: var(--background2); display:flex; align-items:center; justify-content:center; font-size:28px;">
+                    <div class="stat-icon" style="width:70px; height:70px; border-radius:var(--radius-md); background: color-mix(in srgb, var(--primary) 8%, transparent); color: var(--primary); display:flex; align-items:center; justify-content:center; font-size:28px;">
                         <i class="fa-solid fa-tools"></i>
                     </div>
                 </div>
@@ -410,25 +370,25 @@
         <div class="modal-content modal-large">
             <div class="modal-header">
                 <h3>Get Equipment from Inventory</h3>
-                <button onclick="closeGetEquipmentModal()">&times;</button>
+                <button class="modal-close" onclick="closeGetEquipmentModal()">&times;</button>
             </div>
             
             <!-- Step 1: Requester Info Section (Shows first) -->
-            <div id="equipmentRequesterInfoSection" style="padding: 20px 0;">
-                <div style="text-align: center; margin-bottom: 20px;">
-                    <div style="display: inline-block; background: var(--primary-color); color: white; width: 40px; height: 40px; border-radius: 50%; line-height: 40px; font-weight: bold;">1</div>
-                    <span style="margin-left: 10px; font-weight: 500;">Requester Information</span>
+            <div id="equipmentRequesterInfoSection" style="padding: var(--space-md) 0;">
+                <div style="text-align: center; margin-bottom: var(--space-md);">
+                    <div style="display: inline-block; background: var(--primary); color: white; width: 40px; height: 40px; border-radius: 50%; line-height: 40px; font-weight: bold;">1</div>
+                    <span style="margin-left: var(--space-sm); font-weight: 500;">Requester Information</span>
                 </div>
                 
                 <form id="equipmentRequesterInfoForm" onsubmit="proceedToEquipmentSelection(event)">
                     <div class="form-group">
-                        <label for="equipmentRequesterName">Who Gets It *</label>
-                        <input type="text" id="equipmentRequesterName" required placeholder="Enter person's name">
+                        <label class="form-label" for="equipmentRequesterName">Who Gets It *</label>
+                        <input class="form-input" type="text" id="equipmentRequesterName" required placeholder="Enter person's name">
                     </div>
                     
                     <div class="form-group">
-                        <label for="equipmentRequesterTimestamp">Timestamp *</label>
-                        <input type="datetime-local" id="equipmentRequesterTimestamp" required>
+                        <label class="form-label" for="equipmentRequesterTimestamp">Timestamp *</label>
+                        <input class="form-input" type="datetime-local" id="equipmentRequesterTimestamp" required>
                     </div>
                     
                     <div class="form-actions">
@@ -454,7 +414,7 @@
             </div>
             
             <!-- Selected Equipment Details (hidden initially) -->
-            <div id="getEquipmentDetails" style="display: none; margin-top: 20px; padding-top: 20px; border-top: 2px solid #eee;">
+            <div id="getEquipmentDetails" style="display: none; margin-top: var(--space-md); padding-top: var(--space-md); border-top: 2px solid var(--border-color);">
                 <div class="selected-item-info">
                     <h4 id="getEquipmentSelectedName">Equipment Name</h4>
                     <p id="getEquipmentSelectedStock">Available Qty: 0</p>
@@ -464,8 +424,8 @@
                     <input type="hidden" id="getEquipmentSelectedId">
                     
                     <div class="form-group">
-                        <label for="getEquipmentQuantity">Quantity to Get *</label>
-                        <input type="number" id="getEquipmentQuantity" required min="1" placeholder="Enter quantity">
+                        <label class="form-label" for="getEquipmentQuantity">Quantity to Get *</label>
+                        <input class="form-input" type="number" id="getEquipmentQuantity" required min="1" placeholder="Enter quantity">
                     </div>
                     
                     <div class="form-actions">
@@ -478,37 +438,37 @@
             </div>
 
             <!-- Confirmation Section (Step 4 - Shows after review - with cart support) -->
-            <div id="equipmentConfirmationSection" style="display: none; margin-top: 20px; padding-top: 20px; border-top: 2px solid #eee;">
-                <div style="text-align: center; margin-bottom: 20px;">
-                    <div style="display: inline-block; background: var(--primary-color); color: white; width: 40px; height: 40px; border-radius: 50%; line-height: 40px; font-weight: bold;">✓</div>
-                    <span style="margin-left: 10px; font-weight: 500;">Confirm Request</span>
+            <div id="equipmentConfirmationSection" style="display: none; margin-top: var(--space-md); padding-top: var(--space-md); border-top: 2px solid var(--border-color);">
+                <div style="text-align: center; margin-bottom: var(--space-md);">
+                    <div style="display: inline-block; background: var(--primary); color: white; width: 40px; height: 40px; border-radius: 50%; line-height: 40px; font-weight: bold;">✓</div>
+                    <span style="margin-left: var(--space-sm); font-weight: 500;">Confirm Request</span>
                 </div>
                 
                 <!-- Requester Info Summary -->
-                <div style="background: #f9f9f9; border-radius: 8px; padding: 15px; margin-bottom: 15px;">
+                <div class="card" style="margin-bottom: var(--space-md);">
                     <table style="width: 100%; border-collapse: collapse;">
                         <tr>
-                            <td style="padding: 8px 0; color: #666; font-weight: 500; width: 40%;">Who Gets It:</td>
-                            <td style="padding: 8px 0; font-weight: 500;" id="confirmEquipmentPerson">-</td>
+                            <td style="padding: var(--space-xs) 0; color: var(--text-muted); font-weight: 500; width: 40%;">Who Gets It:</td>
+                            <td style="padding: var(--space-xs) 0; font-weight: 500;" id="confirmEquipmentPerson">-</td>
                         </tr>
                         <tr>
-                            <td style="padding: 8px 0; color: #666; font-weight: 500;">Timestamp:</td>
-                            <td style="padding: 8px 0;" id="confirmEquipmentTimestamp">-</td>
+                            <td style="padding: var(--space-xs) 0; color: var(--text-muted); font-weight: 500;">Timestamp:</td>
+                            <td style="padding: var(--space-xs) 0;" id="confirmEquipmentTimestamp">-</td>
                         </tr>
                     </table>
                 </div>
                 
                 <!-- Cart Equipment Table -->
-                <div style="margin-bottom: 15px;">
-                    <h4 style="margin-bottom: 10px; color: #333;">Equipment to Distribute</h4>
-                    <div style="max-height: 200px; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 8px;">
+                <div style="margin-bottom: var(--space-md);">
+                    <h4 style="margin-bottom: var(--space-sm); color: var(--text-primary);">Equipment to Distribute</h4>
+                    <div style="max-height: 200px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: var(--radius-md);">
                         <table id="cartEquipmentTable" style="width: 100%; border-collapse: collapse; font-size: 14px;">
-                            <thead style="background: #f5f5f5; position: sticky; top: 0;">
+                            <thead style="background: var(--bg-surface); position: sticky; top: 0;">
                                 <tr>
-                                    <th style="padding: 10px; text-align: left; border-bottom: 1px solid #e0e0e0;">Equipment</th>
-                                    <th style="padding: 10px; text-align: left; border-bottom: 1px solid #e0e0e0;">Category</th>
-                                    <th style="padding: 10px; text-align: center; border-bottom: 1px solid #e0e0e0;">Qty</th>
-                                    <th style="padding: 10px; text-align: center; border-bottom: 1px solid #e0e0e0;">Action</th>
+                                    <th style="padding: var(--space-sm); text-align: left; border-bottom: 1px solid var(--border-color);">Equipment</th>
+                                    <th style="padding: var(--space-sm); text-align: left; border-bottom: 1px solid var(--border-color);">Category</th>
+                                    <th style="padding: var(--space-sm); text-align: center; border-bottom: 1px solid var(--border-color);">Qty</th>
+                                    <th style="padding: var(--space-sm); text-align: center; border-bottom: 1px solid var(--border-color);">Action</th>
                                 </tr>
                             </thead>
                             <tbody id="cartEquipmentBody">
@@ -537,7 +497,7 @@
         <div class="modal-content modal-large">
             <div class="modal-header">
                 <h3>Add Stock to Equipment</h3>
-                <button onclick="closeSelectEquipmentModal()">&times;</button>
+                <button class="modal-close" onclick="closeSelectEquipmentModal()">&times;</button>
             </div>
             
             <!-- Search Box -->
@@ -549,8 +509,8 @@
             </div>
             
             <!-- Create New Equipment Button -->
-            <div class="create-new-item-section" style="padding: 15px; text-align: center; border-bottom: 1px solid #e0e0e0; background: #f9f9f9;">
-                <p style="margin: 0 0 10px 0; color: #666; font-size: 14px;">Can't find the equipment you're looking for?</p>
+            <div class="create-new-item-section" style="padding: var(--space-md); text-align: center; border-bottom: 1px solid var(--border-color); background: var(--bg-surface);">
+                <p style="margin: 0 0 var(--space-sm) 0; color: var(--text-muted); font-size: 14px;">Can't find the equipment you're looking for?</p>
                 <button type="button" class="btn btn-secondary" onclick="openCreateEquipmentFromStockModal()">
                     <i class="fa-solid fa-plus"></i> Create New Equipment
                 </button>
@@ -563,7 +523,7 @@
 
             
             <!-- Selected Equipment Details (hidden initially) -->
-            <div id="selectedEquipmentDetails" style="display: none; margin-top: 20px; padding-top: 20px; border-top: 2px solid #eee;">
+            <div id="selectedEquipmentDetails" style="display: none; margin-top: var(--space-md); padding-top: var(--space-md); border-top: 2px solid var(--border-color);">
                 <div class="selected-item-info">
                     <h4 id="selectedEquipmentName">Equipment Name</h4>
                     <p id="selectedEquipmentCurrentStock">Current Stock: 0</p>
@@ -573,26 +533,26 @@
                     <input type="hidden" id="selectedEquipmentId">
 
                     <div class="form-group">
-                        <label for="addEquipmentDate">Date *</label>
-                        <input type="date" id="addEquipmentDate" required>
+                        <label class="form-label" for="addEquipmentDate">Date *</label>
+                        <input class="form-input" type="date" id="addEquipmentDate" required>
                     </div>
 
                     <div class="form-group">
-                        <label for="addEquipmentPO">P.O. Number</label>
-                        <input type="text" id="addEquipmentPO" placeholder="e.g., PO-2024-001">
+                        <label class="form-label" for="addEquipmentPO">P.O. Number</label>
+                        <input class="form-input" type="text" id="addEquipmentPO" placeholder="e.g., PO-2024-001">
                     </div>
 
                     <div class="form-group">
-                        <label for="addEquipmentSupplier">Supplier</label>
-                        <select id="addEquipmentSupplier">
+                        <label class="form-label" for="addEquipmentSupplier">Supplier</label>
+                        <select class="form-input" id="addEquipmentSupplier">
                             <option value="">Select Supplier (Optional)</option>
                         </select>
-                        <small style="color: #666; font-size: 11px; cursor: pointer; color: #007bff;" onclick="openAddSupplierModal()">+ Add New Supplier</small>
+                        <small style="color: var(--primary); font-size: 11px; cursor: pointer;" onclick="openAddSupplierModal()">+ Add New Supplier</small>
                     </div>
 
                     <div class="form-group">
-                        <label for="addEquipmentQuantity">Quantity to Add *</label>
-                        <input type="number" id="addEquipmentQuantity" required min="1" placeholder="Enter quantity to add">
+                        <label class="form-label" for="addEquipmentQuantity">Quantity to Add *</label>
+                        <input class="form-input" type="number" id="addEquipmentQuantity" required min="1" placeholder="Enter quantity to add">
                     </div>
 
                     <div class="form-actions">

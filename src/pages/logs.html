@@ -8,11 +8,13 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,300;0,500;0,600;1,100&display=swap" rel="stylesheet">
     <title>Activity Logs - Inventory System</title>
+    <link rel="stylesheet" href="../css/design-system.css">
     <link rel="stylesheet" href="../css/dashboard.css">
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/animations.css">
     <link rel="icon" href="data:,">
     <script type="module" src="../js/auth.js"></script>
+    <script src="../js/navigation.js" defer></script>
 </head>
 <body>
     <script>
@@ -23,52 +25,10 @@
     </script>
     
     <!-- Navigation -->
-    <nav class="navigation" id="navbar">
-        <div class="logo">
-            <img src="../img/logo.png" alt="Logo">
-            <span id="label">RMNHS <br> Supplies Inventory</span>
-        </div>
-        <hr>
-        <div class="options">
-            <ul>
-                <li><a href="../../dashboard.html">
-                    <i class="fa-solid fa-chart-line"></i>
-                    <span>Dashboard</span>
-                </a></li>
-                <li><a href="input.html">
-                    <i class="fa-solid fa-clipboard-list"></i>
-                    <span>Items</span>
-                </a></li>
-                <li><a href="rooms.html">
-                    <i class="fa-solid fa-door-open"></i>
-                    <span>Rooms</span>
-                </a></li>
-                <li><a href="buildings.html">
-                    <i class="fa-solid fa-building"></i>
-                    <span>Buildings</span>
-                </a></li>
-                <li><a href="equipment.html">
-                    <i class="fa-solid fa-tools"></i>
-                    <span>Equipment</span>
-                </a></li>
-                <li><a href="report.html">
-                    <i class="fa-solid fa-calendar-week"></i>
-                    <span>Reports</span>
-                </a></li>
-                <li><a href="logs.html" class="active">
-                    <i class="fa-solid fa-book-open"></i>
-                    <span>Logs</span>
-                </a></li>
-                <li class="logout"><a href="#" data-logout>
-                    <i class="fa-solid fa-sign-out-alt"></i>
-                    <span>Logout</span>
-                </a></li>
-            </ul>
-        </div>
-    </nav>
+    <nav class="navigation" id="navbar"></nav>
 
     <!-- Main Content -->
-    <main class="dashboard">
+    <main class="dashboard main-content">
         <header class="dashboard-header">
             <h1>Activity Logs</h1>
             <div class="header-right">
@@ -121,18 +81,18 @@
         <div id="clearAllModal" class="modal" style="display: none;">
             <div class="modal-content" style="max-width: 400px;">
                 <div class="modal-header">
-                    <h3><i class="fa-solid fa-exclamation-triangle" style="color: #f44336;"></i> Clear All Logs</h3>
-                    <button type="button" class="close-btn" onclick="closeClearAllModal()">&times;</button>
+                    <h3><i class="fa-solid fa-exclamation-triangle" style="color: var(--danger);"></i> Clear All Logs</h3>
+                    <button type="button" class="modal-close" onclick="closeClearAllModal()">&times;</button>
                 </div>
                 <div class="modal-body">
                     <p>Are you sure you want to delete <strong>all</strong> activity logs?</p>
-                    <p style="color: #f44336; font-size: 14px; margin-top: 10px;">
+                    <p style="color: var(--danger); font-size: 14px; margin-top: var(--space-sm);">
                         <i class="fa-solid fa-exclamation-circle"></i> This action cannot be undone!
                     </p>
                 </div>
-                <div class="modal-footer" style="display: flex; gap: 10px; justify-content: flex-end;">
+                <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" onclick="closeClearAllModal()">Cancel</button>
-                    <button type="button" class="btn btn-danger" onclick="confirmClearAllLogs()" style="background-color: #f44336; color: white;">
+                    <button type="button" class="btn btn-danger" onclick="confirmClearAllLogs()">
                         <i class="fa-solid fa-trash"></i> Yes, Clear All
                     </button>
                 </div>

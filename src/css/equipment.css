@@ -1,12 +1,12 @@
 /* Equipment Inventory Styles - Unified with System Design */
 
 :root {
-    --textcolor: #fff;
-    --textcolor2: #000;
-    --background: #dfd9d9;
-    --background2: #550000;
-    --hover: #891623;
-    --border: #29060A;
+    --textcolor: var(--text-white);
+    --textcolor2: var(--text-main);
+    --background: var(--bg-surface);
+    --background2: var(--brand-primary);
+    --hover: var(--brand-primary-hover);
+    --border: var(--border-color);
 }
 
 /* ============================================
@@ -204,9 +204,9 @@
     gap: 20px;
     margin-top: 30px;
     padding: 20px;
-    background-color: #dfd9d9;
-    border-radius: 10px;
-    border: 1px solid rgba(85, 0, 0, 0.1);
+    background-color: var(--background);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
 }
 
 .pagination-btn {

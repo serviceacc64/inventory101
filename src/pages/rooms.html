@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,300;0,500;0,600;1,100&display=swap" rel="stylesheet">
     <title>Rooms - Inventory System</title>
+    <link rel="stylesheet" href="../css/design-system.css">
     <link rel="stylesheet" href="../css/dashboard.css">
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/animations.css">
@@ -16,6 +17,7 @@
     <!-- SheetJS for Excel Export -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script type="module" src="../js/auth.js"></script>
+    <script src="../js/navigation.js" defer></script>
     <!-- Supabase Client -->
     <script type="module" src="../js/supabase.js"></script>
 
@@ -29,52 +31,10 @@
     </script>
     
     <!-- Navigation -->
-    <nav class="navigation" id="navbar">
-        <div class="logo">
-            <img src="../img/logo.png" alt="Logo">
-            <span id="label">RMNHS <br> Supplies Inventory</span>
-        </div>
-        <hr>
-        <div class="options">
-            <ul>
-                <li><a href="../../dashboard.html">
-                    <i class="fa-solid fa-chart-line"></i>
-                    <span>Dashboard</span>
-                </a></li>
-                <li><a href="input.html">
-                    <i class="fa-solid fa-clipboard-list"></i>
-                    <span>Items</span>
-                </a></li>
-                <li><a href="rooms.html" class="active">
-                    <i class="fa-solid fa-door-open"></i>
-                    <span>Rooms</span>
-                </a></li>
-                <li><a href="buildings.html">
-                    <i class="fa-solid fa-building"></i>
-                    <span>Buildings</span>
-                </a></li>
-                <li><a href="equipment.html">
-                    <i class="fa-solid fa-tools"></i>
-                    <span>Equipment</span>
-                </a></li>
-                <li><a href="report.html">
-                    <i class="fa-solid fa-calendar-week"></i>
-                    <span>Reports</span>
-                </a></li>
-                <li><a href="logs.html">
-                    <i class="fa-solid fa-book-open"></i>
-                    <span>Logs</span>
-                </a></li>
-                <li class="logout"><a href="#" data-logout>
-                    <i class="fa-solid fa-sign-out-alt"></i>
-                    <span>Logout</span>
-                </a></li>
-            </ul>
-        </div>
-    </nav>
+    <nav class="navigation" id="navbar"></nav>
 
     <!-- Main Content -->
-    <main class="dashboard">
+    <main class="dashboard main-content">
         <header class="dashboard-header">
             <h1>Room Inventory</h1>
 
@@ -149,28 +109,28 @@
         <div class="modal-content modal-medium">
             <div class="modal-header">
                 <h3>Create New Room</h3>
-                <button onclick="window.closeCreateRoomModal()">&times;</button>
+                <button class="modal-close" onclick="window.closeCreateRoomModal()">&times;</button>
             </div>
             
             <form id="createRoomForm" onsubmit="window.handleCreateRoom(event)">
                 <div class="form-group">
-                    <label for="roomName">Room Name *</label>
-                    <input type="text" id="roomName" placeholder="e.g., Grade 1 Classroom, Lobby" required>
+                    <label class="form-label" for="roomName">Room Name *</label>
+                    <input class="form-input" type="text" id="roomName" placeholder="e.g., Grade 1 Classroom, Lobby" required>
                 </div>
 
                 <div class="form-group">
-                    <label for="roomDescription">Room Address (Optional)</label>
-                    <textarea id="roomDescription" placeholder="e.g., Building A, 2nd Floor, Room 201" rows="2"></textarea>
+                    <label class="form-label" for="roomDescription">Room Address (Optional)</label>
+                    <textarea class="form-input" id="roomDescription" placeholder="e.g., Building A, 2nd Floor, Room 201" rows="2"></textarea>
                 </div>
 
                 <div class="form-group">
-                    <label for="roomAccountable">Accountable (Optional)</label>
-                    <input type="text" id="roomAccountable" placeholder="e.g., Mr. John Smith">
+                    <label class="form-label" for="roomAccountable">Accountable (Optional)</label>
+                    <input class="form-input" type="text" id="roomAccountable" placeholder="e.g., Mr. John Smith">
                 </div>
 
                 <div class="form-group">
-                    <label for="roomAdviser">Room Adviser (Optional)</label>
-                    <input type="text" id="roomAdviser" placeholder="e.g., Mrs. Jane Doe">
+                    <label class="form-label" for="roomAdviser">Room Adviser (Optional)</label>
+                    <input class="form-input" type="text" id="roomAdviser" placeholder="e.g., Mrs. Jane Doe">
                 </div>
 
                 <div class="modal-footer">
@@ -188,30 +148,30 @@
         <div class="modal-content modal-large">
             <div class="modal-header">
                 <h3 id="roomItemsTitle">Room Items</h3>
-                <button onclick="window.closeRoomItemsModal()">&times;</button>
+                <button class="modal-close" onclick="window.closeRoomItemsModal()">&times;</button>
             </div>
             
             <div class="modal-body">
                 <!-- Add Custom Item Section -->
                 <div style="margin-bottom: 20px;">
-                    <button type="button" id="showCustomItemBtn" onclick="window.showCustomItemForm()" class="btn btn-primary" style="width: 100%; background: #550000; color: white; border: none; padding: 12px;">
+                    <button type="button" id="showCustomItemBtn" onclick="window.showCustomItemForm()" class="btn btn-primary" style="width: 100%;">
                         <i class="fa-solid fa-plus"></i> Create Custom Item
                     </button>
                     
-                    <form id="addCustomItemForm" class="add-item-section" style="padding: 12px; background: #fff0f0; border-radius: 8px; border-left: 4px solid #f32121; display: none; margin-top: 10px; max-height: 70vh; overflow-y: auto;" onsubmit="window.handleAddCustomItemToRoom(event); return false;">
+                    <form id="addCustomItemForm" class="add-item-section" style="padding: var(--space-md); background: var(--color-danger-light); border-radius: var(--radius-md); border-left: 4px solid var(--color-danger); display: none; margin-top: 10px; max-height: 70vh; overflow-y: auto;" onsubmit="window.handleAddCustomItemToRoom(event); return false;">
                         <!-- Row 1: Item Name, Qty, Units -->
                         <div style="display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 8px;">
                             <div class="form-group" style="flex: 1; margin: 0; min-width: 150px;">
-                                <label for="customItemName" style="font-size: 12px;">Item Name *</label>
-                                <input type="text" id="customItemName" placeholder="e.g., Whiteboard" maxlength="100" required style="padding: 8px 10px; font-size: 13px;">
+                                <label class="form-label" for="customItemName" style="font-size: 12px;">Item Name *</label>
+                                <input class="form-input" type="text" id="customItemName" placeholder="e.g., Whiteboard" maxlength="100" required style="padding: 8px 10px; font-size: 13px;">
                             </div>
                             <div class="form-group" style="flex: 0 0 70px; margin: 0;">
-                                <label for="customItemQuantity" style="font-size: 12px;">Qty *</label>
-                                <input type="number" id="customItemQuantity" min="1" value="1" required style="padding: 8px 10px; font-size: 13px;">
+                                <label class="form-label" for="customItemQuantity" style="font-size: 12px;">Qty *</label>
+                                <input class="form-input" type="number" id="customItemQuantity" min="1" value="1" required style="padding: 8px 10px; font-size: 13px;">
                             </div>
                             <div class="form-group" style="flex: 0 0 90px; margin: 0;">
-                                <label for="customItemUnits" style="font-size: 12px;">Units</label>
-                                <select id="customItemUnits" style="width: 100%; padding: 8px 10px; border: 1px solid rgba(85, 0, 0, 0.2); border-radius: 8px; font-size: 13px; background-color: white;">
+                                <label class="form-label" for="customItemUnits" style="font-size: 12px;">Units</label>
+                                <select class="form-input" id="customItemUnits" style="width: 100%; padding: 8px 10px; font-size: 13px; background-color: white;">
                                     <option value="pcs">pcs</option>
                                     <option value="boxes">boxes</option>
                                     <option value="sets">sets</option>
@@ -227,12 +187,12 @@
                         <!-- Row 2: Unit Value, Condition -->
                         <div style="display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 8px;">
                             <div class="form-group" style="flex: 0 0 100px; margin: 0;">
-                                <label for="customItemUnitValue" style="font-size: 12px;">Unit Value</label>
-                                <input type="number" id="customItemUnitValue" min="0" step="0.01" placeholder="0.00" style="width: 100%; padding: 8px 10px; border: 1px solid rgba(85, 0, 0, 0.2); border-radius: 8px; font-size: 13px;">
+                                <label class="form-label" for="customItemUnitValue" style="font-size: 12px;">Unit Value</label>
+                                <input class="form-input" type="number" id="customItemUnitValue" min="0" step="0.01" placeholder="0.00" style="width: 100%; padding: 8px 10px; font-size: 13px;">
                             </div>
                             <div class="form-group" style="flex: 0 0 110px; margin: 0;">
-                                <label for="customItemCondition" style="font-size: 12px;">Condition</label>
-                                <select id="customItemCondition" style="width: 100%; padding: 8px 10px; border: 1px solid rgba(85, 0, 0, 0.2); border-radius: 8px; font-size: 13px; background-color: white;">
+                                <label class="form-label" for="customItemCondition" style="font-size: 12px;">Condition</label>
+                                <select class="form-input" id="customItemCondition" style="width: 100%; padding: 8px 10px; font-size: 13px; background-color: white;">
                                     <option value="New">New</option>
                                     <option value="Good" selected>Good</option>
                                     <option value="Fair">Fair</option>
@@ -245,16 +205,16 @@
                         <!-- Row 3: Description -->
                         <div style="margin-bottom: 8px;">
                             <div class="form-group" style="margin: 0;">
-                                <label for="customItemDescription" style="font-size: 12px;">Description (Optional)</label>
-                                <input type="text" id="customItemDescription" placeholder="e.g., 42-inch smart TV" maxlength="255" style="padding: 8px 10px; font-size: 13px;">
+                                <label class="form-label" for="customItemDescription" style="font-size: 12px;">Description (Optional)</label>
+                                <input class="form-input" type="text" id="customItemDescription" placeholder="e.g., 42-inch smart TV" maxlength="255" style="padding: 8px 10px; font-size: 13px;">
                             </div>
                         </div>
                         
                         <!-- Row 4: Remarks -->
                         <div style="margin-bottom: 10px;">
                             <div class="form-group" style="margin: 0;">
-                                <label for="customItemRemarks" style="font-size: 12px;">Remarks / Issued By (Optional)</label>
-                                <input type="text" id="customItemRemarks" placeholder="e.g., Issued by Mr. Smith" maxlength="255" style="padding: 8px 10px; font-size: 13px;">
+                                <label class="form-label" for="customItemRemarks" style="font-size: 12px;">Remarks / Issued By (Optional)</label>
+                                <input class="form-input" type="text" id="customItemRemarks" placeholder="e.g., Issued by Mr. Smith" maxlength="255" style="padding: 8px 10px; font-size: 13px;">
                             </div>
                         </div>
                         
@@ -298,30 +258,30 @@
         <div class="modal-content modal-medium">
             <div class="modal-header">
                 <h3>Edit Room</h3>
-                <button onclick="window.closeEditRoomModal()">&times;</button>
+                <button class="modal-close" onclick="window.closeEditRoomModal()">&times;</button>
             </div>
             
             <form id="editRoomForm" onsubmit="window.handleEditRoom(event)">
                 <input type="hidden" id="editRoomId">
                 
                 <div class="form-group">
-                    <label for="editRoomName">Room Name *</label>
-                    <input type="text" id="editRoomName" required>
+                    <label class="form-label" for="editRoomName">Room Name *</label>
+                    <input class="form-input" type="text" id="editRoomName" required>
                 </div>
-
+ 
                 <div class="form-group">
-                    <label for="editRoomDescription">Room Address (Optional)</label>
-                    <textarea id="editRoomDescription" placeholder="e.g., Building A, 2nd Floor, Room 201" rows="2"></textarea>
+                    <label class="form-label" for="editRoomDescription">Room Address (Optional)</label>
+                    <textarea class="form-input" id="editRoomDescription" placeholder="e.g., Building A, 2nd Floor, Room 201" rows="2"></textarea>
                 </div>
-
+ 
                 <div class="form-group">
-                    <label for="editRoomAccountable">Accountable (Optional)</label>
-                    <input type="text" id="editRoomAccountable" placeholder="e.g., Mr. John Smith">
+                    <label class="form-label" for="editRoomAccountable">Accountable (Optional)</label>
+                    <input class="form-input" type="text" id="editRoomAccountable" placeholder="e.g., Mr. John Smith">
                 </div>
-
+ 
                 <div class="form-group">
-                    <label for="editRoomAdviser">Room Adviser (Optional)</label>
-                    <input type="text" id="editRoomAdviser" placeholder="e.g., Mrs. Jane Doe">
+                    <label class="form-label" for="editRoomAdviser">Room Adviser (Optional)</label>
+                    <input class="form-input" type="text" id="editRoomAdviser" placeholder="e.g., Mrs. Jane Doe">
                 </div>
 
                 <div class="modal-footer">
@@ -342,25 +302,25 @@
         <div class="modal-content modal-medium">
             <div class="modal-header">
                 <h3>Edit Room Item</h3>
-                <button onclick="window.closeEditRoomItemModal()">&times;</button>
+                <button class="modal-close" onclick="window.closeEditRoomItemModal()">&times;</button>
             </div>
             
             <form id="editRoomItemForm" onsubmit="window.handleEditRoomItem(event)">
                 <input type="hidden" id="editRoomItemId">
                 
                 <div class="form-group">
-                    <label for="editRoomItemName">Item Name *</label>
-                    <input type="text" id="editRoomItemName" required>
+                    <label class="form-label" for="editRoomItemName">Item Name *</label>
+                    <input class="form-input" type="text" id="editRoomItemName" required>
                 </div>
-
+ 
                 <div class="form-group">
-                    <label for="editRoomItemQuantity">Quantity *</label>
-                    <input type="number" id="editRoomItemQuantity" min="1" value="1" required>
+                    <label class="form-label" for="editRoomItemQuantity">Quantity *</label>
+                    <input class="form-input" type="number" id="editRoomItemQuantity" min="1" value="1" required>
                 </div>
-
+ 
                 <div class="form-group">
-                    <label for="editRoomItemUnits">Units</label>
-                    <select id="editRoomItemUnits" style="width: 100%; padding: 10px 12px; border: 1px solid rgba(85, 0, 0, 0.2); border-radius: 8px; font-size: 14px; background-color: white;">
+                    <label class="form-label" for="editRoomItemUnits">Units</label>
+                    <select class="form-input" id="editRoomItemUnits" style="width: 100%; background-color: white;">
                         <option value="pcs">pcs</option>
                         <option value="boxes">boxes</option>
                         <option value="sets">sets</option>
@@ -371,15 +331,15 @@
                         <option value="packs">packs</option>
                     </select>
                 </div>
-
+ 
                 <div class="form-group">
-                    <label for="editRoomItemUnitValue">Unit Value</label>
-                    <input type="number" id="editRoomItemUnitValue" min="0" step="0.01" placeholder="0.00" style="width: 100%; padding: 10px 12px; border: 1px solid rgba(85, 0, 0, 0.2); border-radius: 8px; font-size: 14px;">
+                    <label class="form-label" for="editRoomItemUnitValue">Unit Value</label>
+                    <input class="form-input" type="number" id="editRoomItemUnitValue" min="0" step="0.01" placeholder="0.00" style="width: 100%;">
                 </div>
-
+ 
                 <div class="form-group">
-                    <label for="editRoomItemCondition">Condition</label>
-                    <select id="editRoomItemCondition" style="width: 100%; padding: 10px 12px; border: 1px solid rgba(85, 0, 0, 0.2); border-radius: 8px; font-size: 14px; background-color: white;">
+                    <label class="form-label" for="editRoomItemCondition">Condition</label>
+                    <select class="form-input" id="editRoomItemCondition" style="width: 100%; background-color: white;">
                         <option value="New">New</option>
                         <option value="Good">Good</option>
                         <option value="Fair">Fair</option>
@@ -387,15 +347,15 @@
                         <option value="Damaged">Damaged</option>
                     </select>
                 </div>
-
+ 
                 <div class="form-group">
-                    <label for="editRoomItemDescription">Description (Optional)</label>
-                    <input type="text" id="editRoomItemDescription" placeholder="e.g., 42-inch smart TV, mounted on wall" maxlength="255">
+                    <label class="form-label" for="editRoomItemDescription">Description (Optional)</label>
+                    <input class="form-input" type="text" id="editRoomItemDescription" placeholder="e.g., 42-inch smart TV, mounted on wall" maxlength="255">
                 </div>
-
+ 
                 <div class="form-group">
-                    <label for="editRoomItemRemarks">Remarks / Issued By (Optional)</label>
-                    <input type="text" id="editRoomItemRemarks" placeholder="e.g., Issued by Mr. Smith on Jan 15, 2024" maxlength="255">
+                    <label class="form-label" for="editRoomItemRemarks">Remarks / Issued By (Optional)</label>
+                    <input class="form-input" type="text" id="editRoomItemRemarks" placeholder="e.g., Issued by Mr. Smith on Jan 15, 2024" maxlength="255">
                 </div>
 
                 <div class="modal-footer">
@@ -416,7 +376,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Item Details</h3>
-                <button onclick="window.closeViewRoomItemModal()">&times;</button>
+                <button class="modal-close" onclick="window.closeViewRoomItemModal()">&times;</button>
             </div>
 
             <div class="view-item-grid">

@@ -371,7 +371,7 @@ function renderStructures(structures) {
                 </div>
             </div>
             <div style="display: flex; gap: 10px;">
-                <button onclick="window.openViewStructureModal('${structure.id}')" style="background: none; border: none; color: #550000; cursor: pointer;" title="View Details">
+                <button onclick="window.openViewStructureModal('${structure.id}')" style="background: none; border: none; color: var(--brand-primary); cursor: pointer;" title="View Details">
                     <i class="fa-solid fa-eye"></i>
                 </button>
                 <button onclick="window.handleDeleteStructure('${structure.id}')" style="background: none; border: none; color: #ff4d4d; cursor: pointer;" title="Delete">

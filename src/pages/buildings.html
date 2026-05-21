@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,300;0,500;0,600;1,100&display=swap" rel="stylesheet">
     <title>Buildings - Inventory System</title>
+    <link rel="stylesheet" href="../css/design-system.css">
     <link rel="stylesheet" href="../css/dashboard.css">
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/animations.css">
@@ -15,6 +16,7 @@
     <link rel="stylesheet" href="../css/buildings.css">
     <link rel="icon" href="data:,">
     <script type="module" src="../js/auth.js"></script>
+    <script src="../js/navigation.js" defer></script>
     <!-- Supabase Client -->
     <script type="module" src="../js/supabase.js"></script>
     <!-- SheetJS for Excel Export -->
@@ -29,52 +31,10 @@
     </script>
     
     <!-- Navigation -->
-    <nav class="navigation" id="navbar">
-        <div class="logo">
-            <img src="../img/logo.png" alt="Logo">
-            <span id="label">RMNHS <br> Supplies Inventory</span>
-        </div>
-        <hr>
-        <div class="options">
-            <ul>
-                <li><a href="../../dashboard.html">
-                    <i class="fa-solid fa-chart-line"></i>
-                    <span>Dashboard</span>
-                </a></li>
-                <li><a href="input.html">
-                    <i class="fa-solid fa-clipboard-list"></i>
-                    <span>Items</span>
-                </a></li>
-                <li><a href="rooms.html">
-                    <i class="fa-solid fa-door-open"></i>
-                    <span>Rooms</span>
-                </a></li>
-                <li><a href="buildings.html" class="active">
-                    <i class="fa-solid fa-building"></i>
-                    <span>Buildings</span>
-                </a></li>
-                <li><a href="equipment.html">
-                    <i class="fa-solid fa-tools"></i>
-                    <span>Equipment</span>
-                </a></li>
-                <li><a href="report.html">
-                    <i class="fa-solid fa-calendar-week"></i>
-                    <span>Reports</span>
-                </a></li>
-                <li><a href="logs.html">
-                    <i class="fa-solid fa-book-open"></i>
-                    <span>Logs</span>
-                </a></li>
-                <li class="logout"><a href="#" data-logout>
-                    <i class="fa-solid fa-sign-out-alt"></i>
-                    <span>Logout</span>
-                </a></li>
-            </ul>
-        </div>
-    </nav>
+    <nav class="navigation" id="navbar"></nav>
 
     <!-- Main Content -->
-    <main class="dashboard">
+    <main class="dashboard main-content">
         <header class="dashboard-header">
             <h1>Buildings Management</h1>
 
@@ -124,18 +84,18 @@
         <div class="modal-content modal-medium">
             <div class="modal-header">
                 <h3>Create New Building</h3>
-                <button onclick="window.closeCreateBuildingModal()">&times;</button>
+                <button class="modal-close" onclick="window.closeCreateBuildingModal()">&times;</button>
             </div>
             
             <form id="createBuildingForm" onsubmit="window.handleCreateBuilding(event)">
                 <div class="form-group">
-                    <label for="buildingName">Building Name *</label>
-                    <input type="text" id="buildingName" placeholder="e.g., Building 1, Main Building" required>
+                    <label class="form-label" for="buildingName">Building Name *</label>
+                    <input class="form-input" type="text" id="buildingName" placeholder="e.g., Building 1, Main Building" required>
                 </div>
 
                 <div class="form-group">
-                    <label for="buildingDescription">Description (Optional)</label>
-                    <textarea id="buildingDescription" placeholder="e.g., Senior High School Building" rows="2"></textarea>
+                    <label class="form-label" for="buildingDescription">Description (Optional)</label>
+                    <textarea class="form-input" id="buildingDescription" placeholder="e.g., Senior High School Building" rows="2"></textarea>
                 </div>
 
                 <div class="modal-footer">
@@ -153,27 +113,27 @@
         <div class="modal-content modal-large">
             <div class="modal-header">
                 <h3 id="buildingDetailsTitle">Building Details</h3>
-                <button onclick="window.closeBuildingDetailsModal()">&times;</button>
+                <button class="modal-close" onclick="window.closeBuildingDetailsModal()">&times;</button>
             </div>
             
             <div class="modal-body">
-                <div class="building-info-section" style="margin-bottom: 20px; padding: 15px; background: #f9f9f9; border-radius: 8px;">
-                    <h4 style="margin-bottom: 5px;" id="detailBuildingName">Building Name</h4>
-                    <p style="color: #666;" id="detailBuildingDescription">Description</p>
+                <div class="building-info-section card" style="margin-bottom: var(--space-md);">
+                    <h4 style="margin-bottom: var(--space-xs);" id="detailBuildingName">Building Name</h4>
+                    <p style="color: var(--text-muted);" id="detailBuildingDescription">Description</p>
                 </div>
 
                 <!-- Add Structure Section -->
-                <div style="margin-bottom: 20px;">
+                <div style="margin-bottom: var(--space-md);">
                     <button type="button" id="showAddStructureBtn" onclick="window.showAddStructureForm()" class="btn btn-primary" style="width: 100%;">
                         <i class="fa-solid fa-plus"></i> Add Structure
                     </button>
                     
-                    <form id="addStructureForm" class="add-item-section" style="padding: 15px; background: #fff0f0; border-radius: 8px; border-left: 4px solid #f32121; display: none; margin-top: 10px;" onsubmit="window.handleAddStructure(event)">
+                    <form id="addStructureForm" class="add-item-section" style="padding: var(--space-md); background: color-mix(in srgb, var(--primary) 6%, var(--bg-card)); border-radius: var(--radius-md); border-left: 4px solid var(--primary); display: none; margin-top: var(--space-sm);" onsubmit="window.handleAddStructure(event)">
                         <input type="hidden" id="structureBuildingId">
                         
                         <div class="form-group">
-                            <label for="structureType">Structure Type *</label>
-                            <select id="structureType" onchange="window.handleStructureTypeChange()" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid rgba(85, 0, 0, 0.2);">
+                            <label class="form-label" for="structureType">Structure Type *</label>
+                            <select class="form-input" id="structureType" onchange="window.handleStructureTypeChange()" required>
                                 <option value="" disabled selected>Select Type</option>
                                 <option value="Instructional">Instructional</option>
                                 <option value="Non-Instructional">Non-Instructional</option>
@@ -184,12 +144,12 @@
                         <!-- Conditional Fields for Instructional -->
                         <div id="instructionalFields" style="display: none;">
                             <div class="form-group">
-                                <label for="structureRoomsCount">Number of Rooms *</label>
-                                <input type="number" id="structureRoomsCount" min="1" placeholder="e.g., 4">
+                                <label class="form-label" for="structureRoomsCount">Number of Rooms *</label>
+                                <input class="form-input" type="number" id="structureRoomsCount" min="1" placeholder="e.g., 4">
                             </div>
                             <div class="form-group">
-                                <label style="font-size: 12px; color: #666;">Room Names *</label>
-                                <div id="roomNamesContainer" style="display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto; padding-right: 5px;">
+                                <label class="form-label">Room Names *</label>
+                                <div id="roomNamesContainer" style="display: flex; flex-direction: column; gap: var(--space-xs); max-height: 200px; overflow-y: auto; padding-right: 5px;">
                                     <!-- Dynamic inputs will be inserted here -->
                                 </div>
                             </div>
@@ -198,20 +158,20 @@
                         <!-- Conditional Fields for Non-Instructional -->
                         <div id="nonInstructionalFields" style="display: none;">
                             <div class="form-group">
-                                <label for="structurePurpose">Purpose *</label>
-                                <input type="text" id="structurePurpose" placeholder="e.g., Faculty, Library, Music Room">
+                                <label class="form-label" for="structurePurpose">Purpose *</label>
+                                <input class="form-input" type="text" id="structurePurpose" placeholder="e.g., Faculty, Library, Music Room">
                             </div>
                         </div>
 
                         <!-- Conditional Fields for Others -->
                         <div id="othersFields" style="display: none;">
                             <div class="form-group">
-                                <label for="structureFunction">Function *</label>
-                                <input type="text" id="structureFunction" placeholder="e.g., CR, Storage">
+                                <label class="form-label" for="structureFunction">Function *</label>
+                                <input class="form-input" type="text" id="structureFunction" placeholder="e.g., CR, Storage">
                             </div>
                         </div>
 
-                        <div style="display: flex; gap: 10px; margin-top: 15px;">
+                        <div style="display: flex; gap: var(--space-sm); margin-top: var(--space-md);">
                             <button type="submit" class="btn btn-primary" style="flex: 1;">Save Structure</button>
                             <button type="button" onclick="window.hideAddStructureForm()" class="btn btn-secondary">Cancel</button>
                         </div>
@@ -232,7 +192,7 @@
             </div>
 
             <div class="modal-footer">
-                <button type="button" onclick="window.exportBuildingToExcel()" class="btn btn-success" style="margin-right: auto; background-color: #217346; color: white;">
+                <button type="button" onclick="window.exportBuildingToExcel()" class="btn btn-success" style="margin-right: auto;">
                     <i class="fa-solid fa-file-excel"></i> Export to Excel
                 </button>
                 <button type="button" onclick="window.closeBuildingDetailsModal()" class="btn btn-secondary">Close</button>
@@ -245,20 +205,20 @@
         <div class="modal-content modal-medium">
             <div class="modal-header">
                 <h3>Edit Building</h3>
-                <button onclick="window.closeEditBuildingModal()">&times;</button>
+                <button class="modal-close" onclick="window.closeEditBuildingModal()">&times;</button>
             </div>
             
             <form id="editBuildingForm" onsubmit="window.handleEditBuilding(event)">
                 <input type="hidden" id="editBuildingId">
                 
                 <div class="form-group">
-                    <label for="editBuildingName">Building Name *</label>
-                    <input type="text" id="editBuildingName" required>
+                    <label class="form-label" for="editBuildingName">Building Name *</label>
+                    <input class="form-input" type="text" id="editBuildingName" required>
                 </div>
 
                 <div class="form-group">
-                    <label for="editBuildingDescription">Description (Optional)</label>
-                    <textarea id="editBuildingDescription" rows="2"></textarea>
+                    <label class="form-label" for="editBuildingDescription">Description (Optional)</label>
+                    <textarea class="form-input" id="editBuildingDescription" rows="2"></textarea>
                 </div>
 
                 <div class="modal-footer">
@@ -279,37 +239,37 @@
         <div class="modal-content modal-medium">
             <div class="modal-header">
                 <h3>Structure Details</h3>
-                <button onclick="window.closeViewStructureModal()">&times;</button>
+                <button class="modal-close" onclick="window.closeViewStructureModal()">&times;</button>
             </div>
             
             <div class="modal-body">
                 <div class="form-group">
-                    <label style="font-size: 12px; color: #666;">Type</label>
-                    <p id="viewStructureType" style="font-weight: 600; font-size: 14px;"></p>
+                    <label class="form-label">Type</label>
+                    <p id="viewStructureType" style="font-weight: 600;"></p>
                 </div>
 
                 <div id="viewInstructionalInfo" style="display: none;">
                     <div class="form-group">
-                        <label style="font-size: 12px; color: #666;">Number of Rooms</label>
-                        <p id="viewStructureRoomsCount" style="font-size: 14px;"></p>
+                        <label class="form-label">Number of Rooms</label>
+                        <p id="viewStructureRoomsCount"></p>
                     </div>
                     <div class="form-group">
-                        <label style="font-size: 12px; color: #666;">Room Names</label>
-                        <p id="viewStructureRoomNames" style="font-size: 14px;"></p>
+                        <label class="form-label">Room Names</label>
+                        <p id="viewStructureRoomNames"></p>
                     </div>
                 </div>
 
                 <div id="viewNonInstructionalInfo" style="display: none;">
                     <div class="form-group">
-                        <label style="font-size: 12px; color: #666;">Purpose</label>
-                        <p id="viewStructurePurpose" style="font-size: 14px;"></p>
+                        <label class="form-label">Purpose</label>
+                        <p id="viewStructurePurpose"></p>
                     </div>
                 </div>
 
                 <div id="viewOthersInfo" style="display: none;">
                     <div class="form-group">
-                        <label style="font-size: 12px; color: #666;">Function</label>
-                        <p id="viewStructureFunction" style="font-size: 14px;"></p>
+                        <label class="form-label">Function</label>
+                        <p id="viewStructureFunction"></p>
                     </div>
                 </div>
             </div>

@@ -8,12 +8,14 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,300;0,500;0,600;1,100&display=swap" rel="stylesheet">
     <title>Reports - Inventory System</title>
+    <link rel="stylesheet" href="../css/design-system.css">
     <link rel="stylesheet" href="../css/dashboard.css">
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/animations.css">
     <link rel="stylesheet" href="../css/reports.css">
     <link rel="icon" href="data:,">
     <script type="module" src="../js/auth.js"></script>
+    <script src="../js/navigation.js" defer></script>
     <!-- SheetJS for Excel Export -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <!-- Export Functions -->
@@ -28,52 +30,10 @@
     </script>
     
     <!-- Navigation -->
-    <nav class="navigation" id="navbar">
-        <div class="logo">
-            <img src="../img/logo.png" alt="Logo">
-            <span id="label">RMNHS <br> Supplies Inventory</span>
-        </div>
-        <hr>
-        <div class="options">
-            <ul>
-                <li><a href="../../dashboard.html">
-                    <i class="fa-solid fa-chart-line"></i>
-                    <span>Dashboard</span>
-                </a></li>
-                <li><a href="input.html">
-                    <i class="fa-solid fa-clipboard-list"></i>
-                    <span>Items</span>
-                </a></li>
-                <li><a href="rooms.html">
-                    <i class="fa-solid fa-door-open"></i>
-                    <span>Rooms</span>
-                </a></li>
-                <li><a href="buildings.html">
-                    <i class="fa-solid fa-building"></i>
-                    <span>Buildings</span>
-                </a></li>
-                <li><a href="equipment.html">
-                    <i class="fa-solid fa-tools"></i>
-                    <span>Equipment</span>
-                </a></li>
-                <li><a href="report.html" class="active">
-                    <i class="fa-solid fa-calendar-week"></i>
-                    <span>Reports</span>
-                </a></li>
-                <li><a href="logs.html">
-                    <i class="fa-solid fa-book-open"></i>
-                    <span>Logs</span>
-                </a></li>
-                <li class="logout"><a href="#" data-logout>
-                    <i class="fa-solid fa-sign-out-alt"></i>
-                    <span>Logout</span>
-                </a></li>
-            </ul>
-        </div>
-    </nav>
+    <nav class="navigation" id="navbar"></nav>
 
     <!-- Main Content -->
-    <main class="dashboard">
+    <main class="dashboard main-content">
         <header class="dashboard-header">
             <div class="header-left">
                 <h1>Reports</h1>
@@ -121,7 +81,7 @@
                     </div>
 
                     <div class="toolbar-right">
-                        <button id="manageTemplatesBtn" class="btn btn-ghost"><i class="fa-solid fa-file-excel"></i> Templates</button>
+                        <button id="manageTemplatesBtn" class="btn btn-secondary"><i class="fa-solid fa-file-excel"></i> Templates</button>
                         <button id="exportBtn" class="btn btn-secondary"><i class="fa-solid fa-download"></i> Export</button>
                         <button class="btn btn-primary" id="createReportBtn"><i class="fa-solid fa-file-export"></i> Create Report</button>
                     </div>
@@ -326,11 +286,11 @@
                                     <p>Select a specific month to view stats</p>
                                 </div>
                                 <div class="card-actions">
-                                    <div style="display: flex; gap: 10px; align-items: center;">
-                                        <select id="customMonthSelector" onchange="window.updateCustomMonth()" style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; background: white; cursor: pointer;">
+                                    <div style="display: flex; gap: var(--space-xs); align-items: center;">
+                                        <select id="customMonthSelector" onchange="window.updateCustomMonth()" class="form-input" style="padding: var(--space-xs) var(--space-sm); border: 1.5px solid var(--border-color); border-radius: var(--radius-md); font-size: 14px; background: var(--bg-surface); cursor: pointer; width: auto;">
                                             <option value="">-- Select Month --</option>
                                         </select>
-                                        <button class="btn btn-ghost" onclick="window.refreshCustomMonth()"><i class="fa-solid fa-sync-alt"></i> Refresh</button>
+                                        <button class="btn btn-secondary" onclick="window.refreshCustomMonth()"><i class="fa-solid fa-sync-alt"></i> Refresh</button>
                                         <button class="btn btn-primary" onclick="window.exportCustomMonthReport()" id="exportCustomMonthBtn" disabled><i class="fa-solid fa-download"></i> Export Excel</button>
                                     </div>
                                 </div>
@@ -364,7 +324,7 @@
                                 <div>
                                     <h4><i class="fa-solid fa-clock"></i> Activity for Selected Month</h4>
                                     <div id="customActivity" class="activity-list">
-                                        <p class="small-muted" style="padding: 20px; text-align: center;">Please select a month from the dropdown above to view activity.</p>
+                                        <p class="small-muted" style="padding: var(--space-lg); text-align: center; color: var(--text-muted);">Please select a month from the dropdown above to view activity.</p>
                                     </div>
                                 </div>
                                 <div>
@@ -382,7 +342,7 @@
                                             </thead>
                                             <tbody>
                                                 <tr>
-                                                    <td colspan="5" style="text-align: center; padding: 20px;">Select a month to view data</td>
+                                                    <td colspan="5" style="text-align: center; padding: var(--space-lg); color: var(--text-muted);">Select a month to view data</td>
                                                 </tr>
                                             </tbody>
                                         </table>
@@ -397,18 +357,18 @@
     </main>
 
     <!-- Create Report Modal -->
-    <div id="createReportModal" class="modal" style="display:none;">
+    <div id="createReportModal" class="modal">
         <div class="modal-content modal-medium">
             <div class="modal-header">
                 <h3>Create Report</h3>
-                <button onclick="window.closeCreateReportModal()">&times;</button>
+                <button class="modal-close" onclick="window.closeCreateReportModal()" aria-label="Close Modal">&times;</button>
             </div>
 
             <form id="createReportForm">
                 <!-- Report Category Selection -->
                 <div class="form-group">
-                    <label for="reportCategory">Report Type</label>
-                    <select id="reportCategory" onchange="window.handleCategoryChange()">
+                    <label for="reportCategory" class="form-label">Report Type</label>
+                    <select id="reportCategory" onchange="window.handleCategoryChange()" class="form-input">
                         <option value="">-- Select Report Type --</option>
                         <option value="items_list">Items - List of Items</option>
                         <option value="items_lost">Items - Lost/Stolen/Damaged/Destroyed</option>
@@ -421,8 +381,8 @@
 
                 <!-- Report Format -->
                 <div class="form-group">
-                    <label for="reportFormat">File format</label>
-                    <select id="reportFormat">
+                    <label for="reportFormat" class="form-label">File format</label>
+                    <select id="reportFormat" class="form-input">
                         <option value="xlsx">Excel (.xlsx)</option>
                         <option value="csv">CSV (.csv)</option>
                     </select>
@@ -437,20 +397,20 @@
     </div>
 
     <!-- Item History Preview Modal -->
-    <div id="itemHistoryPreviewModal" class="modal" style="display:none;">
+    <div id="itemHistoryPreviewModal" class="modal">
         <div class="modal-content modal-large">
             <div class="modal-header">
                 <h3><i class="fa-solid fa-history"></i> Item History Preview</h3>
-                <button onclick="window.closeItemHistoryPreviewModal()">&times;</button>
+                <button class="modal-close" onclick="window.closeItemHistoryPreviewModal()" aria-label="Close Modal">&times;</button>
             </div>
 
             <div class="modal-body">
-                <div id="itemHistoryPreviewHeader" style="margin-bottom: 16px; color: #333;">
+                <div id="itemHistoryPreviewHeader" style="margin-bottom: var(--space-md); color: var(--text-main);">
                     <p style="margin: 0; font-weight: 600;">Selected item: <span id="previewItemHistoryName">-</span></p>
-                    <p style="margin: 4px 0 0 0; color: #666;">Date range: <span id="previewItemHistoryRange">-</span></p>
+                    <p style="margin: var(--space-2xs) 0 0 0; color: var(--text-muted);">Date range: <span id="previewItemHistoryRange">-</span></p>
                 </div>
 
-                <div class="report-stats" style="display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px;">
+                <div class="report-stats" style="display: flex; flex-wrap: wrap; gap: var(--space-sm); margin-bottom: var(--space-md);">
                     <div class="stat-box">
                         <span class="stat-number" id="previewItemHistoryAdded">-</span>
                         <span class="stat-label">Stock Added</span>
@@ -484,7 +444,7 @@
                         </thead>
                         <tbody id="itemHistoryPreviewBody">
                             <tr>
-                                <td colspan="7" style="text-align: center; padding: 20px; color: #666;">No updates loaded yet.</td>
+                                <td colspan="7" style="text-align: center; padding: var(--space-lg); color: var(--text-muted);">No updates loaded yet.</td>
                             </tr>
                         </tbody>
                     </table>
@@ -499,16 +459,16 @@
     </div>
 
     <!-- Template Management Modal -->
-    <div id="templatesModal" class="modal" style="display:none;">
+    <div id="templatesModal" class="modal">
         <div class="modal-content modal-large">
             <div class="modal-header">
                 <h3><i class="fa-solid fa-file-excel"></i> Manage Excel Templates</h3>
-                <button onclick="window.closeTemplatesModal()">&times;</button>
+                <button class="modal-close" onclick="window.closeTemplatesModal()" aria-label="Close Modal">&times;</button>
             </div>
             
             <div class="modal-body">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <p style="margin: 0; color: #666;">Upload Excel templates to customize your export format.</p>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-md);">
+                    <p style="margin: 0; color: var(--text-muted);">Upload Excel templates to customize your export format.</p>
                     <button onclick="window.openUploadTemplateModal()" class="btn btn-primary">
                         <i class="fa-solid fa-upload"></i> Upload New Template
                     </button>
@@ -516,7 +476,7 @@
                 
                 <!-- Template List Container -->
                 <div id="templateListContainer" style="max-height: 400px; overflow-y: auto;">
-                    <p style="text-align: center; padding: 40px; color: #999;">Loading templates...</p>
+                    <p style="text-align: center; padding: var(--space-xl); color: var(--text-light);">Loading templates...</p>
                 </div>
             </div>
             
@@ -527,29 +487,29 @@
     </div>
 
     <!-- Upload Template Modal -->
-    <div id="uploadTemplateModal" class="modal" style="display:none;">
+    <div id="uploadTemplateModal" class="modal">
         <div class="modal-content modal-medium">
             <div class="modal-header">
                 <h3><i class="fa-solid fa-upload"></i> Upload Excel Template</h3>
-                <button onclick="window.closeUploadTemplateModal()">&times;</button>
+                <button class="modal-close" onclick="window.closeUploadTemplateModal()" aria-label="Close Modal">&times;</button>
             </div>
             
             <!-- Scrollable modal body -->
             <div class="modal-body-scroll">
                 <form id="uploadTemplateForm">
                     <div class="form-group">
-                        <label for="templateName">Template Name *</label>
-                        <input type="text" id="templateName" required placeholder="e.g., My Inventory Template">
+                        <label for="templateName" class="form-label">Template Name *</label>
+                        <input type="text" id="templateName" class="form-input" required placeholder="e.g., My Inventory Template">
                     </div>
                     
                     <div class="form-group">
-                        <label for="templateDescription">Description</label>
-                        <textarea id="templateDescription" rows="2" placeholder="Brief description of this template..."></textarea>
+                        <label for="templateDescription" class="form-label">Description</label>
+                        <textarea id="templateDescription" class="form-input" rows="2" placeholder="Brief description of this template..."></textarea>
                     </div>
                     
                     <div class="form-group">
-                        <label for="templateExportType">Export Type *</label>
-                        <select id="templateExportType" required>
+                        <label for="templateExportType" class="form-label">Export Type *</label>
+                        <select id="templateExportType" class="form-input" required>
                             <option value="">-- Select Export Type --</option>
                             <option value="items_list">Items - List of Items</option>
                             <option value="items_lost">Items - Lost/Stolen/Damaged/Destroyed</option>
@@ -560,17 +520,17 @@
                     </div>
                     
                     <div class="form-group">
-                        <label for="templateFile">Excel File *</label>
-                        <input type="file" id="templateFile" accept=".xlsx,.xls" required 
+                        <label for="templateFile" class="form-label">Excel File *</label>
+                        <input type="file" id="templateFile" class="form-input" accept=".xlsx,.xls" required 
                                onchange="window.handleTemplateFileSelect(this)">
-                        <small style="color: #666; display: block; margin-top: 5px;">
+                        <small style="color: var(--text-muted); display: block; margin-top: var(--space-2xs);">
                             Upload an Excel file with your desired column headers. The system will map these to your data.
                         </small>
                     </div>
                     
-                    <div id="templatePreview" style="display: none; margin-top: 15px; padding: 15px; background: #f5f5f5; border-radius: 8px;">
-                        <h4 style="margin: 0 0 10px 0;">Detected Headers:</h4>
-                        <div id="templateHeadersList" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+                    <div id="templatePreview" style="display: none; margin-top: var(--space-md); padding: var(--space-md); background: var(--bg-surface-hover); border-radius: var(--radius-md);">
+                        <h4 style="margin: 0 0 var(--space-xs) 0;">Detected Headers:</h4>
+                        <div id="templateHeadersList" style="display: flex; flex-wrap: wrap; gap: var(--space-xs);"></div>
                     </div>
                 </form>
             </div>
@@ -583,23 +543,23 @@
     </div>
 
     <!-- Create Items List Report Modal -->
-    <div id="createItemsListReportModal" class="modal" style="display:none;">
+    <div id="createItemsListReportModal" class="modal">
         <div class="modal-content modal-large">
             <div class="modal-header">
                 <h3><i class="fa-solid fa-file-signature"></i> Create List of Items Report</h3>
-                <button onclick="window.closeCreateItemsListReportModal()">&times;</button>
+                <button class="modal-close" onclick="window.closeCreateItemsListReportModal()" aria-label="Close Modal">&times;</button>
             </div>
             
             <!-- Scrollable modal body -->
             <div class="modal-body-scroll">
                 <form id="createItemsListReportForm">
-                    <div style="display: flex; gap: 20px;">
+                    <div style="display: flex; gap: var(--space-lg);">
                         <!-- Left Column: Selected Items -->
                         <div style="flex: 1; min-width: 250px;">
                             <div class="form-group">
-                                <label>Selected Items (<span id="modalItemsListSelectedItemsCount">0</span>)</label>
-                                <div id="modalItemsListSelectedItemsList" style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; padding: 10px; background: #f9f9f9;">
-                                    <p style="color: #666; margin: 0;">No items selected</p>
+                                <label class="form-label">Selected Items (<span id="modalItemsListSelectedItemsCount">0</span>)</label>
+                                <div id="modalItemsListSelectedItemsList" style="max-height: 300px; overflow-y: auto; border: 1.5px solid var(--border-color); border-radius: var(--radius-md); padding: var(--space-sm); background: var(--bg-surface-hover);">
+                                    <p style="color: var(--text-muted); margin: 0;">No items selected</p>
                                 </div>
                             </div>
                         </div>
@@ -607,13 +567,13 @@
                         <!-- Right Column: Form Fields -->
                         <div style="flex: 1; min-width: 300px;">
                             <div class="form-group">
-                                <label for="itemsListReportDate">Report Date *</label>
-                                <input type="date" id="itemsListReportDate" required>
+                                <label for="itemsListReportDate" class="form-label">Report Date *</label>
+                                <input type="date" id="itemsListReportDate" class="form-input" required>
                             </div>
                             
                             <div class="form-group">
-                                <label for="itemsListReportMonth">Month (Optional)</label>
-                                <select id="itemsListReportMonth">
+                                <label for="itemsListReportMonth" class="form-label">Month (Optional)</label>
+                                <select id="itemsListReportMonth" class="form-input">
                                     <option value="">All Months</option>
                                     <option value="01">January</option>
                                     <option value="02">February</option>
@@ -628,7 +588,7 @@
                                     <option value="11">November</option>
                                     <option value="12">December</option>
                                 </select>
-                                <small style="color: #666; display: block; margin-top: 5px;">Select a specific month to filter items in the report</small>
+                                <small style="color: var(--text-muted); display: block; margin-top: var(--space-2xs);">Select a specific month to filter items in the report</small>
                             </div>
                         </div>
                     </div>
@@ -643,26 +603,26 @@
     </div>
 
     <!-- Create Rooms Report Modal -->
-    <div id="createRoomsReportModal" class="modal" style="display:none;">
+    <div id="createRoomsReportModal" class="modal">
         <div class="modal-content modal-xlarge">
             <div class="modal-header">
                 <h3><i class="fa-solid fa-file-signature"></i> Create Classroom Inventory Report</h3>
-                <button onclick="window.closeCreateRoomsReportModal()">&times;</button>
+                <button class="modal-close" onclick="window.closeCreateRoomsReportModal()" aria-label="Close Modal">&times;</button>
             </div>
             
             <!-- Scrollable modal body -->
             <div class="modal-body-scroll">
                 <form id="createRoomsReportForm">
                     <div class="form-group">
-                        <label>Selected Rooms (<span id="modalRoomsSelectedCount">0</span>)</label>
-                        <div id="modalRoomsSelectedList" style="margin-bottom: 15px; padding: 10px; background: #f0f9ff; border-radius: 8px; border-left: 4px solid #3b82f6;">
-                            <p style="color: #666; margin: 0;">No rooms selected</p>
+                        <label class="form-label">Selected Rooms (<span id="modalRoomsSelectedCount">0</span>)</label>
+                        <div id="modalRoomsSelectedList" style="margin-bottom: var(--space-md); padding: var(--space-sm); background: var(--color-info-light); border-radius: var(--radius-md); border-left: 4px solid var(--color-info);">
+                            <p style="color: var(--text-muted); margin: 0;">No rooms selected</p>
                         </div>
                     </div>
                     
                     <div class="form-group">
-                        <label>Items in Selected Rooms <small style="color: #666; font-weight: normal;">(You can edit item details before generating)</small></label>
-                        <div style="max-height: 400px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px;">
+                        <label class="form-label">Items in Selected Rooms <small style="color: var(--text-muted); font-weight: normal;">(You can edit item details before generating)</small></label>
+                        <div style="max-height: 400px; overflow-y: auto; border: 1.5px solid var(--border-color); border-radius: var(--radius-md);">
                             <table class="report-table" id="modalRoomsItemsTable">
                                 <thead>
                                     <tr>
@@ -677,7 +637,7 @@
                                 </thead>
                                 <tbody id="modalRoomsItemsList">
                                     <tr>
-                                        <td colspan="4" style="text-align: center; padding: 20px; color: #666;">No items to display</td>
+                                        <td colspan="7" style="text-align: center; padding: var(--space-lg); color: var(--text-muted);">No items to display</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -694,23 +654,23 @@
     </div>
 
     <!-- Create Lost Items Report Modal -->
-    <div id="createLostItemsReportModal" class="modal" style="display:none;">
+    <div id="createLostItemsReportModal" class="modal">
         <div class="modal-content modal-large">
             <div class="modal-header">
                 <h3><i class="fa-solid fa-file-signature"></i> Create Lost/Stolen/Damaged/Destroyed Report</h3>
-                <button onclick="window.closeCreateLostItemsReportModal()">&times;</button>
+                <button class="modal-close" onclick="window.closeCreateLostItemsReportModal()" aria-label="Close Modal">&times;</button>
             </div>
             
             <!-- Scrollable modal body -->
             <div class="modal-body-scroll">
                 <form id="createLostItemsReportForm">
-                    <div style="display: flex; gap: 20px;">
+                    <div style="display: flex; gap: var(--space-lg);">
                         <!-- Left Column: Selected Items -->
                         <div style="flex: 1; min-width: 250px;">
                             <div class="form-group">
-                                <label>Selected Items (<span id="modalSelectedItemsCount">0</span>)</label>
-                                <div id="modalSelectedItemsList" style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; padding: 10px; background: #f9f9f9;">
-                                    <p style="color: #666; margin: 0;">No items selected</p>
+                                <label class="form-label">Selected Items (<span id="modalSelectedItemsCount">0</span>)</label>
+                                <div id="modalSelectedItemsList" style="max-height: 300px; overflow-y: auto; border: 1.5px solid var(--border-color); border-radius: var(--radius-md); padding: var(--space-sm); background: var(--bg-surface-hover);">
+                                    <p style="color: var(--text-muted); margin: 0;">No items selected</p>
                                 </div>
                             </div>
                         </div>
@@ -718,23 +678,23 @@
                         <!-- Right Column: Form Fields -->
                         <div style="flex: 1; min-width: 300px;">
                             <div class="form-group">
-                                <label for="reportDate">Report Date *</label>
-                                <input type="date" id="reportDate" required>
+                                <label for="reportDate" class="form-label">Report Date *</label>
+                                <input type="date" id="reportDate" class="form-input" required>
                             </div>
                             
                             <div class="form-group">
-                                <label for="accountableOfficer">Name of the Accountable Officer *</label>
-                                <input type="text" id="accountableOfficer" required placeholder="Enter name of accountable officer">
+                                <label for="accountableOfficer" class="form-label">Name of the Accountable Officer *</label>
+                                <input type="text" id="accountableOfficer" class="form-input" required placeholder="Enter name of accountable officer">
                             </div>
                             
                             <div class="form-group">
-                                <label for="immediateSupervisor">Name of the Immediate Supervisor *</label>
-                                <input type="text" id="immediateSupervisor" required placeholder="Enter name of immediate supervisor">
+                                <label for="immediateSupervisor" class="form-label">Name of the Immediate Supervisor *</label>
+                                <input type="text" id="immediateSupervisor" class="form-input" required placeholder="Enter name of immediate supervisor">
                             </div>
                             
                             <div class="form-group">
-                                <label for="incidentDescription">Incident Description</label>
-                                <textarea id="incidentDescription" rows="4" placeholder="Describe the incident or circumstances..."></textarea>
+                                <label for="incidentDescription" class="form-label">Incident Description</label>
+                                <textarea id="incidentDescription" class="form-input" rows="4" placeholder="Describe the incident or circumstances..."></textarea>
                             </div>
                         </div>
                     </div>
@@ -749,23 +709,23 @@
     </div>
 
     <!-- Create Logs Report Modal -->
-    <div id="createLogsReportModal" class="modal" style="display:none;">
+    <div id="createLogsReportModal" class="modal">
         <div class="modal-content modal-large">
             <div class="modal-header">
                 <h3><i class="fa-solid fa-file-signature"></i> Create Activity Logs Report</h3>
-                <button onclick="window.closeCreateLogsReportModal()">&times;</button>
+                <button class="modal-close" onclick="window.closeCreateLogsReportModal()" aria-label="Close Modal">&times;</button>
             </div>
             
             <!-- Scrollable modal body -->
             <div class="modal-body-scroll">
                 <form id="createLogsReportForm">
-                    <div style="display: flex; gap: 20px;">
+                    <div style="display: flex; gap: var(--space-lg);">
                         <!-- Left Column: Selected Logs -->
                         <div style="flex: 1; min-width: 250px;">
                             <div class="form-group">
-                                <label>Selected Log Entries (<span id="modalLogsSelectedCount">0</span>)</label>
-                                <div id="modalLogsSelectedList" style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; padding: 10px; background: #f9f9f9;">
-                                    <p style="color: #666; margin: 0;">No logs selected</p>
+                                <label class="form-label">Selected Log Entries (<span id="modalLogsSelectedCount">0</span>)</label>
+                                <div id="modalLogsSelectedList" style="max-height: 300px; overflow-y: auto; border: 1.5px solid var(--border-color); border-radius: var(--radius-md); padding: var(--space-sm); background: var(--bg-surface-hover);">
+                                    <p style="color: var(--text-muted); margin: 0;">No logs selected</p>
                                 </div>
                             </div>
                         </div>
@@ -773,23 +733,23 @@
                         <!-- Right Column: Form Fields -->
                         <div style="flex: 1; min-width: 300px;">
                             <div class="form-group">
-                                <label for="logsReportDate">Report Date *</label>
-                                <input type="date" id="logsReportDate" required>
+                                <label for="logsReportDate" class="form-label">Report Date *</label>
+                                <input type="date" id="logsReportDate" class="form-input" required>
                             </div>
                             
                             <div class="form-group">
-                                <label for="logsPreparedBy">Prepared By *</label>
-                                <input type="text" id="logsPreparedBy" required placeholder="Enter name of person preparing this report">
+                                <label for="logsPreparedBy" class="form-label">Prepared By *</label>
+                                <input type="text" id="logsPreparedBy" class="form-input" required placeholder="Enter name of person preparing this report">
                             </div>
                             
                             <div class="form-group">
-                                <label for="logsDepartment">Department</label>
-                                <input type="text" id="logsDepartment" placeholder="Enter department name">
+                                <label for="logsDepartment" class="form-label">Department</label>
+                                <input type="text" id="logsDepartment" class="form-input" placeholder="Enter department name">
                             </div>
                             
                             <div class="form-group">
-                                <label for="logsNotes">Notes</label>
-                                <textarea id="logsNotes" rows="4" placeholder="Additional notes or comments..."></textarea>
+                                <label for="logsNotes" class="form-label">Notes</label>
+                                <textarea id="logsNotes" class="form-input" rows="4" placeholder="Additional notes or comments..."></textarea>
                             </div>
                         </div>
                     </div>
@@ -804,23 +764,23 @@
     </div>
 
     <!-- Create Equipment Report Modal -->
-    <div id="createEquipmentReportModal" class="modal" style="display:none;">
+    <div id="createEquipmentReportModal" class="modal">
         <div class="modal-content modal-large">
             <div class="modal-header">
                 <h3><i class="fa-solid fa-file-signature"></i> Create Equipment Inventory Report</h3>
-                <button onclick="window.closeCreateEquipmentReportModal()">&times;</button>
+                <button class="modal-close" onclick="window.closeCreateEquipmentReportModal()" aria-label="Close Modal">&times;</button>
             </div>
             
             <!-- Scrollable modal body -->
             <div class="modal-body-scroll">
                 <form id="createEquipmentReportForm">
-                    <div style="display: flex; gap: 20px;">
+                    <div style="display: flex; gap: var(--space-lg);">
                         <!-- Left Column: Selected Equipment -->
                         <div style="flex: 1; min-width: 250px;">
                             <div class="form-group">
-                                <label>Selected Equipment (<span id="modalEquipmentSelectedCount">0</span>)</label>
-                                <div id="modalEquipmentSelectedList" style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; padding: 10px; background: #f9f9f9;">
-                                    <p style="color: #666; margin: 0;">No equipment selected</p>
+                                <label class="form-label">Selected Equipment (<span id="modalEquipmentSelectedCount">0</span>)</label>
+                                <div id="modalEquipmentSelectedList" style="max-height: 300px; overflow-y: auto; border: 1.5px solid var(--border-color); border-radius: var(--radius-md); padding: var(--space-sm); background: var(--bg-surface-hover);">
+                                    <p style="color: var(--text-muted); margin: 0;">No equipment selected</p>
                                 </div>
                             </div>
                         </div>
@@ -828,23 +788,23 @@
                         <!-- Right Column: Form Fields -->
                         <div style="flex: 1; min-width: 300px;">
                             <div class="form-group">
-                                <label for="equipmentReportDate">Report Date *</label>
-                                <input type="date" id="equipmentReportDate" required>
+                                <label for="equipmentReportDate" class="form-label">Report Date *</label>
+                                <input type="date" id="equipmentReportDate" class="form-input" required>
                             </div>
                             
                             <div class="form-group">
-                                <label for="equipmentPreparedBy">Prepared By *</label>
-                                <input type="text" id="equipmentPreparedBy" required placeholder="Enter name of person preparing this report">
+                                <label for="equipmentPreparedBy" class="form-label">Prepared By *</label>
+                                <input type="text" id="equipmentPreparedBy" class="form-input" required placeholder="Enter name of person preparing this report">
                             </div>
                             
                             <div class="form-group">
-                                <label for="equipmentDepartment">Department</label>
-                                <input type="text" id="equipmentDepartment" placeholder="Enter department name">
+                                <label for="equipmentDepartment" class="form-label">Department</label>
+                                <input type="text" id="equipmentDepartment" class="form-input" placeholder="Enter department name">
                             </div>
                             
                             <div class="form-group">
-                                <label for="equipmentNotes">Notes</label>
-                                <textarea id="equipmentNotes" rows="4" placeholder="Additional notes or comments..."></textarea>
+                                <label for="equipmentNotes" class="form-label">Notes</label>
+                                <textarea id="equipmentNotes" class="form-input" rows="4" placeholder="Additional notes or comments..."></textarea>
                             </div>
                         </div>
                     </div>

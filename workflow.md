@@ -1,365 +1,262 @@
-Building & Structure Management — UX Workflow Design
-Goal
-
-Create a clean, scalable, and user-friendly workflow for managing:
-
-Buildings
-Multiple Structures under each building
-Dynamic structure details based on structure type
-
-The workflow should:
-
-Reduce user confusion
-Minimize form overload
-Make adding structures fast
-Support future expansion
-Recommended UX Approach
-
-Instead of placing everything directly inside the building card, use:
-
-Primary Pattern
-Building Card → Structure Management Modal / Drawer
-
-This avoids:
-
-Extremely long cards
-Cluttered UI
-Confusing nested forms
-Recommended User Flow
-Dashboard
-   ↓
-Building List
-   ↓
-Select Building
-   ↓
-Open Structure Manager
-   ↓
-View Existing Structures
-   ↓
-Add New Structure
-   ↓
-Choose Structure Type
-   ↓
-Dynamic Form Appears
-   ↓
-Save Structure
-   ↓
-Updated Structure List
-1. Building Page (building.html)
-Layout Recommendation
-
-Use a responsive card grid.
-
-Each building card should contain:
-
---------------------------------
-| Building Name               |
-| Total Structures: 5         |
-|                             |
-| [ View Structures ]         |
---------------------------------
-Why This UX Works
-
-Avoids:
-
-Huge expandable cards
-Nested form chaos
-Overwhelming users
-
-Instead:
-
-Buildings remain clean
-Structure management becomes focused
-Easier mobile responsiveness
-2. Structure Management Screen
-
-When user clicks:
-
-View Structures
-
-Open:
-
-Modal
-OR
-Right-side drawer
-OR
-Dedicated page
-
-Recommended:
-
-Desktop → Drawer
-Mobile → Fullscreen Modal
-Structure Management Layout
-Building: Building 1
-
---------------------------------
-| Structures                   |
---------------------------------
-
-[ + Add Structure ]
-
---------------------------------
-| Instructional                |
-| Rooms: 5                     |
-| [ Edit ] [ Delete ]          |
---------------------------------
-
---------------------------------
-| Non-Instructional            |
-| Purpose: Library             |
-| [ Edit ] [ Delete ]          |
---------------------------------
-3. Add Structure Workflow
-
-When user clicks:
-
-+ Add Structure
-
-Open a guided form.
-
-Recommended UX Pattern
-Step-Based Form (Highly Recommended)
-
-This is MUCH cleaner than showing all fields at once.
-
-Multi-Step Workflow
-STEP 1 — Select Structure Type
-What type of structure is this?
-
-( ) Instructional
-( ) Non-Instructional
-( ) Others
-
-                [ Continue ]
-Why This Matters
-
-This:
-
-Prevents cognitive overload
-Makes the interface feel intelligent
-Keeps forms minimal
-STEP 2A — Instructional Flow
-
-If user selects:
-
-Instructional
-
-Show:
-
-Number of Rooms: [ 3 ]
-
-[ Generate Rooms ]
-
-After generation:
-
-Room 1 Name [____________]
-Room 2 Name [____________]
-Room 3 Name [____________]
-UX Recommendation
-Auto-Generate Inputs
-
-When user enters room count:
-
-Dynamically generate room fields instantly
-No page reload
-Better UX Enhancement
-
-Instead of:
-
-Room 1
-Room 2
-Room 3
-
-Use placeholders:
-
-e.g. Computer Lab
-e.g. Grade 8 - Rizal
-e.g. Science Room
-STEP 2B — Non-Instructional Flow
-
-Show:
-
-Purpose of Structure
-
-[___________________]
-
-Suggested autocomplete:
-
-Library
-Faculty Room
-Registrar
-Guidance Office
-UX Improvement
-
-Add:
-
-Smart Suggestions
-
-This:
-
-Speeds input
-Standardizes data
-Reduces spelling inconsistencies
-STEP 2C — Others Flow
-
-Show:
-
-Function of Structure
-
-[___________________]
-
-Suggestions:
-
-CR
-Storage Room
-Utility Room
-Guard House
-4. Review Before Save (Optional but Recommended)
-
-Before final save:
-
-Structure Type: Instructional
-Rooms: 3
-
-• Computer Lab
-• Science Room
-• Grade 10 - A
-
-Buttons:
-
-[ Back ]
-[ Save Structure ]
-Why This Is Good UX
-
-Users can:
-
-Verify entries
-Catch mistakes
-Feel confident before saving
-
-Especially useful for large room counts.
-
-5. Structure List UX
-
-Inside the structure manager:
-
-Group Structures by Type
-Instructional (5)
-Non-Instructional (2)
-Others (3)
-
-This improves:
-
-Scanability
-Organization
-Future scalability
-6. Edit Structure UX
-
-Editing should:
-
-Re-open the same workflow
-Pre-fill existing data
-
-Example:
-
-Edit Structure → Instructional
-
-Rooms:
-[ Computer Lab ]
-[ Science Room ]
-7. Delete Workflow
-
-Avoid instant deletion.
-
-Use confirmation modal:
-
-Delete this structure?
-
-This action cannot be undone.
-
-[ Cancel ] [ Delete ]
-8. Empty States (Important UX Detail)
-
-If no structures exist:
-
-No structures added yet.
-
-[ + Add First Structure ]
-
-This guides users clearly.
-
-9. Recommended Data Architecture
-Building
-
-Contains:
-
-Building Info
-Structure Count
-Structure
-
-Contains:
-
-Type
-Purpose/Function
-Rooms (if instructional)
-Room
-
-Separate entity/table.
-
-Reason:
-Future scalability.
-
-Possible future features:
-
-Room capacity
-Room status
-Equipment inventory
-Scheduling
-10. Recommended Frontend Component Structure
-BuildingPage
- ├── BuildingCard
- │
- ├── StructureDrawer
- │     ├── StructureList
- │     ├── StructureCard
- │     ├── AddStructureWizard
- │     │      ├── StepType
- │     │      ├── StepInstructional
- │     │      ├── StepNonInstructional
- │     │      ├── StepOthers
- │     │      └── StepReview
-UX Priorities
-Highest Priority
-Simplicity
-Dynamic forms
-Fast data entry
-Clear structure hierarchy
-Avoid These UX Mistakes
-❌ Don’t
-Put all forms inside the building card
-Show every possible field at once
-Use long scrolling forms
-Force unnecessary reloads
-Best UX Choice Summary
-Recommended Final UX
-Buildings Page
-
-→ Clean cards only
-
-Structure Management
-
-→ Drawer/modal
-
-Add Structure
-
-→ Multi-step wizard
-
-Dynamic Fields
-
-→ Based on structure type
-
-Instructional Rooms
-
-→ Auto-generated room fields
-
-This workflow is scalable, modern, and much easier for users to understand.
+You are a senior-level software engineer, UX designer, and system architect.
+Your task is to fully analyze, redesign, and improve the entire UX/UI and workflow of this system.
+
+Objective
+
+Rebuild the current system experience into a more professional, modern, scalable, and user-friendly application.
+
+The goal is NOT only to improve the visual design, but also to:
+
+improve usability
+simplify workflows
+remove confusing interactions
+improve information hierarchy
+improve accessibility
+improve responsiveness
+improve consistency across pages
+improve maintainability of components
+improve overall user experience and developer experience
+Your Responsibilities
+1. Analyze the Existing System
+
+Carefully scan and understand the entire system before making changes.
+
+You must:
+
+inspect all pages
+inspect all components
+inspect all forms
+inspect all navigation flows
+inspect all modals/dialogs
+inspect all tables/cards
+inspect all buttons/actions
+inspect all user interactions
+inspect all mobile and desktop layouts
+inspect loading states
+inspect empty states
+inspect error states
+inspect form validation UX
+inspect spacing, typography, colors, and visual consistency
+
+Identify:
+
+confusing workflows
+unnecessary steps
+poor UI hierarchy
+inconsistent styling
+bad spacing/alignment
+weak accessibility
+duplicated UI patterns
+poor responsiveness
+unclear labels/buttons
+difficult navigation
+bad user feedback
+UX bottlenecks
+components that feel outdated
+pages with too much cognitive load
+Workflow Improvement Rules
+
+Whenever you encounter a workflow:
+
+simplify it
+reduce unnecessary clicks
+reduce unnecessary modals
+reduce user confusion
+improve form experience
+improve navigation flow
+improve readability
+improve discoverability of important actions
+improve state feedback to users
+
+You should think like:
+
+a senior frontend engineer
+a product designer
+a UX researcher
+a systems architect
+Design Standards
+
+The rebuilt UI must follow these standards:
+
+Visual Design
+
+Create a UI that is:
+
+modern
+clean
+professional
+minimal but informative
+visually balanced
+highly readable
+consistent across the entire system
+Layout
+
+Use:
+
+proper spacing system
+proper visual hierarchy
+responsive grid layouts
+reusable UI sections
+clear grouping of related information
+Typography
+
+Improve:
+
+font sizing
+readability
+heading hierarchy
+spacing between content
+contrast
+Colors
+
+Create a consistent color system:
+
+primary
+secondary
+success
+warning
+danger
+neutral
+border colors
+hover states
+active states
+
+Avoid random or inconsistent colors.
+
+Components
+
+Standardize all:
+
+buttons
+cards
+tables
+inputs
+dropdowns
+modals
+sidebars
+headers
+tabs
+alerts
+badges
+loading skeletons
+empty states
+
+All components should feel part of one design system.
+
+UX Requirements
+Forms
+
+Improve all forms by:
+
+grouping related fields
+improving labels
+improving validation messages
+reducing clutter
+using proper input types
+adding helper text where needed
+improving spacing and alignment
+Navigation
+
+Improve:
+
+sidebar structure
+page hierarchy
+breadcrumbs
+active states
+mobile navigation
+discoverability
+Data Display
+
+Improve:
+
+tables
+filtering
+searching
+pagination
+sorting
+card layouts
+data readability
+Feedback
+
+Ensure the system always provides clear feedback:
+
+success messages
+loading indicators
+validation messages
+confirmation states
+error handling
+empty states
+Responsiveness
+
+The system must work properly on:
+
+desktop
+tablet
+mobile devices
+
+Ensure:
+
+responsive layouts
+adaptive spacing
+touch-friendly interactions
+mobile navigation optimization
+Accessibility
+
+Follow accessibility best practices:
+
+proper contrast ratios
+keyboard navigation
+semantic HTML
+aria labels where needed
+readable font sizes
+focus states
+accessible forms
+Code Quality Requirements
+
+When rebuilding the UI:
+
+use reusable components
+avoid duplicated code
+improve component architecture
+improve naming conventions
+improve maintainability
+improve scalability
+separate concerns properly
+keep components modular
+Expected Output
+
+For every page or feature you improve, provide:
+
+Problem Analysis
+what is wrong
+why it creates confusion
+UX/UI problems identified
+Proposed Solution
+what should change
+why the new approach is better
+Improved Workflow
+step-by-step user flow
+simplified interaction flow
+UI Improvements
+layout improvements
+component improvements
+spacing improvements
+responsiveness improvements
+Refactored Implementation
+improved code structure
+reusable component suggestions
+cleaner architecture
+Important Behavior Rules
+Do NOT make random design decisions.
+Every UI/UX change must have logical reasoning.
+Prioritize usability over unnecessary animations or visual effects.
+Think long-term scalability.
+Preserve functionality while improving experience.
+Avoid overengineering.
+Always aim for clarity and simplicity.
+If a workflow can be simplified, simplify it.
+If a page has too much information, reorganize it properly.
+If actions are confusing, redesign the interaction flow.
+Maintain a consistent design language across the entire application.
+
+Act like you are redesigning a production-level enterprise application used by real users daily.

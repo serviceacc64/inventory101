@@ -52,8 +52,7 @@
 
 /* modal helpers */
 .modal.show {
-    display: flex;
-    animation: fade-in 0.2s ease-out;
+    animation: fade-in 0.2s ease-out forwards;
 }
 .modal.show .modal-content {
     animation: slide-in 0.3s ease-out;

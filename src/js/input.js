@@ -315,7 +315,8 @@ function renderItems(items) {
 // 3. SELECT ITEM MODAL FUNCTIONS
 // ==========================================
 function openSelectItemModal() {
-    selectItemModal.style.display = 'flex';
+    selectItemModal.classList.add('show');
+    selectItemModal.style.display = '';
     renderSelectableItems(allItems);
     // Reset selection view
     selectedItemDetails.style.display = 'none';
@@ -324,7 +325,8 @@ function openSelectItemModal() {
 }
 
 function closeSelectItemModal() {
-    selectItemModal.style.display = 'none';
+    selectItemModal.classList.remove('show');
+    selectItemModal.style.display = '';
     // Reset form
     if (addQuantity) addQuantity.value = '';
     if (document.getElementById('addPO')) document.getElementById('addPO').value = '';
@@ -500,7 +502,10 @@ function openViewItemModal(itemId) {
 }
 
 function closeViewItemModal() {
-    if (viewItemModal) viewItemModal.style.display = 'none';
+    if (viewItemModal) {
+        viewItemModal.classList.remove('show');
+        viewItemModal.style.display = '';
+    }
 }
 
 // ==========================================
@@ -885,12 +890,12 @@ function openEditModal(itemId) {
         editItemSupplier.value = '';
     }
     
-    editItemModal.style.display = 'flex';
+    editItemModal.classList.add('show');
 }
 
 
 function closeEditModal() {
-    editItemModal.style.display = 'none';
+    editItemModal.classList.remove('show');
     // Reset date field
     document.getElementById('editItemDate').value = '';
     // Reset supplier dropdown
@@ -2059,7 +2064,7 @@ function openAddSupplierModal(targetDropdownId) {
     if (nameInput) nameInput.value = '';
     if (contactInput) contactInput.value = '';
     
-    modal.style.display = 'flex';
+    modal.classList.add('show');
     
     // Focus on name input
     setTimeout(() => {
@@ -2070,6 +2075,7 @@ function openAddSupplierModal(targetDropdownId) {
 function closeAddSupplierModal() {
     const modal = document.getElementById('addSupplierModal');
     modal.classList.remove('show');
+    modal.style.display = '';
     
     // Reset form
     const nameInput = document.getElementById('newSupplierName');

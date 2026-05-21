@@ -1,12 +1,12 @@
 /* Room Inventory Styles - Unified with System Design */
 
 :root {
-    --textcolor: #fff;
-    --textcolor2: #000;
-    --background: #dfd9d9;
-    --background2: #550000;
-    --hover: #891623;
-    --border: #29060A;
+    --textcolor: var(--text-white);
+    --textcolor2: var(--text-main);
+    --background: var(--bg-surface);
+    --background2: var(--brand-primary);
+    --hover: var(--brand-primary-hover);
+    --border: var(--border-color);
 }
 
 /* ============================================

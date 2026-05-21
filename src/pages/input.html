@@ -8,11 +8,13 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,300;0,500;0,600;1,100&display=swap" rel="stylesheet">
     <title>Items - Inventory System</title>
+    <link rel="stylesheet" href="../css/design-system.css">
     <link rel="stylesheet" href="../css/dashboard.css">
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/animations.css">
     <link rel="icon" href="data:,">
     <script type="module" src="../js/auth.js"></script>
+    <script src="../js/navigation.js" defer></script>
     <!-- Supabase Client -->
     <script type="module" src="../js/supabase.js"></script>
 
@@ -26,52 +28,10 @@
     </script>
     
     <!-- Navigation -->
-    <nav class="navigation" id="navbar">
-        <div class="logo">
-            <img src="../img/logo.png" alt="Logo">
-            <span id="label">RMNHS <br> Supplies Inventory</span>
-        </div>
-        <hr>
-        <div class="options">
-            <ul>
-<li><a href="../../dashboard.html">
-                    <i class="fa-solid fa-chart-line"></i>
-                    <span>Dashboard</span>
-                </a></li>
-                <li><a href="input.html" class="active">
-                    <i class="fa-solid fa-clipboard-list"></i>
-                    <span>Items</span>
-                </a></li>
-                <li><a href="rooms.html">
-                    <i class="fa-solid fa-door-open"></i>
-                    <span>Rooms</span>
-                </a></li>
-                <li><a href="buildings.html">
-                    <i class="fa-solid fa-building"></i>
-                    <span>Buildings</span>
-                </a></li>
-                <li><a href="equipment.html">
-                    <i class="fa-solid fa-tools"></i>
-                    <span>Equipment</span>
-                </a></li>
-                <li><a href="report.html">
-                    <i class="fa-solid fa-calendar-week"></i>
-                    <span>Reports</span>
-                </a></li>
-                <li><a href="logs.html">
-                    <i class="fa-solid fa-book-open"></i>
-                    <span>Logs</span>
-                </a></li>
-                <li class="logout"><a href="#" data-logout>
-                    <i class="fa-solid fa-sign-out-alt"></i>
-                    <span>Logout</span>
-                </a></li>
-            </ul>
-        </div>
-    </nav>
+    <nav class="navigation" id="navbar"></nav>
 
     <!-- Main Content -->
-    <main class="dashboard">
+    <main class="dashboard main-content">
         <header class="dashboard-header">
             <h1>Inventory Items</h1>
 
@@ -137,7 +97,7 @@
         <div class="modal-content modal-large">
             <div class="modal-header">
                 <h3>Add Stock to Item</h3>
-                <button onclick="closeSelectItemModal()">&times;</button>
+                <button class="modal-close" onclick="closeSelectItemModal()">&times;</button>
             </div>
             
             <!-- Search Box -->
@@ -173,26 +133,26 @@
                     <input type="hidden" id="selectedItemId">
 
                     <div class="form-group">
-                        <label for="addDate">Date *</label>
-                        <input type="date" id="addDate" required>
+                        <label class="form-label" for="addDate">Date *</label>
+                        <input class="form-input" type="date" id="addDate" required>
                     </div>
 
                     <div class="form-group">
-                        <label for="addPO">P.O. Number</label>
-                        <input type="text" id="addPO" placeholder="e.g., PO-2024-001">
+                        <label class="form-label" for="addPO">P.O. Number</label>
+                        <input class="form-input" type="text" id="addPO" placeholder="e.g., PO-2024-001">
                     </div>
 
                     <div class="form-group">
-                        <label for="addSupplier">Supplier</label>
-                        <select id="addSupplier">
+                        <label class="form-label" for="addSupplier">Supplier</label>
+                        <select class="form-input" id="addSupplier">
                             <option value="">Select Supplier (Optional)</option>
                         </select>
-                        <small style="color: #666; font-size: 11px; cursor: pointer; color: #007bff;" onclick="openAddSupplierModal('addSupplier')">+ Add New Supplier</small>
+                        <small style="color: #666; font-size: 11px; cursor: pointer; color: var(--brand-primary);" onclick="openAddSupplierModal('addSupplier')">+ Add New Supplier</small>
                     </div>
 
                     <div class="form-group">
-                        <label for="addQuantity">Quantity to Add *</label>
-                        <input type="number" id="addQuantity" required min="1" placeholder="Enter quantity to add">
+                        <label class="form-label" for="addQuantity">Quantity to Add *</label>
+                        <input class="form-input" type="number" id="addQuantity" required min="1" placeholder="Enter quantity to add">
                     </div>
 
                     <div class="form-actions">
@@ -213,18 +173,18 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Create New Item</h3>
-                <button onclick="closeCreateItemModal()">&times;</button>
+                <button class="modal-close" onclick="closeCreateItemModal()">&times;</button>
             </div>
             
             <form id="createItemForm" onsubmit="handleCreateItem(event)">
                 <div class="form-group">
-                    <label for="newItemName">Item Name *</label>
-                    <input type="text" id="newItemName" required placeholder="e.g., Ballpoint Pens">
+                    <label class="form-label" for="newItemName">Item Name *</label>
+                    <input class="form-input" type="text" id="newItemName" required placeholder="e.g., Ballpoint Pens">
                 </div>
                 
                 <div class="form-group">
-                    <label for="newItemLabel">Category *</label>
-                    <select id="newItemLabel" required>
+                    <label class="form-label" for="newItemLabel">Category *</label>
+                    <select class="form-input" id="newItemLabel" required>
                         <option value="">Select Category</option>
                         <option value="Janitorial">Janitorial</option>
                         <option value="Office Supplies">Office Supplies</option>
@@ -232,31 +192,31 @@
                 </div>
                 
                 <div class="form-group" id="newItemUnitGroup" style="display: none;">
-                    <label for="newItemUnit">Unit *</label>
-                    <input type="text" id="newItemUnit" placeholder="e.g., Gallon, Box, Piece, Ream">
+                    <label class="form-label" for="newItemUnit">Unit *</label>
+                    <input class="form-input" type="text" id="newItemUnit" placeholder="e.g., Gallon, Box, Piece, Ream">
                 </div>
                 
                 <div class="form-group">
-                    <label for="newItemPO">P.O. Number</label>
-                    <input type="text" id="newItemPO" placeholder="e.g., PO-2024-001">
+                    <label class="form-label" for="newItemPO">P.O. Number</label>
+                    <input class="form-input" type="text" id="newItemPO" placeholder="e.g., PO-2024-001">
                 </div>
 
                 <div class="form-group">
-                    <label for="newItemSupplier">Supplier</label>
-                    <select id="newItemSupplier">
+                    <label class="form-label" for="newItemSupplier">Supplier</label>
+                    <select class="form-input" id="newItemSupplier">
                         <option value="">Select Supplier (Optional)</option>
                     </select>
-                    <small style="color: #666; font-size: 11px; cursor: pointer; color: #007bff;" onclick="openAddSupplierModal('newItemSupplier')">+ Add New Supplier</small>
+                    <small style="color: #666; font-size: 11px; cursor: pointer; color: var(--brand-primary);" onclick="openAddSupplierModal('newItemSupplier')">+ Add New Supplier</small>
                 </div>
                 
                 <div class="form-group">
-                    <label for="newItemQuantity">Initial Quantity *</label>
-                    <input type="number" id="newItemQuantity" required min="0" placeholder="e.g., 100">
+                    <label class="form-label" for="newItemQuantity">Initial Quantity *</label>
+                    <input class="form-input" type="number" id="newItemQuantity" required min="0" placeholder="e.g., 100">
                 </div>
                 
                     <div class="form-group">
-                        <label for="newItemDate">Date</label>
-                        <input type="date" id="newItemDate" value="1999-01-01">
+                        <label class="form-label" for="newItemDate">Date</label>
+                        <input class="form-input" type="date" id="newItemDate" value="1999-01-01">
                         <small style="color: #666; font-size: 11px;">Set a past date for items acquired before this system was created</small>
                     </div>
                 
@@ -276,20 +236,20 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Edit Item</h3>
-                <button onclick="closeEditModal()">&times;</button>
+                <button class="modal-close" onclick="closeEditModal()">&times;</button>
             </div>
             
             <form id="editItemForm" onsubmit="handleEditItem(event)">
                 <input type="hidden" id="editItemId">
                 
                 <div class="form-group">
-                    <label for="editItemName">Item Name *</label>
-                    <input type="text" id="editItemName" required>
+                    <label class="form-label" for="editItemName">Item Name *</label>
+                    <input class="form-input" type="text" id="editItemName" required>
                 </div>
                 
                 <div class="form-group">
-                    <label for="editItemLabel">Category *</label>
-                    <select id="editItemLabel" required>
+                    <label class="form-label" for="editItemLabel">Category *</label>
+                    <select class="form-input" id="editItemLabel" required>
                         <option value="">Select Category</option>
                         <option value="Janitorial">Janitorial</option>
                         <option value="Office Supplies">Office Supplies</option>
@@ -297,27 +257,27 @@
                 </div>
 
                 <div class="form-group" id="editItemUnitGroup" style="display: none;">
-                    <label for="editItemUnit">Unit *</label>
-                    <input type="text" id="editItemUnit" placeholder="e.g., Gallon, Box, Piece">
+                    <label class="form-label" for="editItemUnit">Unit *</label>
+                    <input class="form-input" type="text" id="editItemUnit" placeholder="e.g., Gallon, Box, Piece">
                 </div>
                 
                 <div class="form-group">
-                    <label for="editItemQuantity">Quantity *</label>
-                    <input type="number" id="editItemQuantity" required min="0">
+                    <label class="form-label" for="editItemQuantity">Quantity *</label>
+                    <input class="form-input" type="number" id="editItemQuantity" required min="0">
                 </div>
 
                 <div class="form-group">
-                    <label for="editItemDate">Date</label>
-                    <input type="date" id="editItemDate" placeholder="Leave empty to keep current date">
+                    <label class="form-label" for="editItemDate">Date</label>
+                    <input class="form-input" type="date" id="editItemDate" placeholder="Leave empty to keep current date">
                     <small style="color: #666; font-size: 11px;">Set a past date for items acquired before this system was created</small>
                 </div>
 
                 <div class="form-group">
-                    <label for="editItemSupplier">Supplier</label>
-                    <select id="editItemSupplier">
+                    <label class="form-label" for="editItemSupplier">Supplier</label>
+                    <select class="form-input" id="editItemSupplier">
                         <option value="">Select Supplier (Optional)</option>
                     </select>
-                    <small style="color: #666; font-size: 11px; cursor: pointer; color: #007bff;" onclick="openAddSupplierModal('editItemSupplier')">+ Add New Supplier</small>
+                    <small style="color: #666; font-size: 11px; cursor: pointer; color: var(--brand-primary);" onclick="openAddSupplierModal('editItemSupplier')">+ Add New Supplier</small>
                 </div>
 
                 
@@ -337,25 +297,25 @@
         <div class="modal-content modal-large">
             <div class="modal-header">
                 <h3>Get Item from Inventory</h3>
-                <button onclick="closeGetItemModal()">&times;</button>
+                <button class="modal-close" onclick="closeGetItemModal()">&times;</button>
             </div>
             
             <!-- Step 1: Requester Info Section (Shows first) -->
             <div id="requesterInfoSection" style="padding: 20px 0;">
                 <div style="text-align: center; margin-bottom: 20px;">
-                    <div style="display: inline-block; background: var(--primary-color); color: white; width: 40px; height: 40px; border-radius: 50%; line-height: 40px; font-weight: bold;">1</div>
+                    <div style="display: inline-block; background: var(--brand-primary); color: white; width: 40px; height: 40px; border-radius: 50%; line-height: 40px; font-weight: bold;">1</div>
                     <span style="margin-left: 10px; font-weight: 500;">Requester Information</span>
                 </div>
                 
                 <form id="requesterInfoForm" onsubmit="proceedToItemSelection(event)">
                     <div class="form-group">
-                        <label for="requesterName">Who Gets It *</label>
-                        <input type="text" id="requesterName" required placeholder="Enter person's name">
+                        <label class="form-label" for="requesterName">Who Gets It *</label>
+                        <input class="form-input" type="text" id="requesterName" required placeholder="Enter person's name">
                     </div>
                     
                     <div class="form-group">
-                        <label for="requesterTimestamp">Timestamp *</label>
-                        <input type="datetime-local" id="requesterTimestamp" required>
+                        <label class="form-label" for="requesterTimestamp">Timestamp *</label>
+                        <input class="form-input" type="datetime-local" id="requesterTimestamp" required>
                     </div>
                     
                     <div class="form-actions">
@@ -413,8 +373,8 @@
                     <input type="hidden" id="getItemSelectedId">
                     
                     <div class="form-group">
-                        <label for="getItemQuantity">Quantity to Get *</label>
-                        <input type="number" id="getItemQuantity" required min="1" placeholder="Enter quantity">
+                        <label class="form-label" for="getItemQuantity">Quantity to Get *</label>
+                        <input class="form-input" type="number" id="getItemQuantity" required min="1" placeholder="Enter quantity">
                     </div>
                     
                     <div class="form-actions">
@@ -487,7 +447,7 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <h3>Item Details</h3>
-                        <button id="viewCloseX" onclick="closeViewItemModal()">&times;</button>
+                        <button id="viewCloseX" class="modal-close" onclick="closeViewItemModal()">&times;</button>
                     </div>
 
                     <div class="view-item-grid">
@@ -532,20 +492,20 @@
         <div class="modal-content" style="max-width: 400px;">
             <div class="modal-header">
                 <h3>Add New Supplier</h3>
-                <button onclick="closeAddSupplierModal()">&times;</button>
+                <button class="modal-close" onclick="closeAddSupplierModal()">&times;</button>
             </div>
             
             <form id="addSupplierForm" onsubmit="handleAddSupplier(event)">
                 <input type="hidden" id="targetSupplierDropdown">
                 
                 <div class="form-group">
-                    <label for="newSupplierName">Supplier Name *</label>
-                    <input type="text" id="newSupplierName" required placeholder="e.g., ABC Supplies Inc.">
+                    <label class="form-label" for="newSupplierName">Supplier Name *</label>
+                    <input class="form-input" type="text" id="newSupplierName" required placeholder="e.g., ABC Supplies Inc.">
                 </div>
                 
                 <div class="form-group">
-                    <label for="newSupplierContact">Contact Info</label>
-                    <input type="text" id="newSupplierContact" placeholder="e.g., Phone, Email, Address">
+                    <label class="form-label" for="newSupplierContact">Contact Info</label>
+                    <input class="form-input" type="text" id="newSupplierContact" placeholder="e.g., Phone, Email, Address">
                 </div>
                 
                 <div class="form-actions">
@@ -563,11 +523,11 @@
         <div class="modal-content modal-large">
             <div class="modal-header">
                 <h3><i class="fa-solid fa-file-invoice"></i> Add Stock by Receipt</h3>
-                <button onclick="closePOModal()">&times;</button>
+                <button class="modal-close" onclick="closePOModal()">&times;</button>
             </div>
             
             <!-- Step Progress Indicator -->
-            <div class="po-step-progress" style="display: flex; justify-content: center; margin: 20px 0; gap: 20px;">
+            <div class="po-step-progress">
                 <div id="poStep1Indicator" class="po-step-indicator active">
                     <span class="po-step-number">1</span>
                     <span class="po-step-label">Receipt Info</span>
@@ -593,21 +553,21 @@
                 
                 <form id="poReceiptForm" onsubmit="proceedToPOStep2(event)">
                     <div class="form-group">
-                        <label for="poDate">Date *</label>
-                        <input type="date" id="poDate" required>
+                        <label class="form-label" for="poDate">Date *</label>
+                        <input class="form-input" type="date" id="poDate" required>
                     </div>
                     
                     <div class="form-group">
-                        <label for="poNumber">P.O. Number / Receipt Number</label>
-                        <input type="text" id="poNumber" placeholder="e.g., PO-2024-001">
+                        <label class="form-label" for="poNumber">P.O. Number / Receipt Number</label>
+                        <input class="form-input" type="text" id="poNumber" placeholder="e.g., PO-2024-001">
                     </div>
                     
                     <div class="form-group">
-                        <label for="poSupplier">Supplier</label>
-                        <select id="poSupplier">
+                        <label class="form-label" for="poSupplier">Supplier</label>
+                        <select class="form-input" id="poSupplier">
                             <option value="">Select Supplier (Optional)</option>
                         </select>
-                        <small style="color: #666; font-size: 11px; cursor: pointer; color: #007bff;" onclick="openAddSupplierModal('poSupplier')">+ Add New Supplier</small>
+                        <small style="color: #666; font-size: 11px; cursor: pointer; color: var(--brand-primary);" onclick="openAddSupplierModal('poSupplier')">+ Add New Supplier</small>
                     </div>
                     
                     <div class="form-actions">
@@ -673,8 +633,8 @@
                         <input type="hidden" id="poSelectedItemId">
                         
                         <div class="form-group">
-                            <label for="poItemQuantity">Quantity to Add *</label>
-                            <input type="number" id="poItemQuantity" required min="1" placeholder="Enter quantity">
+                            <label class="form-label" for="poItemQuantity">Quantity to Add *</label>
+                            <input class="form-input" type="number" id="poItemQuantity" required min="1" placeholder="Enter quantity">
                         </div>
                         
                         <div class="form-actions">
@@ -795,18 +755,18 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Create New Item</h3>
-                <button onclick="closePOCreateItemModal()">&times;</button>
+                <button class="modal-close" onclick="closePOCreateItemModal()">&times;</button>
             </div>
             
             <form id="poCreateItemForm" onsubmit="handlePOCreateItem(event)">
                 <div class="form-group">
-                    <label for="poNewItemName">Item Name *</label>
-                    <input type="text" id="poNewItemName" required placeholder="e.g., Ballpoint Pens">
+                    <label class="form-label" for="poNewItemName">Item Name *</label>
+                    <input class="form-input" type="text" id="poNewItemName" required placeholder="e.g., Ballpoint Pens">
                 </div>
                 
                 <div class="form-group">
-                    <label for="poNewItemLabel">Category *</label>
-                    <select id="poNewItemLabel" required>
+                    <label class="form-label" for="poNewItemLabel">Category *</label>
+                    <select class="form-input" id="poNewItemLabel" required>
                         <option value="">Select Category</option>
                         <option value="Janitorial">Janitorial</option>
                         <option value="Office Supplies">Office Supplies</option>
@@ -814,13 +774,13 @@
                 </div>
                 
                 <div class="form-group" id="poNewItemUnitGroup" style="display: none;">
-                    <label for="poNewItemUnit">Unit *</label>
-                    <input type="text" id="poNewItemUnit" placeholder="e.g., Gallon, Box, Piece, Ream">
+                    <label class="form-label" for="poNewItemUnit">Unit *</label>
+                    <input class="form-input" type="text" id="poNewItemUnit" placeholder="e.g., Gallon, Box, Piece, Ream">
                 </div>
                 
                 <div class="form-group">
-                    <label for="poNewItemQuantity">Initial Quantity *</label>
-                    <input type="number" id="poNewItemQuantity" required min="1" placeholder="e.g., 100">
+                    <label class="form-label" for="poNewItemQuantity">Initial Quantity *</label>
+                    <input class="form-input" type="number" id="poNewItemQuantity" required min="1" placeholder="e.g., 100">
                 </div>
                 
                 <div class="form-actions">

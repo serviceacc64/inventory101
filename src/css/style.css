@@ -1,28 +1,22 @@
-:root{
---textcolor:#fff;
---textcolor2:#000;
---background:#dfd9d9;
---background2:#550000;
---hover:#891623;
---border:#29060A;
+/* ==========================================================================
+   Legacy Variable Bridge & Layout Modifiers
+   Maps old CSS custom properties to the Design System tokens to prevent
+   theme collisions while maintaining functionality.
+   ========================================================================== */
+
+:root {
+    --textcolor: var(--text-white);
+    --textcolor2: var(--text-main);
+    --background: var(--bg-surface);
+    --background2: var(--brand-primary);
+    --hover: var(--brand-primary-hover);
+    --border: var(--border-color);
 }
 
-*{
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: "Poppins", sans-serif;
-}
-html {
-    scrollbar-gutter: stable;
-}
-body{
-    background-color: var(--background2);
-    font-family: "Poppins", sans-serif;
-    height: 100vh;
-    display: flex;
-    overflow-x: hidden;
-}
+/* 
+   Direct 'body', '*', and 'html' overrides are removed from here.
+   They are now managed centrally by design-system.css to maintain a cohesive light-theme workspace.
+*/
 
 
 
@@ -273,12 +267,12 @@ body{
 
 .report-tabs button.active {
     border-radius: 0px;
-    color: #dfd9d9;
-    border-bottom-color: #dfd9d9;
+    color: var(--brand-primary);
+    border-bottom-color: var(--brand-primary);
 }
 
 .report-tabs button:hover {
-    color: #891623;
+    color: var(--brand-primary-hover);
 }
 
 /* Report Content */
@@ -732,57 +726,73 @@ body{
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 25px;
+    margin: var(--space-md) 0 var(--space-xl) 0;
+    gap: var(--space-md);
 }
 
 .po-step-indicator {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-xs);
 }
 
 .po-step-number {
-    width: 36px;
-    height: 36px;
+    width: 38px;
+    height: 38px;
     border-radius: 50%;
-    background: #e0e0e0;
-    color: #666;
+    background: hsl(220, 15%, 90%);
+    color: var(--text-muted);
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 600;
     font-size: 14px;
-    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    transition: var(--transition-spring);
 }
 
 .po-step-indicator.active .po-step-number {
-    background: var(--background2);
-    color: white;
+    background: var(--brand-primary);
+    color: var(--text-white);
+    transform: scale(1.1);
+    box-shadow: 0 0 0 4px rgba(var(--brand-primary-rgb), 0.15), var(--shadow-md);
 }
 
 .po-step-indicator.completed .po-step-number {
-    background: #4caf50;
-    color: white;
+    background: var(--color-success);
+    color: var(--text-white);
+    box-shadow: 0 0 0 4px var(--color-success-light);
 }
 
 .po-step-label {
     font-size: 12px;
-    color: #666;
+    color: var(--text-muted);
     font-weight: 500;
+    transition: var(--transition-normal);
 }
 
 .po-step-indicator.active .po-step-label {
-    color: var(--background2);
+    color: var(--brand-primary);
     font-weight: 600;
+}
+
+.po-step-indicator.completed .po-step-label {
+    color: var(--color-success);
 }
 
 .po-step-line {
     width: 60px;
-    height: 2px;
-    background: #e0e0e0;
-    margin: 0 10px;
-    margin-bottom: 20px;
+    height: 3px;
+    background: hsl(220, 15%, 90%);
+    border-radius: var(--radius-full);
+    align-self: flex-start;
+    margin-top: 18px; /* Vertically centered with 38px circle */
+    transition: var(--transition-normal);
+}
+
+.po-step-indicator.completed + .po-step-line {
+    background: var(--color-success);
 }
 
 /* PO Step Content */

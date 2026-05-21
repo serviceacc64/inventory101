@@ -8,15 +8,15 @@
 */
 
 :root {
-    --reports-muted: #666666;
-    --reports-muted-light: #888888;
-    --reports-glass: rgba(85, 0, 0, 0.05);
-    --reports-success: #4CAF50;
-    --reports-danger: #f44336;
-    --reports-warning: #ff9800;
-    --reports-info: #2196F3;
-    --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    --card-shadow-hover: 0 8px 20px rgba(0, 0, 0, 0.12);
+    --reports-muted: var(--text-muted);
+    --reports-muted-light: var(--text-light);
+    --reports-glass: var(--brand-primary-light);
+    --reports-success: var(--color-success);
+    --reports-danger: var(--color-danger);
+    --reports-warning: var(--color-warning);
+    --reports-info: var(--color-info);
+    --card-shadow: var(--shadow-md);
+    --card-shadow-hover: var(--shadow-lg);
 }
 
 /* Reports Section */

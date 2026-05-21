@@ -8,6 +8,19 @@ const errorState = document.getElementById('errorState');
 const emptyState = document.getElementById('emptyState');
 const reportContainer = document.getElementById('reportContainer');
 
+/** Show/hide modals via .show (design-system.css); clears inline display from HTML. */
+function openModal(modal) {
+    if (!modal) return;
+    modal.classList.add('show');
+    modal.style.removeProperty('display');
+}
+
+function closeModal(modal) {
+    if (!modal) return;
+    modal.classList.remove('show');
+    modal.style.removeProperty('display');
+}
+
 // Store all data
 let allItems = [];
 let allRooms = [];
@@ -850,14 +863,14 @@ function openCreateLostItemsReportModal() {
             }
         }
         
-        modal.style.display = 'flex';
+        openModal(modal);
     }
 }
 
 // Close Create Lost Items Report Modal
 function closeCreateLostItemsReportModal() {
     const modal = document.getElementById('createLostItemsReportModal');
-    if (modal) modal.style.display = 'none';
+    closeModal(modal);
     
     // Reset form
     const form = document.getElementById('createLostItemsReportForm');
@@ -1533,15 +1546,11 @@ function renderItemHistoryPreview() {
 }
 
 function openItemHistoryPreviewModal() {
-    const modal = document.getElementById('itemHistoryPreviewModal');
-    if (!modal) return;
-    modal.style.display = 'flex';
+    openModal(document.getElementById('itemHistoryPreviewModal'));
 }
 
 function closeItemHistoryPreviewModal() {
-    const modal = document.getElementById('itemHistoryPreviewModal');
-    if (!modal) return;
-    modal.style.display = 'none';
+    closeModal(document.getElementById('itemHistoryPreviewModal'));
 }
 
 async function exportItemHistoryReport(format) {
@@ -1695,14 +1704,14 @@ function openCreateItemsListReportModal() {
             }
         }
         
-        modal.style.display = 'flex';
+        openModal(modal);
     }
 }
 
 // Close Create Items List Report Modal
 function closeCreateItemsListReportModal() {
     const modal = document.getElementById('createItemsListReportModal');
-    if (modal) modal.style.display = 'none';
+    closeModal(modal);
     
     const form = document.getElementById('createItemsListReportForm');
     if (form) form.reset();
@@ -2023,7 +2032,7 @@ async function openCreateRoomsReportModal() {
         // Populate editable items table (now async)
         await populateEditableRoomItems();
         
-        modal.style.display = 'flex';
+        openModal(modal);
     }
 }
 
@@ -2097,7 +2106,7 @@ async function populateEditableRoomItems() {
 // Close Create Rooms Report Modal
 function closeCreateRoomsReportModal() {
     const modal = document.getElementById('createRoomsReportModal');
-    if (modal) modal.style.display = 'none';
+    closeModal(modal);
     
     const form = document.getElementById('createRoomsReportForm');
     if (form) form.reset();
@@ -2484,14 +2493,14 @@ function openCreateLogsReportModal() {
             }
         }
         
-        modal.style.display = 'flex';
+        openModal(modal);
     }
 }
 
 // Close Create Logs Report Modal
 function closeCreateLogsReportModal() {
     const modal = document.getElementById('createLogsReportModal');
-    if (modal) modal.style.display = 'none';
+    closeModal(modal);
     
     const form = document.getElementById('createLogsReportForm');
     if (form) form.reset();
@@ -2873,14 +2882,14 @@ function openCreateEquipmentReportModal() {
             }
         }
         
-        modal.style.display = 'flex';
+        openModal(modal);
     }
 }
 
 // Close Create Equipment Report Modal
 function closeCreateEquipmentReportModal() {
     const modal = document.getElementById('createEquipmentReportModal');
-    if (modal) modal.style.display = 'none';
+    closeModal(modal);
     
     const form = document.getElementById('createEquipmentReportForm');
     if (form) form.reset();
@@ -3794,13 +3803,12 @@ function downloadCSV(csvContent, filename) {
 // ==========================================
 
 function openCreateReportModal() {
-    const modal = document.getElementById('createReportModal');
-    if (modal) modal.style.display = 'flex';
+    openModal(document.getElementById('createReportModal'));
 }
 
 function closeCreateReportModal() {
     const modal = document.getElementById('createReportModal');
-    if (modal) modal.style.display = 'none';
+    closeModal(modal);
     // Reset form
     const form = document.getElementById('createReportForm');
     if (form) form.reset();
@@ -3953,20 +3961,19 @@ let selectedTemplateFile = null;
 function openTemplatesModal() {
     const modal = document.getElementById('templatesModal');
     if (modal) {
-        modal.style.display = 'flex';
+        openModal(modal);
         loadTemplates();
     }
 }
 
 function closeTemplatesModal() {
-    const modal = document.getElementById('templatesModal');
-    if (modal) modal.style.display = 'none';
+    closeModal(document.getElementById('templatesModal'));
 }
 
 function openUploadTemplateModal() {
     const modal = document.getElementById('uploadTemplateModal');
     if (modal) {
-        modal.style.display = 'flex';
+        openModal(modal);
         // Reset form
         const form = document.getElementById('uploadTemplateForm');
         if (form) form.reset();
@@ -3977,8 +3984,31 @@ function openUploadTemplateModal() {
 }
 
 function closeUploadTemplateModal() {
-    const modal = document.getElementById('uploadTemplateModal');
-    if (modal) modal.style.display = 'none';
+    closeModal(document.getElementById('uploadTemplateModal'));
+}
+
+/** Toolbar Export: use in-report export if a generated report is open. */
+function handleToolbarExport() {
+    const reportExportBtn = reportContainer?.querySelector(
+        '.report-header .btn-primary[onclick*="exportCurrentReport"]'
+    );
+    if (reportExportBtn) {
+        reportExportBtn.click();
+        return;
+    }
+
+    const activeTab = document.querySelector('.report-tabs .tab-btn.active')?.dataset.tab;
+    if (activeTab === 'custom' && typeof window.exportCustomMonthReport === 'function') {
+        const customBtn = document.getElementById('exportCustomMonthBtn');
+        if (customBtn && !customBtn.disabled) {
+            window.exportCustomMonthReport();
+            return;
+        }
+    }
+
+    alert(
+        'No exportable report is open. Click "Create Report" to generate one, then use Export on that report—or pick a month on the Custom Month tab.'
+    );
 }
 
 async function loadTemplates() {
@@ -4170,6 +4200,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const manageTemplatesBtn = document.getElementById('manageTemplatesBtn');
     if (manageTemplatesBtn) {
         manageTemplatesBtn.addEventListener('click', openTemplatesModal);
+    }
+
+    const toolbarExportBtn = document.getElementById('exportBtn');
+    if (toolbarExportBtn) {
+        toolbarExportBtn.addEventListener('click', handleToolbarExport);
     }
 
     // Templates modal close on outside click
