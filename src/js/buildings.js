@@ -19,7 +19,6 @@ const createBuildingForm = document.getElementById('createBuildingForm');
 const buildingDetailsModal = document.getElementById('buildingDetailsModal');
 const buildingDetailsTitle = document.getElementById('buildingDetailsTitle');
 const detailBuildingName = document.getElementById('detailBuildingName');
-const detailBuildingMeta = document.getElementById('detailBuildingMeta');
 const detailBuildingDescription = document.getElementById('detailBuildingDescription');
 const structuresList = document.getElementById('structuresList');
 const noStructuresState = document.getElementById('noStructuresState');
@@ -32,32 +31,11 @@ const editBuildingForm = document.getElementById('editBuildingForm');
 const editBuildingId = document.getElementById('editBuildingId');
 const editBuildingName = document.getElementById('editBuildingName');
 const editBuildingDescription = document.getElementById('editBuildingDescription');
-const editBuildingNumber = document.getElementById('editBuildingNumber');
-const editStructureNumber = document.getElementById('editStructureNumber');
-const editNumberOfStoreys = document.getElementById('editNumberOfStoreys');
-const editNumberOfRooms = document.getElementById('editNumberOfRooms');
-const editPropertyNumber = document.getElementById('editPropertyNumber');
-const editFundSource = document.getElementById('editFundSource');
-const editAcquisitionCost = document.getElementById('editAcquisitionCost');
-const editAcquisitionDate = document.getElementById('editAcquisitionDate');
 
 // State
 let allBuildings = [];
 let currentBuildingId = null;
 let isSubmitting = false;
-const BUILDING_LOCAL_DETAILS_KEY = 'buildingAdditionalDetails';
-const BUILDING_EXTRA_COLUMNS = [
-    'building_number',
-    'structure_number',
-    'number_of_storeys',
-    'number_of_rooms',
-    'room_usage',
-    'property_number',
-    'fund_source',
-    'acquisition_cost',
-    'acquisition_date'
-];
-const unsupportedBuildingColumns = new Set(BUILDING_EXTRA_COLUMNS);
 
 // ==========================================
 // INITIALIZE
@@ -96,19 +74,6 @@ function setupEventListeners() {
             window.generateRoomInputs();
         });
     }
-
-    const buildingRoomsInput = document.getElementById('numberOfRooms');
-    if (buildingRoomsInput) {
-        buildingRoomsInput.addEventListener('input', () => {
-            generateRoomUsageInputs();
-        });
-    }
-
-    if (editNumberOfRooms) {
-        editNumberOfRooms.addEventListener('input', () => {
-            generateRoomUsageInputs('edit');
-        });
-    }
 }
 
 // ==========================================
@@ -127,8 +92,7 @@ async function fetchBuildings() {
 
         if (error) throw error;
 
-        syncSupportedBuildingColumns(buildings || []);
-        allBuildings = (buildings || []).map(mergeLocalBuildingDetails);
+        allBuildings = buildings || [];
         applyFilters();
 
     } catch (error) {
@@ -146,16 +110,7 @@ function applyFilters() {
     if (searchTerm) {
         filtered = filtered.filter(building =>
             building.name.toLowerCase().includes(searchTerm) ||
-            fieldIncludes(building.description, searchTerm) ||
-            fieldIncludes(building.building_number, searchTerm) ||
-            fieldIncludes(building.structure_number, searchTerm) ||
-            fieldIncludes(building.number_of_storeys, searchTerm) ||
-            fieldIncludes(building.number_of_rooms, searchTerm) ||
-            fieldIncludes(building.room_usage, searchTerm) ||
-            fieldIncludes(building.property_number, searchTerm) ||
-            fieldIncludes(building.fund_source, searchTerm) ||
-            fieldIncludes(building.acquisition_cost, searchTerm) ||
-            fieldIncludes(building.acquisition_date, searchTerm)
+            (building.description && building.description.toLowerCase().includes(searchTerm))
         );
     }
 
@@ -181,12 +136,6 @@ function renderBuildings(buildings) {
         buildingEl.dataset.buildingId = building.id;
 
         const structuresCount = building.structures ? building.structures.length : 0;
-        const summaryItems = [
-            building.building_number ? `<p><i class="fa-solid fa-hashtag"></i> Building No: ${escapeHtml(building.building_number)}</p>` : '',
-            building.structure_number ? `<p><i class="fa-solid fa-layer-group"></i> Structure No: ${escapeHtml(building.structure_number)}</p>` : '',
-            building.number_of_storeys !== null && building.number_of_storeys !== undefined ? `<p><i class="fa-solid fa-building"></i> Storeys: ${building.number_of_storeys}</p>` : '',
-            building.number_of_rooms !== null && building.number_of_rooms !== undefined ? `<p><i class="fa-solid fa-door-open"></i> Rooms: ${building.number_of_rooms}</p>` : ''
-        ].join('');
 
         buildingEl.innerHTML = `
             <div class="room-header">
@@ -200,7 +149,6 @@ function renderBuildings(buildings) {
 
             <div class="room-info">
                 ${building.description ? `<p class="room-adviser"><i class="fa-solid fa-info-circle"></i> ${escapeHtml(building.description)}</p>` : '<p class="room-adviser">No description</p>'}
-                ${summaryItems ? `<div class="building-card-meta">${summaryItems}</div>` : ''}
             </div>
 
             <div class="room-stats">
@@ -225,7 +173,6 @@ function renderBuildings(buildings) {
 // ==========================================
 window.openCreateBuildingModal = function() {
     createBuildingForm.reset();
-    generateRoomUsageInputs();
     createBuildingModal.classList.add('show');
 }
 
@@ -240,15 +187,6 @@ window.openEditBuildingModal = function(buildingId) {
     editBuildingId.value = building.id;
     editBuildingName.value = building.name;
     editBuildingDescription.value = building.description || '';
-    editBuildingNumber.value = building.building_number || '';
-    editStructureNumber.value = building.structure_number || '';
-    editNumberOfStoreys.value = building.number_of_storeys ?? '';
-    editNumberOfRooms.value = building.number_of_rooms ?? '';
-    generateRoomUsageInputs('edit', parseRoomUsage(building.room_usage));
-    editPropertyNumber.value = building.property_number || '';
-    editFundSource.value = building.fund_source || '';
-    editAcquisitionCost.value = building.acquisition_cost ?? '';
-    editAcquisitionDate.value = building.acquisition_date || '';
 
     editBuildingModal.classList.add('show');
 }
@@ -265,7 +203,6 @@ window.openBuildingDetailsModal = function(buildingId) {
     structureBuildingIdInput.value = buildingId;
 
     detailBuildingName.textContent = building.name;
-    detailBuildingMeta.innerHTML = renderBuildingMeta(building);
     detailBuildingDescription.textContent = building.description || 'No description';
 
     renderStructures(building.structures || []);
@@ -455,14 +392,15 @@ window.handleCreateBuilding = async function(event) {
     if (isSubmitting) return;
     isSubmitting = true;
 
-    const data = {
-        ...getBuildingFormData(),
-        name: document.getElementById('buildingName').value.trim()
-    };
+    const name = document.getElementById('buildingName').value.trim();
+    const description = document.getElementById('buildingDescription').value.trim();
 
     try {
-        const savedBuilding = await saveBuildingRecord('insert', data);
-        persistUnsupportedBuildingDetails(savedBuilding.id, data);
+        const { error } = await supabase
+            .from('buildings')
+            .insert([{ name, description }]);
+
+        if (error) throw error;
 
         showNotification('Building created successfully!');
         window.closeCreateBuildingModal();
@@ -481,14 +419,16 @@ window.handleEditBuilding = async function(event) {
     isSubmitting = true;
 
     const id = editBuildingId.value;
-    const data = {
-        ...getBuildingFormData('edit'),
-        name: editBuildingName.value.trim()
-    };
+    const name = editBuildingName.value.trim();
+    const description = editBuildingDescription.value.trim();
 
     try {
-        await saveBuildingRecord('update', data, id);
-        persistUnsupportedBuildingDetails(id, data);
+        const { error } = await supabase
+            .from('buildings')
+            .update({ name, description })
+            .eq('id', id);
+
+        if (error) throw error;
 
         showNotification('Building updated successfully!');
         window.closeEditBuildingModal();
@@ -519,7 +459,6 @@ window.handleDeleteBuilding = async function() {
         if (error) throw error;
 
         showNotification('Building deleted successfully!');
-        removeStoredBuildingDetails(id);
         window.closeEditBuildingModal();
         fetchBuildings();
     } catch (error) {
@@ -633,15 +572,6 @@ window.exportBuildingToExcel = function() {
     const data = structures.map(structure => {
         const row = {
             'Building Name': building.name,
-            'Building Number': building.building_number || '',
-            'Structure Number': building.structure_number || '',
-            'Number of Storeys': building.number_of_storeys ?? '',
-            'Building Number of Rooms': building.number_of_rooms ?? '',
-            'Room Usage': building.room_usage || '',
-            'Property Number': building.property_number || '',
-            'Fund Source': building.fund_source || '',
-            'Acquisition Cost': building.acquisition_cost ?? '',
-            'Acquisition Date': building.acquisition_date || '',
             'Description': building.description || '',
             'Structure Type': structure.type,
             'Number of Rooms': '',
@@ -692,248 +622,6 @@ function showError(message) {
 
 function hideError() {
     errorState.style.display = 'none';
-}
-
-function fieldIncludes(value, searchTerm) {
-    return value !== null &&
-        value !== undefined &&
-        String(value).toLowerCase().includes(searchTerm);
-}
-
-function getBuildingFormData(prefix = '') {
-    const id = (field) => prefix ? `${prefix}${field}` : `${field.charAt(0).toLowerCase()}${field.slice(1)}`;
-
-    return {
-        description: getStringValue(id('BuildingDescription')),
-        building_number: getStringValue(id('BuildingNumber')),
-        structure_number: getStringValue(id('StructureNumber')),
-        number_of_storeys: getNumberValue(id('NumberOfStoreys')),
-        number_of_rooms: getNumberValue(id('NumberOfRooms')),
-        room_usage: getRoomUsageValue(prefix),
-        property_number: getStringValue(id('PropertyNumber')),
-        fund_source: getStringValue(id('FundSource')),
-        acquisition_cost: getNumberValue(id('AcquisitionCost')),
-        acquisition_date: getStringValue(id('AcquisitionDate')) || null
-    };
-}
-
-function getStringValue(id) {
-    const element = document.getElementById(id);
-    return element ? element.value.trim() : '';
-}
-
-function getNumberValue(id) {
-    const value = getStringValue(id);
-    return value === '' ? null : Number(value);
-}
-
-function generateRoomUsageInputs(prefix = '', existingUsage = []) {
-    const roomsInputId = prefix ? 'editNumberOfRooms' : 'numberOfRooms';
-    const containerId = prefix ? 'editRoomUsageContainer' : 'roomUsageContainer';
-    const count = parseInt(getStringValue(roomsInputId), 10) || 0;
-    const container = document.getElementById(containerId);
-
-    if (!container) return;
-
-    container.innerHTML = '';
-
-    if (count <= 0) {
-        container.innerHTML = '<p class="room-usage-empty">Enter the number of rooms to add room usage fields.</p>';
-        return;
-    }
-
-    for (let index = 0; index < count; index++) {
-        const row = document.createElement('div');
-        row.className = 'room-usage-row';
-
-        const label = document.createElement('label');
-        label.textContent = `Room ${index + 1} Usage`;
-
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.className = 'building-room-usage-input';
-        input.placeholder = `e.g., Classroom, Office, Library`;
-        input.value = existingUsage[index] || '';
-
-        row.appendChild(label);
-        row.appendChild(input);
-        container.appendChild(row);
-    }
-}
-
-function getRoomUsageValue(prefix = '') {
-    const containerId = prefix ? 'editRoomUsageContainer' : 'roomUsageContainer';
-    const container = document.getElementById(containerId);
-    if (!container) return '';
-
-    const usage = Array.from(container.querySelectorAll('.building-room-usage-input'))
-        .map((input, index) => `Room ${index + 1}: ${input.value.trim()}`)
-        .filter((line) => !line.endsWith(':'));
-
-    return usage.join('\n');
-}
-
-function parseRoomUsage(value) {
-    if (!value) return [];
-
-    return String(value)
-        .split('\n')
-        .map((line) => line.replace(/^Room\s+\d+:\s*/i, '').trim());
-}
-
-async function saveBuildingRecord(action, data, id = null) {
-    const payload = getSupportedBuildingPayload(data);
-
-    try {
-        let query = supabase.from('buildings');
-
-        if (action === 'insert') {
-            query = query.insert([payload]);
-        } else {
-            query = query.update(payload).eq('id', id);
-        }
-
-        const { data: savedBuilding, error } = await query.select().single();
-        if (error) throw error;
-
-        return savedBuilding || { id };
-    } catch (error) {
-        const missingColumn = getMissingColumnName(error);
-
-        if (missingColumn && Object.prototype.hasOwnProperty.call(data, missingColumn)) {
-            unsupportedBuildingColumns.add(missingColumn);
-            console.warn(`Skipping unsupported buildings column: ${missingColumn}`);
-            return saveBuildingRecord(action, data, id);
-        }
-
-        throw error;
-    }
-}
-
-function getSupportedBuildingPayload(data) {
-    return Object.entries(data).reduce((payload, [key, value]) => {
-        if (!unsupportedBuildingColumns.has(key)) {
-            payload[key] = value;
-        }
-
-        return payload;
-    }, {});
-}
-
-function getMissingColumnName(error) {
-    if (!error || error.code !== 'PGRST204' || !error.message) return null;
-
-    const match = error.message.match(/'([^']+)' column/);
-    return match ? match[1] : null;
-}
-
-function syncSupportedBuildingColumns(buildings) {
-    const sampleBuilding = buildings.find(Boolean);
-    if (!sampleBuilding) return;
-
-    BUILDING_EXTRA_COLUMNS.forEach((column) => {
-        if (Object.prototype.hasOwnProperty.call(sampleBuilding, column)) {
-            unsupportedBuildingColumns.delete(column);
-        }
-    });
-}
-
-function persistUnsupportedBuildingDetails(buildingId, data) {
-    if (!buildingId) return;
-
-    const unsupportedDetails = BUILDING_EXTRA_COLUMNS.reduce((details, column) => {
-        if (unsupportedBuildingColumns.has(column)) {
-            details[column] = data[column];
-        }
-
-        return details;
-    }, {});
-
-    if (Object.keys(unsupportedDetails).length === 0) return;
-
-    const storedDetails = getStoredBuildingDetails();
-    storedDetails[buildingId] = {
-        ...(storedDetails[buildingId] || {}),
-        ...unsupportedDetails
-    };
-    localStorage.setItem(BUILDING_LOCAL_DETAILS_KEY, JSON.stringify(storedDetails));
-
-    showNotification('Building saved. Run the building fields SQL setup to store the new fields in Supabase.', 'warning');
-}
-
-function mergeLocalBuildingDetails(building) {
-    const storedDetails = getStoredBuildingDetails()[building.id] || {};
-
-    return BUILDING_EXTRA_COLUMNS.reduce((mergedBuilding, column) => {
-        const databaseValue = mergedBuilding[column];
-        const localValue = storedDetails[column];
-
-        if ((databaseValue === null || databaseValue === undefined || databaseValue === '') &&
-            localValue !== null &&
-            localValue !== undefined &&
-            localValue !== '') {
-            mergedBuilding[column] = localValue;
-        }
-
-        return mergedBuilding;
-    }, { ...building });
-}
-
-function getStoredBuildingDetails() {
-    try {
-        return JSON.parse(localStorage.getItem(BUILDING_LOCAL_DETAILS_KEY)) || {};
-    } catch (error) {
-        console.warn('Unable to read stored building details:', error);
-        return {};
-    }
-}
-
-function removeStoredBuildingDetails(buildingId) {
-    const storedDetails = getStoredBuildingDetails();
-    delete storedDetails[buildingId];
-    localStorage.setItem(BUILDING_LOCAL_DETAILS_KEY, JSON.stringify(storedDetails));
-}
-
-function renderBuildingMeta(building) {
-    const meta = [
-        ['Building Number', building.building_number],
-        ['Structure Number', building.structure_number],
-        ['Number of Storeys', building.number_of_storeys],
-        ['Number of Rooms', building.number_of_rooms],
-        ['Room Usage', building.room_usage],
-        ['Property Number', building.property_number],
-        ['Fund Source', building.fund_source],
-        ['Acquisition Cost', formatCurrency(building.acquisition_cost)],
-        ['Acquisition Date', formatDate(building.acquisition_date)]
-    ].filter(([, value]) => value !== null && value !== undefined && value !== '');
-
-    if (meta.length === 0) {
-        return '<p class="building-meta-empty">No additional building details</p>';
-    }
-
-    return meta.map(([label, value]) => `
-        <div class="building-meta-item">
-            <span>${label}</span>
-            <strong>${escapeHtml(String(value))}</strong>
-        </div>
-    `).join('');
-}
-
-function formatCurrency(value) {
-    if (value === null || value === undefined || value === '') return '';
-    return Number(value).toLocaleString('en-PH', {
-        style: 'currency',
-        currency: 'PHP'
-    });
-}
-
-function formatDate(value) {
-    if (!value) return '';
-    return new Date(`${value}T00:00:00`).toLocaleDateString('en-PH', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-    });
 }
 
 function escapeHtml(text) {

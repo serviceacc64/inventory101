@@ -128,64 +128,9 @@
             </div>
             
             <form id="createBuildingForm" onsubmit="window.handleCreateBuilding(event)">
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label for="buildingNumber">Building Number</label>
-                        <input type="text" id="buildingNumber" placeholder="e.g., BLDG-001">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="structureNumber">Structure Number</label>
-                        <input type="text" id="structureNumber" placeholder="e.g., STR-001">
-                    </div>
-                </div>
-
                 <div class="form-group">
                     <label for="buildingName">Building Name *</label>
                     <input type="text" id="buildingName" placeholder="e.g., Building 1, Main Building" required>
-                </div>
-
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label for="numberOfStoreys">Number of Storeys</label>
-                        <input type="number" id="numberOfStoreys" min="0" placeholder="e.g., 2">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="numberOfRooms">Number of Rooms</label>
-                        <input type="number" id="numberOfRooms" min="0" placeholder="e.g., 12">
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Room Usage</label>
-                    <div id="roomUsageContainer" class="room-usage-container">
-                        <p class="room-usage-empty">Enter the number of rooms to add room usage fields.</p>
-                    </div>
-                </div>
-
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label for="propertyNumber">Property Number</label>
-                        <input type="text" id="propertyNumber" placeholder="e.g., PROP-2026-001">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="fundSource">Fund Source</label>
-                        <input type="text" id="fundSource" placeholder="e.g., School MOOE">
-                    </div>
-                </div>
-
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label for="acquisitionCost">Acquisition Cost</label>
-                        <input type="number" id="acquisitionCost" min="0" step="0.01" placeholder="e.g., 1500000.00">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="acquisitionDate">Acquisition Date</label>
-                        <input type="date" id="acquisitionDate">
-                    </div>
                 </div>
 
                 <div class="form-group">
@@ -214,11 +159,7 @@
             <div class="modal-body">
                 <div class="building-info-section" style="margin-bottom: 20px; padding: 15px; background: #f9f9f9; border-radius: 8px;">
                     <h4 style="margin-bottom: 5px;" id="detailBuildingName">Building Name</h4>
-                    <div id="detailBuildingMeta" class="building-meta-grid"></div>
-                    <div class="building-description-box">
-                        <span>Description</span>
-                        <p id="detailBuildingDescription">Description</p>
-                    </div>
+                    <p style="color: #666;" id="detailBuildingDescription">Description</p>
                 </div>
 
                 <!-- Add Structure Section -->
@@ -309,65 +250,10 @@
             
             <form id="editBuildingForm" onsubmit="window.handleEditBuilding(event)">
                 <input type="hidden" id="editBuildingId">
-
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label for="editBuildingNumber">Building Number</label>
-                        <input type="text" id="editBuildingNumber">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="editStructureNumber">Structure Number</label>
-                        <input type="text" id="editStructureNumber">
-                    </div>
-                </div>
                 
                 <div class="form-group">
                     <label for="editBuildingName">Building Name *</label>
                     <input type="text" id="editBuildingName" required>
-                </div>
-
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label for="editNumberOfStoreys">Number of Storeys</label>
-                        <input type="number" id="editNumberOfStoreys" min="0">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="editNumberOfRooms">Number of Rooms</label>
-                        <input type="number" id="editNumberOfRooms" min="0">
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Room Usage</label>
-                    <div id="editRoomUsageContainer" class="room-usage-container">
-                        <p class="room-usage-empty">Enter the number of rooms to add room usage fields.</p>
-                    </div>
-                </div>
-
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label for="editPropertyNumber">Property Number</label>
-                        <input type="text" id="editPropertyNumber">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="editFundSource">Fund Source</label>
-                        <input type="text" id="editFundSource">
-                    </div>
-                </div>
-
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label for="editAcquisitionCost">Acquisition Cost</label>
-                        <input type="number" id="editAcquisitionCost" min="0" step="0.01">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="editAcquisitionDate">Acquisition Date</label>
-                        <input type="date" id="editAcquisitionDate">
-                    </div>
                 </div>
 
                 <div class="form-group">
