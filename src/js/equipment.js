@@ -27,6 +27,11 @@ const viewEquipmentReceivedBy = document.getElementById('viewEquipmentReceivedBy
 const viewEquipmentDate = document.getElementById('viewEquipmentDate');
 const viewEquipmentEditBtn = document.getElementById('viewEquipmentEditBtn');
 const viewEquipmentDeleteBtn = document.getElementById('viewEquipmentDeleteBtn');
+const viewEquipmentOldPropertyNo = document.getElementById('viewEquipmentOldPropertyNo');
+const viewEquipmentNewPropertyNo = document.getElementById('viewEquipmentNewPropertyNo');
+const viewEquipmentUnitOfMeasurement = document.getElementById('viewEquipmentUnitOfMeasurement');
+const viewEquipmentQtyPerPhysicalCount = document.getElementById('viewEquipmentQtyPerPhysicalCount');
+const viewEquipmentCondition = document.getElementById('viewEquipmentCondition');
 
 // Store all equipment for search functionality
 let allEquipment = [];
@@ -196,6 +201,20 @@ function renderEquipment(equipment) {
         const updatedAt = item.updated_at || item.created_at || null;
         const updatedDisplay = updatedAt ? new Date(updatedAt).toLocaleDateString() : 'Recently';
 
+        // Property numbers display on card
+        const properties = [];
+        if (item.old_property_number) properties.push(`Old Prop: ${item.old_property_number}`);
+        if (item.new_property_number) properties.push(`New Prop: ${item.new_property_number}`);
+        const propertyDisplay = properties.length > 0 
+            ? `<p style="margin: 3px 0; font-size: 11px; color: #777; font-weight: 500;">${escapeHtml(properties.join(' | '))}</p>`
+            : '';
+
+        const qtyDisplay = item.unit_of_measurement ? `${item.quantity} ${item.unit_of_measurement}` : `${item.quantity}`;
+        const physicalCountDisplay = item.quantity_per_physical_count !== null && item.quantity_per_physical_count !== undefined
+            ? `<strong style="margin-left: 8px;">Physical Count:</strong> ${item.quantity_per_physical_count}`
+            : '';
+        const conditionDisplay = `<strong style="margin-left: 8px;">Condition:</strong> ${escapeHtml(item.condition || 'Good')}`;
+
         itemEl.innerHTML = `
             <div style="display: flex; gap: 8px; margin-bottom: 10px; align-items: flex-start;">
                 <div class="stat-icon" style="width:44px; height:44px; min-width:44px; border-radius:8px; background: var(--hover); color: #fff; display:flex; align-items:center; justify-content:center; font-size: 20px;">
@@ -223,7 +242,8 @@ function renderEquipment(equipment) {
             ${item.item_description ? `<p class="equipment-description">${escapeHtml(item.item_description)}</p>` : ''}
             
             <div class="equipment-meta">
-                <p><strong>Qty:</strong> ${item.quantity} <strong style="margin-left: 8px;">Unit Cost:</strong> ${formatCurrency(item.unit_cost || 0)} <strong style="margin-left: 8px;">Amount:</strong> ${formatCurrency(amount)}</p>
+                ${propertyDisplay}
+                <p><strong>Qty:</strong> ${qtyDisplay} ${physicalCountDisplay} ${conditionDisplay} <strong style="margin-left: 8px;">Unit Cost:</strong> ${formatCurrency(item.unit_cost || 0)} <strong style="margin-left: 8px;">Amount:</strong> ${formatCurrency(amount)}</p>
                 <p><strong>Supplier:</strong> ${escapeHtml(supplierName)}</p>
                 <p><strong>Delivered:</strong> ${item.date_delivered ? formatDate(item.date_delivered) : '-'}</p>
                 <p><strong>Last updated:</strong> ${escapeHtml(updatedDisplay)}</p>
@@ -293,9 +313,15 @@ async function handleCreateEquipment(event) {
     event.preventDefault();
     
     const receiptNumber = document.getElementById('receiptNumber').value.trim();
+    const oldPropertyNumber = document.getElementById('oldPropertyNumber').value.trim();
+    const newPropertyNumber = document.getElementById('newPropertyNumber').value.trim();
     const itemName = document.getElementById('itemName').value.trim();
     const itemDescription = document.getElementById('itemDescription').value.trim();
+    const unitOfMeasurement = document.getElementById('unitOfMeasurement').value.trim();
+    const condition = document.getElementById('condition').value.trim() || 'Good';
     const quantity = parseInt(document.getElementById('quantity').value);
+    const quantityPerPhysicalCountVal = document.getElementById('quantityPerPhysicalCount').value;
+    const quantityPerPhysicalCount = quantityPerPhysicalCountVal !== '' ? parseInt(quantityPerPhysicalCountVal) : null;
     const unitCost = parseFloat(document.getElementById('unitCost').value) || 0;
     const supplierId = document.getElementById('supplier').value;
     const accountable = document.getElementById('accountable').value.trim();
@@ -314,9 +340,14 @@ async function handleCreateEquipment(event) {
     try {
         const equipmentData = {
             receipt_number: receiptNumber,
+            old_property_number: oldPropertyNumber || null,
+            new_property_number: newPropertyNumber || null,
             item_name: itemName,
             item_description: itemDescription,
+            unit_of_measurement: unitOfMeasurement || null,
+            condition: condition,
             quantity: quantity,
+            quantity_per_physical_count: quantityPerPhysicalCount,
             unit_cost: unitCost,
             amount: amount,
             accountable: accountable,
@@ -367,9 +398,14 @@ function openEditEquipmentModal(equipmentId) {
     
     document.getElementById('editEquipmentId').value = item.id;
     document.getElementById('editReceiptNumber').value = item.receipt_number || '';
+    document.getElementById('editOldPropertyNumber').value = item.old_property_number || '';
+    document.getElementById('editNewPropertyNumber').value = item.new_property_number || '';
     document.getElementById('editItemName').value = item.item_name;
     document.getElementById('editItemDescription').value = item.item_description || '';
+    document.getElementById('editUnitOfMeasurement').value = item.unit_of_measurement || '';
+    document.getElementById('editCondition').value = item.condition || 'Good';
     document.getElementById('editQuantity').value = item.quantity;
+    document.getElementById('editQuantityPerPhysicalCount').value = item.quantity_per_physical_count !== null && item.quantity_per_physical_count !== undefined ? item.quantity_per_physical_count : '';
     document.getElementById('editUnitCost').value = item.unit_cost;
     document.getElementById('editAccountable').value = item.accountable || '';
     document.getElementById('editReceivedBy').value = item.received_by || '';
@@ -409,7 +445,12 @@ function openViewEquipmentModal(equipmentId) {
 
     if (viewEquipmentName) viewEquipmentName.textContent = item.item_name;
     if (viewEquipmentReceipt) viewEquipmentReceipt.textContent = item.receipt_number || '-';
+    if (viewEquipmentOldPropertyNo) viewEquipmentOldPropertyNo.textContent = item.old_property_number || '-';
+    if (viewEquipmentNewPropertyNo) viewEquipmentNewPropertyNo.textContent = item.new_property_number || '-';
+    if (viewEquipmentUnitOfMeasurement) viewEquipmentUnitOfMeasurement.textContent = item.unit_of_measurement || '-';
+    if (viewEquipmentCondition) viewEquipmentCondition.textContent = item.condition || '-';
     if (viewEquipmentQuantity) viewEquipmentQuantity.textContent = `${item.quantity}`;
+    if (viewEquipmentQtyPerPhysicalCount) viewEquipmentQtyPerPhysicalCount.textContent = item.quantity_per_physical_count !== null && item.quantity_per_physical_count !== undefined ? item.quantity_per_physical_count : '-';
     if (viewEquipmentUnitCost) viewEquipmentUnitCost.textContent = formatCurrency(item.unit_cost || 0);
     if (viewEquipmentSupplier) viewEquipmentSupplier.textContent = item.suppliers ? item.suppliers.supplier_name : '-';
     if (viewEquipmentAccountable) viewEquipmentAccountable.textContent = item.accountable || '-';
@@ -452,9 +493,15 @@ async function handleEditEquipment(event) {
     
     const equipmentId = document.getElementById('editEquipmentId').value;
     const receiptNumber = document.getElementById('editReceiptNumber').value.trim();
+    const oldPropertyNumber = document.getElementById('editOldPropertyNumber').value.trim();
+    const newPropertyNumber = document.getElementById('editNewPropertyNumber').value.trim();
     const itemName = document.getElementById('editItemName').value.trim();
     const itemDescription = document.getElementById('editItemDescription').value.trim();
+    const unitOfMeasurement = document.getElementById('editUnitOfMeasurement').value.trim();
+    const condition = document.getElementById('editCondition').value.trim() || 'Good';
     const quantity = parseInt(document.getElementById('editQuantity').value);
+    const quantityPerPhysicalCountVal = document.getElementById('editQuantityPerPhysicalCount').value;
+    const quantityPerPhysicalCount = quantityPerPhysicalCountVal !== '' ? parseInt(quantityPerPhysicalCountVal) : null;
     const unitCost = parseFloat(document.getElementById('editUnitCost').value) || 0;
     const supplierId = document.getElementById('editSupplier').value;
     const accountable = document.getElementById('editAccountable').value.trim();
@@ -473,9 +520,14 @@ async function handleEditEquipment(event) {
     try {
         const updateData = {
             receipt_number: receiptNumber,
+            old_property_number: oldPropertyNumber || null,
+            new_property_number: newPropertyNumber || null,
             item_name: itemName,
             item_description: itemDescription,
+            unit_of_measurement: unitOfMeasurement || null,
+            condition: condition,
             quantity: quantity,
+            quantity_per_physical_count: quantityPerPhysicalCount,
             unit_cost: unitCost,
             amount: amount,
             accountable: accountable,
@@ -734,8 +786,17 @@ function filterEquipment() {
             case 'receipt_number':
                 searchText = (item.receipt_number || '').toLowerCase();
                 return searchText.includes(query);
+            case 'old_property_number':
+                searchText = (item.old_property_number || '').toLowerCase();
+                return searchText.includes(query);
+            case 'new_property_number':
+                searchText = (item.new_property_number || '').toLowerCase();
+                return searchText.includes(query);
             case 'item_name':
                 searchText = item.item_name.toLowerCase();
+                return searchText.includes(query);
+            case 'condition':
+                searchText = (item.condition || '').toLowerCase();
                 return searchText.includes(query);
             case 'supplier':
                 searchText = (item.suppliers ? item.suppliers.supplier_name : '').toLowerCase();
@@ -750,7 +811,10 @@ function filterEquipment() {
             default:
                 searchText = (
                     (item.receipt_number || '') + ' ' +
+                    (item.old_property_number || '') + ' ' +
+                    (item.new_property_number || '') + ' ' +
                     item.item_name + ' ' + 
+                    (item.condition || '') + ' ' + 
                     (item.item_description || '') + ' ' +
                     (item.suppliers ? item.suppliers.supplier_name : '') + ' ' +
                     (item.accountable || '') + ' ' +

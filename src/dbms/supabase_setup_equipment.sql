@@ -23,6 +23,11 @@ CREATE INDEX IF NOT EXISTS idx_suppliers_name ON suppliers(supplier_name);
 CREATE TABLE IF NOT EXISTS equipment (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     receipt_number VARCHAR(50),
+    old_property_number VARCHAR(100),
+    new_property_number VARCHAR(100),
+    unit_of_measurement VARCHAR(50),
+    quantity_per_physical_count INTEGER,
+    condition VARCHAR(50) DEFAULT 'Good',
     item_name VARCHAR(255) NOT NULL,
     item_description TEXT,
     quantity INTEGER NOT NULL DEFAULT 1,
@@ -44,6 +49,10 @@ CREATE INDEX IF NOT EXISTS idx_equipment_supplier ON equipment(supplier_id);
 CREATE INDEX IF NOT EXISTS idx_equipment_date_delivered ON equipment(date_delivered);
 -- Create index for receipt_number
 CREATE INDEX IF NOT EXISTS idx_equipment_receipt ON equipment(receipt_number);
+-- Create index for old_property_number
+CREATE INDEX IF NOT EXISTS idx_equipment_old_property ON equipment(old_property_number);
+-- Create index for new_property_number
+CREATE INDEX IF NOT EXISTS idx_equipment_new_property ON equipment(new_property_number);
 
 -- ==========================================
 -- 3. POLICIES (ROW LEVEL SECURITY)

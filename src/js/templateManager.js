@@ -9,7 +9,7 @@ const TemplateManager = {
         items_lost: ['item_name', 'category', 'person', 'quantity', 'last_date'],
         logs: ['timestamp', 'action_type', 'item_name', 'quantity_changed', 'quantity_before', 'quantity_after', 'person', 'details'],
         rooms: ['name', 'description', 'created_at'],
-        equipment: ['item_name', 'item_description', 'quantity', 'unit_cost', 'amount', 'created_at', 'updated_at']
+        equipment: ['item_name', 'item_description', 'quantity', 'unit_cost', 'amount', 'created_at', 'updated_at', 'old_property_number', 'new_property_number', 'unit_of_measurement', 'quantity_per_physical_count', 'condition']
     },
 
     // Default column mappings for each export type
@@ -46,6 +46,11 @@ const TemplateManager = {
             'Quantity': 'quantity',
             'Unit Cost': 'unit_cost',
             'Amount': 'amount',
+            'Old Property No.': 'old_property_number',
+            'New Property No.': 'new_property_number',
+            'Unit of Measurement': 'unit_of_measurement',
+            'Qty per Physical Count': 'quantity_per_physical_count',
+            'Condition': 'condition',
             'Date Added': 'created_at'
         }
     },
