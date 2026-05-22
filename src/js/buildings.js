@@ -19,7 +19,7 @@ const createBuildingForm = document.getElementById('createBuildingForm');
 const buildingDetailsModal = document.getElementById('buildingDetailsModal');
 const buildingDetailsTitle = document.getElementById('buildingDetailsTitle');
 const detailBuildingName = document.getElementById('detailBuildingName');
-const detailBuildingDescription = document.getElementById('detailBuildingDescription');
+const detailBuildingMetadata = document.getElementById('detailBuildingMetadata');
 const structuresList = document.getElementById('structuresList');
 const noStructuresState = document.getElementById('noStructuresState');
 const structureBuildingIdInput = document.getElementById('structureBuildingId');
@@ -31,6 +31,14 @@ const editBuildingForm = document.getElementById('editBuildingForm');
 const editBuildingId = document.getElementById('editBuildingId');
 const editBuildingName = document.getElementById('editBuildingName');
 const editBuildingDescription = document.getElementById('editBuildingDescription');
+const editBuildingNumber = document.getElementById('editBuildingNumber');
+const editStructureNumber = document.getElementById('editStructureNumber');
+const editNumberOfStoreys = document.getElementById('editNumberOfStoreys');
+const editNumberOfRooms = document.getElementById('editNumberOfRooms');
+const editPropertyNumber = document.getElementById('editPropertyNumber');
+const editFundSource = document.getElementById('editFundSource');
+const editAcquisitionCost = document.getElementById('editAcquisitionCost');
+const editAcquisitionDate = document.getElementById('editAcquisitionDate');
 
 // State
 let allBuildings = [];
@@ -74,6 +82,19 @@ function setupEventListeners() {
             window.generateRoomInputs();
         });
     }
+
+    const buildingRoomsInput = document.getElementById('numberOfRooms');
+    if (buildingRoomsInput) {
+        buildingRoomsInput.addEventListener('input', () => {
+            generateBuildingUsageInputs('create');
+        });
+    }
+
+    if (editNumberOfRooms) {
+        editNumberOfRooms.addEventListener('input', () => {
+            generateBuildingUsageInputs('edit');
+        });
+    }
 }
 
 // ==========================================
@@ -110,7 +131,12 @@ function applyFilters() {
     if (searchTerm) {
         filtered = filtered.filter(building =>
             building.name.toLowerCase().includes(searchTerm) ||
-            (building.description && building.description.toLowerCase().includes(searchTerm))
+            (building.description && building.description.toLowerCase().includes(searchTerm)) ||
+            (building.building_number && building.building_number.toLowerCase().includes(searchTerm)) ||
+            (building.structure_number && building.structure_number.toLowerCase().includes(searchTerm)) ||
+            (building.property_number && building.property_number.toLowerCase().includes(searchTerm)) ||
+            (building.fund_source && building.fund_source.toLowerCase().includes(searchTerm)) ||
+            (building.usage && building.usage.toLowerCase().includes(searchTerm))
         );
     }
 
@@ -148,10 +174,21 @@ function renderBuildings(buildings) {
             </div>
 
             <div class="room-info">
+                ${building.building_number ? `<p class="room-adviser"><i class="fa-solid fa-hashtag"></i> ${escapeHtml(building.building_number)}</p>` : ''}
+                ${building.structure_number ? `<p class="room-adviser"><i class="fa-solid fa-cubes"></i> ${escapeHtml(building.structure_number)}</p>` : ''}
                 ${building.description ? `<p class="room-adviser"><i class="fa-solid fa-info-circle"></i> ${escapeHtml(building.description)}</p>` : '<p class="room-adviser">No description</p>'}
+                ${building.usage ? `<p class="room-adviser"><i class="fa-solid fa-list-check"></i> ${escapeHtml(building.usage)}</p>` : ''}
             </div>
 
             <div class="room-stats">
+                <div class="room-stat">
+                    <span class="room-stat-value">${building.number_of_storeys ?? '-'}</span>
+                    <span class="room-stat-label">Storeys</span>
+                </div>
+                <div class="room-stat">
+                    <span class="room-stat-value">${building.number_of_rooms ?? '-'}</span>
+                    <span class="room-stat-label">Rooms</span>
+                </div>
                 <div class="room-stat">
                     <span class="room-stat-value">${structuresCount}</span>
                     <span class="room-stat-label">Structures</span>
@@ -173,6 +210,7 @@ function renderBuildings(buildings) {
 // ==========================================
 window.openCreateBuildingModal = function() {
     createBuildingForm.reset();
+    generateBuildingUsageInputs('create');
     createBuildingModal.classList.add('show');
 }
 
@@ -187,6 +225,15 @@ window.openEditBuildingModal = function(buildingId) {
     editBuildingId.value = building.id;
     editBuildingName.value = building.name;
     editBuildingDescription.value = building.description || '';
+    editBuildingNumber.value = building.building_number || '';
+    editStructureNumber.value = building.structure_number || '';
+    editNumberOfStoreys.value = building.number_of_storeys ?? '';
+    editNumberOfRooms.value = building.number_of_rooms ?? '';
+    editPropertyNumber.value = building.property_number || '';
+    editFundSource.value = building.fund_source || '';
+    editAcquisitionCost.value = building.acquisition_cost ?? '';
+    editAcquisitionDate.value = building.acquisition_date || '';
+    generateBuildingUsageInputs('edit', parseRoomUsages(building.usage));
 
     editBuildingModal.classList.add('show');
 }
@@ -203,7 +250,7 @@ window.openBuildingDetailsModal = function(buildingId) {
     structureBuildingIdInput.value = buildingId;
 
     detailBuildingName.textContent = building.name;
-    detailBuildingDescription.textContent = building.description || 'No description';
+    renderBuildingMetadata(building);
 
     renderStructures(building.structures || []);
 
@@ -392,13 +439,12 @@ window.handleCreateBuilding = async function(event) {
     if (isSubmitting) return;
     isSubmitting = true;
 
-    const name = document.getElementById('buildingName').value.trim();
-    const description = document.getElementById('buildingDescription').value.trim();
+    const data = getBuildingFormData();
 
     try {
         const { error } = await supabase
             .from('buildings')
-            .insert([{ name, description }]);
+            .insert([data]);
 
         if (error) throw error;
 
@@ -419,13 +465,12 @@ window.handleEditBuilding = async function(event) {
     isSubmitting = true;
 
     const id = editBuildingId.value;
-    const name = editBuildingName.value.trim();
-    const description = editBuildingDescription.value.trim();
+    const data = getBuildingFormData('edit');
 
     try {
         const { error } = await supabase
             .from('buildings')
-            .update({ name, description })
+            .update(data)
             .eq('id', id);
 
         if (error) throw error;
@@ -572,7 +617,16 @@ window.exportBuildingToExcel = function() {
     const data = structures.map(structure => {
         const row = {
             'Building Name': building.name,
+            'Building Number': building.building_number || '',
+            'Structure Number': building.structure_number || '',
             'Description': building.description || '',
+            'Number of Storeys': building.number_of_storeys ?? '',
+            'Building Number of Rooms': building.number_of_rooms ?? '',
+            'Usage': building.usage || '',
+            'Property Number': building.property_number || '',
+            'Fund Source': building.fund_source || '',
+            'Acquisition Cost': building.acquisition_cost ?? '',
+            'Acquisition Date': building.acquisition_date || '',
             'Structure Type': structure.type,
             'Number of Rooms': '',
             'Room Names': '',
@@ -629,6 +683,164 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+function getBuildingFormData(mode = 'create') {
+    const fields = mode === 'edit'
+        ? {
+            name: 'editBuildingName',
+            description: 'editBuildingDescription',
+            buildingNumber: 'editBuildingNumber',
+            structureNumber: 'editStructureNumber',
+            numberOfStoreys: 'editNumberOfStoreys',
+            numberOfRooms: 'editNumberOfRooms',
+            propertyNumber: 'editPropertyNumber',
+            fundSource: 'editFundSource',
+            acquisitionCost: 'editAcquisitionCost',
+            acquisitionDate: 'editAcquisitionDate'
+        }
+        : {
+            name: 'buildingName',
+            description: 'buildingDescription',
+            buildingNumber: 'buildingNumber',
+            structureNumber: 'structureNumber',
+            numberOfStoreys: 'numberOfStoreys',
+            numberOfRooms: 'numberOfRooms',
+            propertyNumber: 'propertyNumber',
+            fundSource: 'fundSource',
+            acquisitionCost: 'acquisitionCost',
+            acquisitionDate: 'acquisitionDate'
+        };
+    const getValue = (fieldKey) => {
+        const element = document.getElementById(fields[fieldKey]);
+        return element ? element.value.trim() : '';
+    };
+    const getNumber = (fieldKey) => {
+        const value = getValue(fieldKey);
+        return value === '' ? null : Number(value);
+    };
+
+    return {
+        name: getValue('name'),
+        description: getValue('description'),
+        building_number: getValue('buildingNumber') || null,
+        structure_number: getValue('structureNumber') || null,
+        number_of_storeys: getNumber('numberOfStoreys'),
+        number_of_rooms: getNumber('numberOfRooms'),
+        usage: getRoomUsageValue(mode) || null,
+        property_number: getValue('propertyNumber') || null,
+        fund_source: getValue('fundSource') || null,
+        acquisition_cost: getNumber('acquisitionCost'),
+        acquisition_date: getValue('acquisitionDate') || null
+    };
+}
+
+function generateBuildingUsageInputs(mode, initialValues = []) {
+    const isEdit = mode === 'edit';
+    const countInput = document.getElementById(isEdit ? 'editNumberOfRooms' : 'numberOfRooms');
+    const container = document.getElementById(isEdit ? 'editBuildingUsageContainer' : 'buildingUsageContainer');
+
+    if (!countInput || !container) return;
+
+    const existingValues = initialValues.length > 0
+        ? initialValues
+        : Array.from(container.querySelectorAll('.building-room-usage-input')).map(input => input.value);
+    const count = parseInt(countInput.value, 10) || 0;
+
+    container.innerHTML = '';
+
+    if (count <= 0) {
+        container.innerHTML = '<p class="room-usage-empty">Enter the number of rooms to add usage fields.</p>';
+        return;
+    }
+
+    for (let i = 1; i <= count; i++) {
+        const row = document.createElement('div');
+        row.className = 'room-usage-row';
+
+        const label = document.createElement('span');
+        label.textContent = `Room ${i}`;
+
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'form-input building-room-usage-input';
+        input.placeholder = 'e.g., Classroom, Office, Storage';
+        input.value = existingValues[i - 1] || '';
+        input.dataset.roomNumber = String(i);
+
+        row.appendChild(label);
+        row.appendChild(input);
+        container.appendChild(row);
+    }
+}
+
+function getRoomUsageValue(mode) {
+    const selector = mode === 'edit'
+        ? '#editBuildingUsageContainer .building-room-usage-input'
+        : '#buildingUsageContainer .building-room-usage-input';
+    const usages = Array.from(document.querySelectorAll(selector))
+        .map((input, index) => {
+            const value = input.value.trim();
+            return value ? `Room ${index + 1}: ${value}` : '';
+        })
+        .filter(Boolean);
+
+    return usages.join('; ');
+}
+
+function parseRoomUsages(usage) {
+    if (!usage) return [];
+
+    const roomPattern = /^Room\s+\d+:\s*/i;
+    const parts = usage.split(';').map(part => part.trim()).filter(Boolean);
+
+    if (parts.length === 0) return [];
+    if (!parts.some(part => roomPattern.test(part))) return [usage];
+
+    return parts.map(part => part.replace(roomPattern, '').trim());
+}
+
+function renderBuildingMetadata(building) {
+    if (!detailBuildingMetadata) return;
+
+    const details = [
+        ['Description', building.description],
+        ['Building Number', building.building_number],
+        ['Structure Number', building.structure_number],
+        ['Number of Storeys', building.number_of_storeys],
+        ['Number of Rooms', building.number_of_rooms],
+        ['Usage', building.usage],
+        ['Property Number', building.property_number],
+        ['Fund Source', building.fund_source],
+        ['Acquisition Cost', formatCurrency(building.acquisition_cost)],
+        ['Acquisition Date', formatDate(building.acquisition_date)]
+    ];
+
+    detailBuildingMetadata.innerHTML = details
+        .map(([label, value]) => `
+            <div class="building-metadata-item">
+                <span>${escapeHtml(label)}</span>
+                <strong>${escapeHtml(value === null || value === undefined || value === '' ? '-' : String(value))}</strong>
+            </div>
+        `)
+        .join('');
+}
+
+function formatCurrency(value) {
+    if (value === null || value === undefined || value === '') return '';
+    return Number(value).toLocaleString('en-PH', {
+        style: 'currency',
+        currency: 'PHP'
+    });
+}
+
+function formatDate(value) {
+    if (!value) return '';
+    return new Date(`${value}T00:00:00`).toLocaleDateString('en-PH', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+    });
 }
 
 // Expose fetchBuildings to window
