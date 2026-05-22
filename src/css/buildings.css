@@ -30,11 +30,32 @@
 
 .structure-item {
     transition: all 0.2s ease;
+    padding: 10px;
+    background: #fff;
+    border: 1px solid #eee;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
 }
 
 .structure-item:hover {
     background-color: #f0f0f0 !important;
     transform: translateX(2px);
+}
+
+.structures-container {
+    margin-bottom: var(--space-md);
+    padding: 14px;
+    border: 1px solid rgba(85, 0, 0, 0.12);
+    border-radius: 8px;
+    background: rgba(85, 0, 0, 0.03);
+}
+
+.structures-container h4 {
+    margin-bottom: 10px;
 }
 
 /* Item Type Badges for Structures */
@@ -127,6 +148,64 @@
     margin: 0;
     color: var(--text-muted);
     font-size: 13px;
+}
+
+.create-structures-section {
+    margin: 18px 0;
+    padding: 14px;
+    border: 1px solid rgba(85, 0, 0, 0.12);
+    border-radius: 8px;
+    background: rgba(85, 0, 0, 0.03);
+}
+
+.create-structures-section h4 {
+    margin-bottom: 12px;
+}
+
+.create-add-structure-form {
+    padding: 14px;
+    border-left: 4px solid var(--brand-primary);
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--brand-primary) 6%, #fff);
+    margin-bottom: 12px;
+}
+
+.create-room-names-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.create-structure-show-btn {
+    width: 100%;
+    margin-bottom: 12px;
+}
+
+.create-structure-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.create-structure-actions .btn-primary {
+    flex: 1;
+}
+
+.create-structures-list {
+    max-height: 220px;
+}
+
+.structure-item-details {
+    margin-top: 5px;
+    font-size: 13px;
+}
+
+.structure-remove-btn {
+    background: none;
+    border: none;
+    color: #ff4d4d;
+    cursor: pointer;
+    padding: 6px;
 }
 
 #addStructureForm .form-group {

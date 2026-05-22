@@ -14,6 +14,8 @@ const clearSearch = document.getElementById('clearSearch');
 // Create Building Modal Elements
 const createBuildingModal = document.getElementById('createBuildingModal');
 const createBuildingForm = document.getElementById('createBuildingForm');
+const createStructuresList = document.getElementById('createStructuresList');
+const noCreateStructuresState = document.getElementById('noCreateStructuresState');
 
 // Building Details Modal Elements
 const buildingDetailsModal = document.getElementById('buildingDetailsModal');
@@ -44,6 +46,7 @@ const editAcquisitionDate = document.getElementById('editAcquisitionDate');
 let allBuildings = [];
 let currentBuildingId = null;
 let isSubmitting = false;
+let createBuildingStructures = [];
 
 // ==========================================
 // INITIALIZE
@@ -80,6 +83,13 @@ function setupEventListeners() {
     if (roomsCountInput) {
         roomsCountInput.addEventListener('input', () => {
             window.generateRoomInputs();
+        });
+    }
+
+    const createRoomsCountInput = document.getElementById('createStructureRoomsCount');
+    if (createRoomsCountInput) {
+        createRoomsCountInput.addEventListener('input', () => {
+            window.generateCreateStructureRoomInputs();
         });
     }
 
@@ -210,7 +220,10 @@ function renderBuildings(buildings) {
 // ==========================================
 window.openCreateBuildingModal = function() {
     createBuildingForm.reset();
+    createBuildingStructures = [];
     generateBuildingUsageInputs('create');
+    window.hideCreateAddStructureForm();
+    renderCreateStructures();
     createBuildingModal.classList.add('show');
 }
 
@@ -340,6 +353,27 @@ window.generateRoomInputs = function() {
     }
 }
 
+window.generateCreateStructureRoomInputs = function() {
+    const countInput = document.getElementById('createStructureRoomsCount');
+    const container = document.getElementById('createRoomNamesContainer');
+
+    if (!countInput || !container) return;
+
+    const existingValues = Array.from(container.querySelectorAll('.create-room-name-input')).map(input => input.value);
+    const count = parseInt(countInput.value, 10) || 0;
+    container.innerHTML = '';
+
+    for (let i = 1; i <= count; i++) {
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'form-input create-room-name-input';
+        input.placeholder = `Room ${i} Name`;
+        input.value = existingValues[i - 1] || '';
+        input.required = true;
+        container.appendChild(input);
+    }
+}
+
 // ==========================================
 // CONDITIONAL LOGIC
 // ==========================================
@@ -369,6 +403,63 @@ window.handleStructureTypeChange = function() {
         others.style.display = 'block';
         document.getElementById('structureFunction').setAttribute('required', 'required');
     }
+}
+
+window.handleCreateStructureTypeChange = function() {
+    const type = document.getElementById('createStructureType').value;
+    const instructional = document.getElementById('createInstructionalFields');
+    const nonInstructional = document.getElementById('createNonInstructionalFields');
+    const others = document.getElementById('createOthersFields');
+
+    instructional.style.display = 'none';
+    nonInstructional.style.display = 'none';
+    others.style.display = 'none';
+
+    document.getElementById('createStructureRoomsCount').removeAttribute('required');
+    document.getElementById('createStructurePurpose').removeAttribute('required');
+    document.getElementById('createStructureFunction').removeAttribute('required');
+
+    if (type === 'Instructional') {
+        instructional.style.display = 'block';
+        document.getElementById('createStructureRoomsCount').setAttribute('required', 'required');
+        window.generateCreateStructureRoomInputs();
+    } else if (type === 'Non-Instructional') {
+        nonInstructional.style.display = 'block';
+        document.getElementById('createStructurePurpose').setAttribute('required', 'required');
+    } else if (type === 'Others') {
+        others.style.display = 'block';
+        document.getElementById('createStructureFunction').setAttribute('required', 'required');
+    }
+}
+
+window.showCreateAddStructureForm = function() {
+    document.getElementById('createAddStructureForm').style.display = 'block';
+    document.getElementById('showCreateAddStructureBtn').style.display = 'none';
+}
+
+window.hideCreateAddStructureForm = function() {
+    resetCreateStructureForm();
+    document.getElementById('createAddStructureForm').style.display = 'none';
+    document.getElementById('showCreateAddStructureBtn').style.display = 'block';
+}
+
+window.handleAddCreateStructure = function() {
+    const structure = getCreateStructureFormData();
+
+    if (!structure) return;
+
+    createBuildingStructures.push({
+        ...structure,
+        tempId: globalThis.crypto?.randomUUID ? globalThis.crypto.randomUUID() : `${Date.now()}-${Math.random()}`
+    });
+
+    window.hideCreateAddStructureForm();
+    renderCreateStructures();
+}
+
+window.removeCreateStructure = function(tempId) {
+    createBuildingStructures = createBuildingStructures.filter(structure => structure.tempId !== tempId);
+    renderCreateStructures();
 }
 
 // ==========================================
@@ -442,11 +533,25 @@ window.handleCreateBuilding = async function(event) {
     const data = getBuildingFormData();
 
     try {
-        const { error } = await supabase
+        const { data: building, error } = await supabase
             .from('buildings')
-            .insert([data]);
+            .insert([data])
+            .select('id')
+            .single();
 
         if (error) throw error;
+
+        if (createBuildingStructures.length > 0) {
+            const structures = createBuildingStructures.map(({ tempId, ...structure }) => ({
+                ...structure,
+                building_id: building.id
+            }));
+            const { error: structuresError } = await supabase
+                .from('structures')
+                .insert(structures);
+
+            if (structuresError) throw structuresError;
+        }
 
         showNotification('Building created successfully!');
         window.closeCreateBuildingModal();
@@ -733,6 +838,124 @@ function getBuildingFormData(mode = 'create') {
         acquisition_cost: getNumber('acquisitionCost'),
         acquisition_date: getValue('acquisitionDate') || null
     };
+}
+
+function getCreateStructureFormData() {
+    const type = document.getElementById('createStructureType').value;
+
+    if (!type) {
+        showNotification('Please select a structure type.', 'warning');
+        return null;
+    }
+
+    const data = { type };
+
+    if (type === 'Instructional') {
+        const roomsCount = parseInt(document.getElementById('createStructureRoomsCount').value, 10);
+        const names = Array.from(document.querySelectorAll('.create-room-name-input'))
+            .map(input => input.value.trim())
+            .filter(Boolean);
+
+        if (!roomsCount || roomsCount < 1) {
+            showNotification('Please enter the number of rooms for the instructional structure.', 'warning');
+            return null;
+        }
+
+        if (names.length !== roomsCount) {
+            showNotification('Please enter all room names for the instructional structure.', 'warning');
+            return null;
+        }
+
+        data.number_of_rooms = roomsCount;
+        data.room_names = names.join(', ');
+    } else if (type === 'Non-Instructional') {
+        const purpose = document.getElementById('createStructurePurpose').value.trim();
+
+        if (!purpose) {
+            showNotification('Please enter the purpose for the non-instructional structure.', 'warning');
+            return null;
+        }
+
+        data.purpose = purpose;
+    } else if (type === 'Others') {
+        const structureFunction = document.getElementById('createStructureFunction').value.trim();
+
+        if (!structureFunction) {
+            showNotification('Please enter the function for this structure.', 'warning');
+            return null;
+        }
+
+        data.function = structureFunction;
+    }
+
+    return data;
+}
+
+function resetCreateStructureForm() {
+    const typeInput = document.getElementById('createStructureType');
+    if (typeInput) typeInput.value = '';
+
+    const roomsCount = document.getElementById('createStructureRoomsCount');
+    const roomNamesContainer = document.getElementById('createRoomNamesContainer');
+    const purpose = document.getElementById('createStructurePurpose');
+    const structureFunction = document.getElementById('createStructureFunction');
+
+    if (roomsCount) roomsCount.value = '';
+    if (roomNamesContainer) roomNamesContainer.innerHTML = '';
+    if (purpose) purpose.value = '';
+    if (structureFunction) structureFunction.value = '';
+
+    if (roomsCount) roomsCount.removeAttribute('required');
+    if (purpose) purpose.removeAttribute('required');
+    if (structureFunction) structureFunction.removeAttribute('required');
+
+    document.getElementById('createInstructionalFields').style.display = 'none';
+    document.getElementById('createNonInstructionalFields').style.display = 'none';
+    document.getElementById('createOthersFields').style.display = 'none';
+}
+
+function renderCreateStructures() {
+    if (!createStructuresList || !noCreateStructuresState) return;
+
+    createStructuresList.innerHTML = '';
+
+    if (createBuildingStructures.length === 0) {
+        noCreateStructuresState.style.display = 'block';
+        return;
+    }
+
+    noCreateStructuresState.style.display = 'none';
+
+    createBuildingStructures.forEach(structure => {
+        const structureEl = document.createElement('div');
+        structureEl.className = 'structure-item';
+
+        let detailsHtml = '';
+        let badgeClass = 'others';
+
+        if (structure.type === 'Instructional') {
+            badgeClass = 'instructional';
+            detailsHtml = `<span>Rooms: ${structure.number_of_rooms}${structure.room_names ? ` (${escapeHtml(structure.room_names)})` : ''}</span>`;
+        } else if (structure.type === 'Non-Instructional') {
+            badgeClass = 'non-instructional';
+            detailsHtml = `<span>Purpose: ${escapeHtml(structure.purpose)}</span>`;
+        } else if (structure.type === 'Others') {
+            badgeClass = 'others';
+            detailsHtml = `<span>Function: ${escapeHtml(structure.function)}</span>`;
+        }
+
+        structureEl.innerHTML = `
+            <div>
+                <span class="item-type-badge ${badgeClass}">${escapeHtml(structure.type)}</span>
+                <div class="structure-item-details">${detailsHtml}</div>
+            </div>
+            <button type="button" onclick="window.removeCreateStructure('${structure.tempId}')" class="structure-remove-btn" title="Remove Structure">
+                <i class="fa-solid fa-trash"></i>
+            </button>
+        `;
+
+        createStructuresList.appendChild(structureEl);
+    });
 }
 
 function generateBuildingUsageInputs(mode, initialValues = []) {

@@ -81,7 +81,7 @@
 
     <!-- Create Building Modal -->
     <div id="createBuildingModal" class="modal">
-        <div class="modal-content modal-medium">
+        <div class="modal-content modal-large">
             <div class="modal-header">
                 <h3>Create New Building</h3>
                 <button class="modal-close" onclick="window.closeCreateBuildingModal()">&times;</button>
@@ -153,6 +153,63 @@
                     <textarea class="form-input" id="buildingDescription" placeholder="e.g., Senior High School Building" rows="2"></textarea>
                 </div>
 
+                <div class="create-structures-section">
+                    <h4>Structures</h4>
+
+                    <button type="button" id="showCreateAddStructureBtn" onclick="window.showCreateAddStructureForm()" class="btn btn-primary create-structure-show-btn">
+                        <i class="fa-solid fa-plus"></i> Add Structure
+                    </button>
+
+                    <div id="createAddStructureForm" class="create-add-structure-form" style="display: none;">
+                        <div class="form-group">
+                            <label class="form-label" for="createStructureType">Structure Type *</label>
+                            <select class="form-input" id="createStructureType" onchange="window.handleCreateStructureTypeChange()">
+                                <option value="" disabled selected>Select Type</option>
+                                <option value="Instructional">Instructional</option>
+                                <option value="Non-Instructional">Non-Instructional</option>
+                                <option value="Others">Others</option>
+                            </select>
+                        </div>
+
+                        <div id="createInstructionalFields" style="display: none;">
+                            <div class="form-group">
+                                <label class="form-label" for="createStructureRoomsCount">Number of Rooms *</label>
+                                <input class="form-input" type="number" id="createStructureRoomsCount" min="1" placeholder="e.g., 4">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Room Names *</label>
+                                <div id="createRoomNamesContainer" class="create-room-names-container"></div>
+                            </div>
+                        </div>
+
+                        <div id="createNonInstructionalFields" style="display: none;">
+                            <div class="form-group">
+                                <label class="form-label" for="createStructurePurpose">Purpose *</label>
+                                <input class="form-input" type="text" id="createStructurePurpose" placeholder="e.g., Faculty, Library, Music Room">
+                            </div>
+                        </div>
+
+                        <div id="createOthersFields" style="display: none;">
+                            <div class="form-group">
+                                <label class="form-label" for="createStructureFunction">Function *</label>
+                                <input class="form-input" type="text" id="createStructureFunction" placeholder="e.g., CR, Storage">
+                            </div>
+                        </div>
+
+                        <div class="create-structure-actions">
+                            <button type="button" onclick="window.handleAddCreateStructure()" class="btn btn-primary">
+                                Save Structure
+                            </button>
+                            <button type="button" onclick="window.hideCreateAddStructureForm()" class="btn btn-secondary">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="createStructuresList" class="structures-list create-structures-list"></div>
+                    <p id="noCreateStructuresState" class="room-usage-empty">No structures added yet.</p>
+                </div>
+
                 <div class="modal-footer">
                     <button type="button" onclick="window.closeCreateBuildingModal()" class="btn btn-secondary">Cancel</button>
                     <button type="submit" class="btn btn-primary" id="createBuildingBtn">
@@ -175,6 +232,18 @@
                 <div class="building-info-section card" style="margin-bottom: var(--space-md);">
                     <h4 style="margin-bottom: var(--space-xs);" id="detailBuildingName">Building Name</h4>
                     <div id="detailBuildingMetadata" class="building-metadata-grid"></div>
+                </div>
+
+                <!-- Structures List -->
+                <div class="structures-container">
+                    <h4>Structures</h4>
+                    <div id="structuresList" class="structures-list" style="margin-top: 10px;">
+                        <!-- Structures will be rendered here -->
+                    </div>
+                    <div id="noStructuresState" class="empty-state" style="display: none; padding: 20px;">
+                        <i class="fa-solid fa-cubes"></i>
+                        <p>No structures added yet</p>
+                    </div>
                 </div>
 
                 <!-- Add Structure Section -->
@@ -231,18 +300,6 @@
                             <button type="button" onclick="window.hideAddStructureForm()" class="btn btn-secondary">Cancel</button>
                         </div>
                     </form>
-                </div>
-
-                <!-- Structures List -->
-                <div class="structures-container">
-                    <h4>Structures</h4>
-                    <div id="structuresList" class="structures-list" style="margin-top: 10px;">
-                        <!-- Structures will be rendered here -->
-                    </div>
-                    <div id="noStructuresState" class="empty-state" style="display: none; padding: 20px;">
-                        <i class="fa-solid fa-cubes"></i>
-                        <p>No structures added yet</p>
-                    </div>
                 </div>
             </div>
 
