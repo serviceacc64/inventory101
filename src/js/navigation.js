@@ -25,49 +25,75 @@ function renderSidebar() {
         filename = 'dashboard.html'; // Default index fallback
     }
 
-    // Navigation links data structure
-    const navItems = [
+    // Navigation sections (order reflects workflow: overview → inventory → facilities → system)
+    const navSections = [
         {
-            name: 'Dashboard',
-            icon: 'fa-solid fa-chart-line',
-            href: `${rootPrefix}dashboard.html`,
-            match: ['dashboard.html']
+            label: 'Overview',
+            items: [
+                {
+                    name: 'Dashboard',
+                    icon: 'fa-solid fa-chart-line',
+                    href: `${rootPrefix}dashboard.html`,
+                    match: ['dashboard.html']
+                }
+            ]
         },
         {
-            name: 'Items',
-            icon: 'fa-solid fa-clipboard-list',
-            href: `${pagesPrefix}input.html`,
-            match: ['input.html']
+            label: 'Inventory',
+            items: [
+                {
+                    name: 'Items',
+                    icon: 'fa-solid fa-clipboard-list',
+                    href: `${pagesPrefix}input.html`,
+                    match: ['input.html']
+                },
+                {
+                    name: 'Personnel',
+                    icon: 'fa-solid fa-users-gear',
+                    href: `${pagesPrefix}personnel.html`,
+                    match: ['personnel.html']
+                }
+            ]
         },
         {
-            name: 'Rooms',
-            icon: 'fa-solid fa-door-open',
-            href: `${pagesPrefix}rooms.html`,
-            match: ['rooms.html']
+            label: 'Facilities & Assets',
+            items: [
+                {
+                    name: 'Buildings',
+                    icon: 'fa-solid fa-building',
+                    href: `${pagesPrefix}buildings.html`,
+                    match: ['buildings.html']
+                },
+                {
+                    name: 'Rooms',
+                    icon: 'fa-solid fa-door-open',
+                    href: `${pagesPrefix}rooms.html`,
+                    match: ['rooms.html']
+                },
+                {
+                    name: 'Equipment',
+                    icon: 'fa-solid fa-tools',
+                    href: `${pagesPrefix}equipment.html`,
+                    match: ['equipment.html']
+                }
+            ]
         },
         {
-            name: 'Buildings',
-            icon: 'fa-solid fa-building',
-            href: `${pagesPrefix}buildings.html`,
-            match: ['buildings.html']
-        },
-        {
-            name: 'Equipment',
-            icon: 'fa-solid fa-tools',
-            href: `${pagesPrefix}equipment.html`,
-            match: ['equipment.html']
-        },
-        {
-            name: 'Reports',
-            icon: 'fa-solid fa-calendar-week',
-            href: `${pagesPrefix}report.html`,
-            match: ['report.html']
-        },
-        {
-            name: 'Logs',
-            icon: 'fa-solid fa-book-open',
-            href: `${pagesPrefix}logs.html`,
-            match: ['logs.html']
+            label: 'System',
+            items: [
+                {
+                    name: 'Reports',
+                    icon: 'fa-solid fa-calendar-week',
+                    href: `${pagesPrefix}report.html`,
+                    match: ['report.html']
+                },
+                {
+                    name: 'Logs',
+                    icon: 'fa-solid fa-book-open',
+                    href: `${pagesPrefix}logs.html`,
+                    match: ['logs.html']
+                }
+            ]
         }
     ];
 
@@ -81,17 +107,27 @@ function renderSidebar() {
             <ul>
     `;
 
-    navItems.forEach(item => {
-        const isActive = item.match.includes(filename);
-        const activeClass = isActive ? 'class="active"' : '';
-        menuHTML += `
-            <li>
-                <a href="${item.href}" ${activeClass}>
-                    <i class="${item.icon}"></i>
-                    <span>${item.name}</span>
-                </a>
-            </li>
-        `;
+    navSections.forEach((section, sectionIndex) => {
+        if (section.label) {
+            menuHTML += `
+                <li class="nav-section-label${sectionIndex > 0 ? '' : ' nav-section-label--first'}">
+                    <span>${section.label}</span>
+                </li>
+            `;
+        }
+
+        section.items.forEach(item => {
+            const isActive = item.match.includes(filename);
+            const activeClass = isActive ? 'class="active"' : '';
+            menuHTML += `
+                <li>
+                    <a href="${item.href}" ${activeClass}>
+                        <i class="${item.icon}"></i>
+                        <span>${item.name}</span>
+                    </a>
+                </li>
+            `;
+        });
     });
 
     menuHTML += `

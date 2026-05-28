@@ -168,6 +168,20 @@ function resetCustomMonthStats() {
     if (tableBody) {
         tableBody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px;">Select a month to view data</td></tr>';
     }
+
+    if (typeof window.displayPersonnelSummarySection === 'function') {
+        window.displayPersonnelSummarySection('custom', {
+            totalEmployees: 0,
+            juniorHigh: 0,
+            seniorHigh: 0,
+            newEmployees: 0,
+            equipmentIssued: 0,
+            equipmentAssignments: 0,
+            equipmentValue: 0,
+            trends: { newEmployees: 0, equipmentIssued: 0 },
+            topPersonnelEquipment: []
+        });
+    }
 }
 
 // Load custom month data from database
@@ -203,9 +217,21 @@ async function loadCustomMonthData() {
             .select('*')
             .gte('timestamp', prevMonthStart.toISOString())
             .lte('timestamp', prevMonthEnd.toISOString());
+
+        const { data: personnel } = await supabase.from('personnel').select('*');
+        const { data: personnelItems } = await supabase.from('personnel_items').select('*');
         
         // Calculate summary
-        customMonthSummaryData = calculateCustomMonthSummary(logs || [], prevLogs || []);
+        customMonthSummaryData = calculateCustomMonthSummary(
+            logs || [],
+            prevLogs || [],
+            personnel || [],
+            personnelItems || [],
+            startDate,
+            endDate,
+            prevMonthStart,
+            prevMonthEnd
+        );
         
         // Display the summary
         displayCustomMonthSummary();
@@ -219,7 +245,7 @@ async function loadCustomMonthData() {
 }
 
 // Calculate summary for custom month
-function calculateCustomMonthSummary(logs, prevLogs) {
+function calculateCustomMonthSummary(logs, prevLogs, personnelRecords = [], personnelItems = [], startDate = null, endDate = null, prevStartDate = null, prevEndDate = null) {
     // Calculate metrics for current month
     const itemsAdded = logs.reduce((sum, log) => {
         const delta = getQuantityDelta(log);
@@ -277,8 +303,7 @@ function calculateCustomMonthSummary(logs, prevLogs) {
         .sort((a, b) => (b.added + b.removed) - (a.added + a.removed))
         .slice(0, 10);
     
-    // Get recent activity (last 10)
-    const recentActivity = logs
+    const inventoryActivity = logs
         .slice(0, 10)
         .map(log => {
             const delta = getQuantityDelta(log);
@@ -291,6 +316,34 @@ function calculateCustomMonthSummary(logs, prevLogs) {
                 action: log.action_type
             };
         });
+
+    let personnel = {
+        totalEmployees: personnelRecords.length,
+        juniorHigh: 0,
+        seniorHigh: 0,
+        newEmployees: 0,
+        equipmentIssued: 0,
+        equipmentAssignments: 0,
+        equipmentValue: 0,
+        trends: { newEmployees: 0, equipmentIssued: 0 },
+        topPersonnelEquipment: [],
+        personnelActivity: []
+    };
+
+    if (typeof window.calculatePersonnelPeriodSummary === 'function' && startDate && endDate) {
+        personnel = window.calculatePersonnelPeriodSummary(
+            personnelRecords,
+            personnelItems,
+            startDate,
+            endDate,
+            prevStartDate,
+            prevEndDate
+        );
+    }
+
+    const recentActivity = typeof window.mergeRecentActivity === 'function'
+        ? window.mergeRecentActivity(inventoryActivity, personnel.personnelActivity)
+        : inventoryActivity;
     
     return {
         itemsAdded,
@@ -303,7 +356,8 @@ function calculateCustomMonthSummary(logs, prevLogs) {
             transactions: calculateTrend(transactions, prevTransactions)
         },
         topItems,
-        recentActivity
+        recentActivity,
+        personnel
     };
 }
 
@@ -332,15 +386,21 @@ function displayCustomMonthSummary() {
     const itemsRemovedTrendEl = document.getElementById('customItemsRemovedTrend');
     const transactionsTrendEl = document.getElementById('customTransactionsTrend');
     
-    const formatTrend = (value) => {
-        if (value > 0) return `<span class="trend-up"><i class="fa-solid fa-arrow-up"></i> ${value}%</span>`;
-        if (value < 0) return `<span class="trend-down"><i class="fa-solid fa-arrow-down"></i> ${Math.abs(value)}%</span>`;
-        return `<span class="trend-neutral"><i class="fa-solid fa-minus"></i> 0%</span>`;
-    };
+    const formatTrend = typeof window.formatTrendHtml === 'function'
+        ? window.formatTrendHtml
+        : (value) => {
+            if (value > 0) return `<span class="trend-up"><i class="fa-solid fa-arrow-up"></i> ${value}%</span>`;
+            if (value < 0) return `<span class="trend-down"><i class="fa-solid fa-arrow-down"></i> ${Math.abs(value)}%</span>`;
+            return `<span class="trend-neutral"><i class="fa-solid fa-minus"></i> 0%</span>`;
+        };
     
     if (itemsAddedTrendEl) itemsAddedTrendEl.innerHTML = formatTrend(data.trends.itemsAdded);
     if (itemsRemovedTrendEl) itemsRemovedTrendEl.innerHTML = formatTrend(data.trends.itemsRemoved);
     if (transactionsTrendEl) transactionsTrendEl.innerHTML = formatTrend(data.trends.transactions);
+
+    if (typeof window.displayPersonnelSummarySection === 'function') {
+        window.displayPersonnelSummarySection('custom', data.personnel);
+    }
     
     // Update activity list
     const activityListEl = document.getElementById('customActivity');
@@ -348,17 +408,30 @@ function displayCustomMonthSummary() {
         if (data.recentActivity.length === 0) {
             activityListEl.innerHTML = '<p class="small-muted">No activity in this month</p>';
         } else {
-            activityListEl.innerHTML = data.recentActivity.map(activity => `
+            activityListEl.innerHTML = data.recentActivity.map(activity => {
+                const isPersonnel = activity.source === 'personnel';
+                const iconClass = isPersonnel
+                    ? (activity.type === 'employee' ? 'personnel' : 'personnel-equipment')
+                    : activity.type;
+                const icon = isPersonnel
+                    ? (activity.type === 'employee' ? 'fa-user-plus' : 'fa-box')
+                    : (activity.type === 'added' ? 'fa-plus' : activity.type === 'removed' ? 'fa-minus' : 'fa-pen');
+                const actionText = isPersonnel
+                    ? (activity.type === 'employee' ? 'new employee' : `issued (${activity.quantity})`)
+                    : `${activity.type === 'added' ? 'added' : activity.type === 'removed' ? 'removed' : 'updated'} (${activity.quantity})`;
+
+                return `
                 <div class="activity-item">
-                    <div class="activity-icon ${activity.type}">
-                        <i class="fa-solid ${activity.type === 'added' ? 'fa-plus' : activity.type === 'removed' ? 'fa-minus' : 'fa-pen'}"></i>
+                    <div class="activity-icon ${iconClass}">
+                        <i class="fa-solid ${icon}"></i>
                     </div>
                     <div class="activity-details">
-                        <p>${escapeHtml(activity.itemName)} ${activity.type === 'added' ? 'added' : activity.type === 'removed' ? 'removed' : 'updated'} (${activity.quantity})</p>
+                        <p>${escapeHtml(activity.itemName)} ${actionText}</p>
                         <small>${escapeHtml(activity.person)} • ${new Date(activity.timestamp).toLocaleString()}</small>
                     </div>
                 </div>
-            `).join('');
+            `;
+            }).join('');
         }
     }
     
@@ -413,11 +486,16 @@ async function exportCustomMonthReport() {
         const monthName = monthNames[parseInt(month) - 1];
         
         // Prepare summary data
+        const p = customMonthSummaryData.personnel || {};
         const summaryData = [
             { 'Metric': 'Items Added', 'Value': customMonthSummaryData.itemsAdded, 'Trend': (customMonthSummaryData.trends.itemsAdded > 0 ? '+' : '') + customMonthSummaryData.trends.itemsAdded + '%' },
             { 'Metric': 'Items Removed', 'Value': customMonthSummaryData.itemsRemoved, 'Trend': (customMonthSummaryData.trends.itemsRemoved > 0 ? '+' : '') + customMonthSummaryData.trends.itemsRemoved + '%' },
             { 'Metric': 'Transactions', 'Value': customMonthSummaryData.transactions, 'Trend': (customMonthSummaryData.trends.transactions > 0 ? '+' : '') + customMonthSummaryData.trends.transactions + '%' },
-            { 'Metric': 'Net Change', 'Value': customMonthSummaryData.netChange, 'Trend': '-' }
+            { 'Metric': 'Net Change', 'Value': customMonthSummaryData.netChange, 'Trend': '-' },
+            { 'Metric': 'Total Employees', 'Value': p.totalEmployees || 0, 'Trend': `JH: ${p.juniorHigh || 0} · SH: ${p.seniorHigh || 0}` },
+            { 'Metric': 'New Employees', 'Value': p.newEmployees || 0, 'Trend': (p.trends?.newEmployees > 0 ? '+' : '') + (p.trends?.newEmployees || 0) + '%' },
+            { 'Metric': 'Equipment Issued (Qty)', 'Value': p.equipmentIssued || 0, 'Trend': (p.trends?.equipmentIssued > 0 ? '+' : '') + (p.trends?.equipmentIssued || 0) + '%' },
+            { 'Metric': 'Issued Value', 'Value': p.equipmentValue || 0, 'Trend': `${p.equipmentAssignments || 0} assignments` }
         ];
         
         // Prepare top items data
@@ -449,6 +527,16 @@ async function exportCustomMonthReport() {
         if (topItemsData.length > 0) {
             const topItemsWs = XLSX.utils.json_to_sheet(topItemsData);
             XLSX.utils.book_append_sheet(wb, topItemsWs, 'Top Items');
+        }
+
+        const topPersonnelData = (p.topPersonnelEquipment || []).map(item => ({
+            'Item': item.name,
+            'Qty Issued': item.qty,
+            'Assignments': item.assignments
+        }));
+        if (topPersonnelData.length > 0) {
+            const topPersonnelWs = XLSX.utils.json_to_sheet(topPersonnelData);
+            XLSX.utils.book_append_sheet(wb, topPersonnelWs, 'Personnel Equipment');
         }
         
         // Add Activity sheet if data exists

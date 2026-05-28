@@ -226,6 +226,46 @@
     background: rgba(85, 0, 0, 0.02);
 }
 
+.report-card .stats-grid--personnel {
+    padding-top: 0;
+    border-top: 1px solid rgba(85, 0, 0, 0.06);
+}
+
+.report-card .summary-section-divider {
+    padding: 8px 24px 0;
+    background: rgba(85, 0, 0, 0.02);
+}
+
+.report-card .summary-subheading {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--textcolor2);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.report-card .summary-table-heading {
+    margin: 20px 0 10px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--textcolor2);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.report-card .activity-icon.personnel {
+    background: rgba(33, 150, 243, 0.15);
+    color: #1565c0;
+}
+
+.report-card .activity-icon.personnel-equipment {
+    background: rgba(156, 39, 176, 0.15);
+    color: #7b1fa2;
+}
+
 @media (max-width: 900px) {
     .report-card .stats-grid {
         grid-template-columns: repeat(2, 1fr);
