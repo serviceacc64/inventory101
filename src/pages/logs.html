@@ -12,80 +12,87 @@
     <link rel="stylesheet" href="../css/dashboard.css">
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/animations.css">
+    <link rel="stylesheet" href="../css/logs.css">
     <link rel="icon" href="data:,">
     <script type="module" src="../js/auth.js"></script>
     <script src="../js/navigation.js" defer></script>
+    <script type="module" src="../js/supabase.js"></script>
 </head>
 <body>
     <script>
-        // Check if user is logged in (works with both old and new auth)
         if (!localStorage.getItem('isLoggedIn')) {
             window.location.href = '../../index.html';
         }
     </script>
     
-    <!-- Navigation -->
     <nav class="navigation" id="navbar"></nav>
 
-    <!-- Main Content -->
     <main class="dashboard main-content">
         <header class="dashboard-header">
             <h1>Activity Logs</h1>
             <div class="header-right">
                 <div class="search-box" role="search" aria-label="Search logs">
-                    <input type="search" id="logSearch" placeholder="Search logs..." aria-label="Search logs">
+                    <input type="search" id="logSearch" placeholder="Search logs, employees, items..." aria-label="Search logs">
                     <button type="button" id="clearSearch" title="Clear search"><i class="fa-solid fa-times"></i></button>
                 </div>
 
                 <div class="header-actions" style="position: relative;">
-                    <button class="btn btn-secondary" id="filterBtn"><i class="fa-solid fa-filter"></i> Filter</button>
+                    <button class="btn btn-secondary" id="filterBtn" type="button"><i class="fa-solid fa-filter"></i> Filter</button>
                     
-                    <!-- Filter Dropdown -->
                     <div id="filterDropdown" class="filter-dropdown" style="display: none;">
                         <div class="filter-option active" data-filter="all" onclick="setFilter('all')">All Activities</div>
+
+                        <div class="filter-divider"></div>
+                        <div class="filter-group-label">Supplies Inventory</div>
+                        <div class="filter-option" data-filter="supplies" onclick="setFilter('supplies')">All Supplies</div>
                         <div class="filter-option" data-filter="CREATE" onclick="setFilter('CREATE')">Created Items</div>
                         <div class="filter-option" data-filter="UPDATE_QUANTITY" onclick="setFilter('UPDATE_QUANTITY')">Stock Added</div>
                         <div class="filter-option" data-filter="DISTRIBUTE" onclick="setFilter('DISTRIBUTE')">Distributed</div>
                         <div class="filter-option" data-filter="EDIT" onclick="setFilter('EDIT')">Edited Items</div>
                         <div class="filter-option" data-filter="DELETE" onclick="setFilter('DELETE')">Deleted Items</div>
+
+                        <div class="filter-divider"></div>
+                        <div class="filter-group-label">Personnel</div>
+                        <div class="filter-option" data-filter="personnel" onclick="setFilter('personnel')">All Personnel</div>
+                        <div class="filter-option" data-filter="PERSONNEL_CREATE" onclick="setFilter('PERSONNEL_CREATE')">New Employees</div>
+                        <div class="filter-option" data-filter="PERSONNEL_UPDATE" onclick="setFilter('PERSONNEL_UPDATE')">Updated Employees</div>
+                        <div class="filter-option" data-filter="PERSONNEL_ISSUE" onclick="setFilter('PERSONNEL_ISSUE')">Equipment Issued</div>
+                        <div class="filter-option" data-filter="PERSONNEL_ITEM_UPDATE" onclick="setFilter('PERSONNEL_ITEM_UPDATE')">Equipment Updated</div>
                     </div>
 
-                    <button class="btn btn-danger" id="clearAllBtn" style="background-color: #f44336; color: white;"><i class="fa-solid fa-trash"></i> Clear All</button>
+                    <button class="btn btn-secondary" id="exportBtn" type="button"><i class="fa-solid fa-download"></i> Export</button>
+                    <button class="btn btn-danger" id="clearAllBtn" type="button" style="background-color: #f44336; color: white;"><i class="fa-solid fa-trash"></i> Clear Supplies Logs</button>
                 </div>
-
-
             </div>
         </header>
-
-        <!-- Loading State -->
 
         <div id="loadingState" class="loading-state" style="display: none;">
             <i class="fa-solid fa-spinner fa-spin"></i>
             <p>Loading activity logs...</p>
         </div>
 
-        <!-- Error State -->
         <div id="errorState" class="error-state" style="display: none;">
             <i class="fa-solid fa-exclamation-triangle"></i>
             <p id="errorMessage">Failed to load logs</p>
         </div>
 
-        <!-- Empty State -->
         <div id="emptyState" class="empty-state" style="display: none;">
             <i class="fa-solid fa-clipboard-list"></i>
             <p>No activity logs found</p>
-            <p>Activities will appear here when items are created, updated, or distributed.</p>
+            <p>Supplies changes and personnel events (new employees, issued equipment) will appear here.</p>
         </div>
 
-        <!-- Clear All Confirmation Modal -->
-        <div id="clearAllModal" class="modal" style="display: none;">
-            <div class="modal-content" style="max-width: 400px;">
+        <div id="clearAllModal" class="modal">
+            <div class="modal-content" style="max-width: 440px;">
                 <div class="modal-header">
-                    <h3><i class="fa-solid fa-exclamation-triangle" style="color: var(--danger);"></i> Clear All Logs</h3>
+                    <h3><i class="fa-solid fa-exclamation-triangle" style="color: var(--danger);"></i> Clear Supplies Logs</h3>
                     <button type="button" class="modal-close" onclick="closeClearAllModal()">&times;</button>
                 </div>
                 <div class="modal-body">
-                    <p>Are you sure you want to delete <strong>all</strong> activity logs?</p>
+                    <p>Are you sure you want to delete <strong>all supplies inventory activity logs</strong>?</p>
+                    <p style="font-size: 14px; margin-top: var(--space-sm); color: #666;">
+                        Personnel activity is shown from employee and issued-equipment records. Clearing logs does not delete personnel data.
+                    </p>
                     <p style="color: var(--danger); font-size: 14px; margin-top: var(--space-sm);">
                         <i class="fa-solid fa-exclamation-circle"></i> This action cannot be undone!
                     </p>
@@ -93,23 +100,33 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" onclick="closeClearAllModal()">Cancel</button>
                     <button type="button" class="btn btn-danger" onclick="confirmClearAllLogs()">
-                        <i class="fa-solid fa-trash"></i> Yes, Clear All
+                        <i class="fa-solid fa-trash"></i> Yes, Clear Supplies Logs
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- Activity Logs -->
         <section class="recent-activity">
-            <h2>All Activities</h2>
-            <div id="logsContainer" class="activity-list">
-                <!-- Logs will be dynamically loaded here -->
+            <div class="logs-summary-grid" id="logsSummaryGrid" style="display: none;">
+                <div class="logs-summary-card">
+                    <small>Total Events</small>
+                    <div id="logsTotalCount" class="logs-summary-value">0</div>
+                </div>
+                <div class="logs-summary-card logs-summary-card--supplies">
+                    <small>Supplies Inventory</small>
+                    <div id="logsSuppliesCount" class="logs-summary-value">0</div>
+                </div>
+                <div class="logs-summary-card logs-summary-card--personnel">
+                    <small>Personnel</small>
+                    <div id="logsPersonnelCount" class="logs-summary-value">0</div>
+                </div>
             </div>
+
+            <h2>All Activities</h2>
+            <div id="logsContainer" class="activity-list"></div>
         </section>
     </main>
 
-
-    <!-- Logs JavaScript -->
     <script type="module" src="../js/logs.js"></script>
 </body>
 </html>

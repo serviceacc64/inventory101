@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,300;0,500;0,600;1,100&display=swap" rel="stylesheet">
+    <title>Personnel - Inventory System</title>
+    <link rel="stylesheet" href="../css/design-system.css">
+    <link rel="stylesheet" href="../css/dashboard.css">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/animations.css">
+    <link rel="stylesheet" href="../css/personnel.css">
+    <link rel="icon" href="data:,">
+    <!-- SheetJS for Excel Export -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script type="module" src="../js/auth.js"></script>
+    <script src="../js/navigation.js" defer></script>
+    <!-- Supabase Client -->
+    <script type="module" src="../js/supabase.js"></script>
+</head>
+<body>
+    <script>
+        // Secure page auth check
+        if (!localStorage.getItem('isLoggedIn')) {
+            window.location.href = '../../index.html';
+        }
+    </script>
+    
+    <!-- Dynamic Navigation Sidebar -->
+    <nav class="navigation" id="navbar"></nav>
+
+    <!-- Main Dashboard Content -->
+    <main class="dashboard main-content">
+        <header class="dashboard-header">
+            <h1>Personnel Inventory</h1>
+
+            <div class="header-right">
+                <!-- Search Box -->
+                <div class="search-box" role="search" aria-label="Search personnel">
+                    <input type="search" id="personnelSearch" placeholder="Search employee or ID..." aria-label="Search personnel">
+                    <button type="button" id="clearSearch" title="Clear search"><i class="fa-solid fa-times"></i></button>
+                </div>
+
+                <!-- Filters -->
+                <div class="filter-box">
+                    <select id="schoolLevelFilter" aria-label="Filter by School Level" style="margin-right: 8px;">
+                        <option value="">All School Levels</option>
+                        <option value="Junior High">Junior High</option>
+                        <option value="Senior High">Senior High</option>
+                    </select>
+                    
+                    <select id="departmentFilter" aria-label="Filter by Department">
+                        <option value="">All Departments</option>
+                    </select>
+                </div>
+
+                <!-- Create Action -->
+                <div class="header-actions">
+                    <button class="btn btn-primary" onclick="window.openCreatePersonnelModal()"><i class="fa-solid fa-plus"></i> New Employee</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Personnel Content Grid -->
+        <section class="recent-activity">
+            <!-- Loading State -->
+            <div id="loadingState" class="loading-state">
+                <i class="fa-solid fa-spinner fa-spin"></i>
+                <p>Loading personnel profiles...</p>
+            </div>
+            
+            <!-- Error State -->
+            <div id="errorState" class="error-state">
+                <i class="fa-solid fa-exclamation-circle"></i>
+                <p id="errorMessage">Failed to load personnel profiles</p>
+                <button onclick="window.fetchPersonnel()" class="btn btn-primary">Retry</button>
+            </div>
+            
+            <!-- Empty State -->
+            <div id="emptyState" class="empty-state">
+                <i class="fa-solid fa-users"></i>
+                <p>No employees found</p>
+                <p>Click "New Employee" to create your first employee record.</p>
+            </div>
+
+            <!-- Dynamic Grid Container -->
+            <div id="personnelContainer" class="personnel-grid">
+                <!-- Renders dynamically -->
+            </div>
+
+            <!-- Pagination Container -->
+            <div id="paginationContainer" class="pagination-controls" style="display: none;">
+                <button id="prevBtn" class="pagination-btn" onclick="window.previousPage()">
+                    <i class="fa-solid fa-chevron-left"></i> Previous
+                </button>
+                <div class="pagination-info">
+                    <span id="pageIndicator">Page 1</span>
+                </div>
+                <button id="nextBtn" class="pagination-btn" onclick="window.nextPage()">
+                    Next <i class="fa-solid fa-chevron-right"></i>
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <!-- 1. CREATE PERSONNEL MODAL -->
+    <div id="createPersonnelModal" class="modal">
+        <div class="modal-content modal-medium">
+            <div class="modal-header">
+                <h3>Add New Employee</h3>
+                <button class="modal-close" onclick="window.closeCreatePersonnelModal()">&times;</button>
+            </div>
+            
+            <form id="createPersonnelForm" onsubmit="window.handleCreatePersonnel(event)">
+                <div class="form-group">
+                    <label class="form-label" for="empName">Employee Name *</label>
+                    <input class="form-input" type="text" id="empName" placeholder="e.g., Jane D. Smith" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="empId">Employee ID *</label>
+                    <input class="form-input" type="text" id="empId" placeholder="e.g., 2026-10493" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="empPosition">Position *</label>
+                    <input class="form-input" type="text" id="empPosition" placeholder="e.g., Teacher III, Master Teacher I" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="empSchoolLevel">School Level *</label>
+                    <select class="form-input" id="empSchoolLevel" required style="background-color: white;">
+                        <option value="Junior High" selected>Junior High</option>
+                        <option value="Senior High">Senior High</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="empDepartment">Department *</label>
+                    <select class="form-input" id="empDepartment" required style="background-color: white;"></select>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" onclick="window.closeCreatePersonnelModal()" class="btn btn-secondary">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="createPersonnelBtn">
+                        <i class="fa-solid fa-plus"></i> Add Employee
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 2. EDIT PERSONNEL PROFILE MODAL -->
+    <div id="editPersonnelModal" class="modal">
+        <div class="modal-content modal-medium">
+            <div class="modal-header">
+                <h3>Edit Employee Details</h3>
+                <button class="modal-close" onclick="window.closeEditPersonnelModal()">&times;</button>
+            </div>
+            
+            <form id="editPersonnelForm" onsubmit="window.handleEditPersonnel(event)">
+                <input type="hidden" id="editPersonnelRecordId">
+                
+                <div class="form-group">
+                    <label class="form-label" for="editEmpName">Employee Name *</label>
+                    <input class="form-input" type="text" id="editEmpName" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="editEmpId">Employee ID *</label>
+                    <input class="form-input" type="text" id="editEmpId" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="editEmpPosition">Position *</label>
+                    <input class="form-input" type="text" id="editEmpPosition" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="editEmpSchoolLevel">School Level *</label>
+                    <select class="form-input" id="editEmpSchoolLevel" required style="background-color: white;">
+                        <option value="Junior High">Junior High</option>
+                        <option value="Senior High">Senior High</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="editEmpDepartment">Department *</label>
+                    <select class="form-input" id="editEmpDepartment" required style="background-color: white;"></select>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" onclick="window.closeEditPersonnelModal()" class="btn btn-secondary">Cancel</button>
+                    <button type="button" onclick="window.handleDeletePersonnel()" class="btn btn-danger" style="margin-right: auto;">
+                        <i class="fa-solid fa-trash"></i> Delete Profile
+                    </button>
+                    <button type="submit" class="btn btn-primary" id="editPersonnelBtn">
+                        <i class="fa-solid fa-save"></i> Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 3. PERSONNEL ITEMS DETAIL MODAL -->
+    <div id="personnelItemsModal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3 id="personnelItemsTitle">Issued Equipment</h3>
+                <button class="modal-close" onclick="window.closePersonnelItemsModal()">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                <!-- Add custom item button -->
+                <div style="margin-bottom: 20px;">
+                    <button type="button" id="showCustomItemBtn" onclick="window.showCustomItemForm()" class="btn btn-primary" style="width: 100%;">
+                        <i class="fa-solid fa-plus"></i> Issue New Item/Equipment
+                    </button>
+                    
+                    <!-- Issue New Item Form -->
+                    <form id="addCustomItemForm" class="add-item-section" style="padding: var(--space-md); background: var(--color-danger-light); border-radius: var(--radius-md); border-left: 4px solid var(--color-danger); display: none; margin-top: 10px; max-height: 70vh; overflow-y: auto;" onsubmit="window.handleAddCustomItemToPersonnel(event); return false;">
+                        <div style="display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 8px;">
+                            <div class="form-group" style="flex: 1; margin: 0; min-width: 150px;">
+                                <label class="form-label" for="customItemName" style="font-size: 12px;">Item Name *</label>
+                                <input class="form-input" type="text" id="customItemName" placeholder="e.g., ThinkPad Laptop, Office Desk" maxlength="100" required style="padding: 8px 10px; font-size: 13px;">
+                            </div>
+                            <div class="form-group" style="flex: 0 0 70px; margin: 0;">
+                                <label class="form-label" for="customItemQuantity" style="font-size: 12px;">Qty *</label>
+                                <input class="form-input" type="number" id="customItemQuantity" min="1" value="1" required style="padding: 8px 10px; font-size: 13px;">
+                            </div>
+                            <div class="form-group" style="flex: 0 0 90px; margin: 0;">
+                                <label class="form-label" for="customItemUnits" style="font-size: 12px;">Units</label>
+                                <select class="form-input" id="customItemUnits" style="width: 100%; padding: 8px 10px; font-size: 13px; background-color: white;">
+                                    <option value="pcs">pcs</option>
+                                    <option value="sets">sets</option>
+                                    <option value="units" selected>units</option>
+                                    <option value="pairs">pairs</option>
+                                    <option value="boxes">boxes</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 8px;">
+                            <div class="form-group" style="flex: 0 0 120px; margin: 0;">
+                                <label class="form-label" for="customItemUnitValue" style="font-size: 12px;">Unit Value</label>
+                                <input class="form-input" type="number" id="customItemUnitValue" min="0" step="0.01" placeholder="0.00" style="width: 100%; padding: 8px 10px; font-size: 13px;">
+                            </div>
+                            <div class="form-group" style="flex: 0 0 110px; margin: 0;">
+                                <label class="form-label" for="customItemCondition" style="font-size: 12px;">Condition</label>
+                                <select class="form-input" id="customItemCondition" style="width: 100%; padding: 8px 10px; font-size: 13px; background-color: white;">
+                                    <option value="New" selected>New</option>
+                                    <option value="Good">Good</option>
+                                    <option value="Fair">Fair</option>
+                                    <option value="Poor">Poor</option>
+                                    <option value="Damaged">Damaged</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-bottom: 8px;">
+                            <div class="form-group" style="margin: 0;">
+                                <label class="form-label" for="customItemDescription" style="font-size: 12px;">Description (Optional)</label>
+                                <input class="form-input" type="text" id="customItemDescription" placeholder="e.g., Model, Serial Number or specification" maxlength="255" style="padding: 8px 10px; font-size: 13px;">
+                            </div>
+                        </div>
+                        
+                        <div style="margin-bottom: 10px;">
+                            <div class="form-group" style="margin: 0;">
+                                <label class="form-label" for="customItemRemarks" style="font-size: 12px;">Remarks (Optional)</label>
+                                <input class="form-input" type="text" id="customItemRemarks" placeholder="e.g., Project funded, storage details" maxlength="255" style="padding: 8px 10px; font-size: 13px;">
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; gap: 8px; position: sticky; bottom: 0; background: #fff0f0; padding-top: 5px;">
+                            <button type="submit" class="btn btn-primary" style="background: #2e7d32; color: white; border: none; flex: 1; padding: 10px; font-size: 14px;">
+                                <i class="fa-solid fa-check"></i> Assign Item
+                            </button>
+                            <button type="button" onclick="window.hideCustomItemForm()" class="btn btn-secondary" style="flex: 0 0 80px; padding: 10px; font-size: 14px;">
+                                <i class="fa-solid fa-times"></i> Cancel
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Issued Items List -->
+                <div id="personnelItemsList" class="personnel-items-list">
+                    <!-- Items will be rendered here dynamically -->
+                </div>
+
+                <!-- No Issued Items State -->
+                <div id="noItemsState" class="empty-state" style="display: none;">
+                    <i class="fa-solid fa-inbox"></i>
+                    <p>No equipment issued to this employee yet</p>
+                    <p>Use the form above to assign their first item.</p>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" onclick="window.exportPersonnelItemsToExcel()" class="btn btn-success" style="margin-right: auto; background-color: #2e7d32; color: white;">
+                    <i class="fa-solid fa-file-excel"></i> Export to Excel
+                </button>
+                <button type="button" onclick="window.closePersonnelItemsModal()" class="btn btn-secondary">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. EDIT PERSONNEL ITEM MODAL -->
+    <div id="editPersonnelItemModal" class="modal">
+        <div class="modal-content modal-medium">
+            <div class="modal-header">
+                <h3>Edit Issued Item</h3>
+                <button class="modal-close" onclick="window.closeEditPersonnelItemModal()">&times;</button>
+            </div>
+            
+            <form id="editPersonnelItemForm" onsubmit="window.handleEditPersonnelItem(event)">
+                <input type="hidden" id="editPersonnelItemId">
+                
+                <div class="form-group">
+                    <label class="form-label" for="editItemName">Item Name *</label>
+                    <input class="form-input" type="text" id="editItemName" required>
+                </div>
+ 
+                <div class="form-group">
+                    <label class="form-label" for="editItemQuantity">Quantity *</label>
+                    <input class="form-input" type="number" id="editItemQuantity" min="1" required>
+                </div>
+ 
+                <div class="form-group">
+                    <label class="form-label" for="editItemUnits">Units</label>
+                    <select class="form-input" id="editItemUnits" style="width: 100%; background-color: white;">
+                        <option value="pcs">pcs</option>
+                        <option value="sets">sets</option>
+                        <option value="units">units</option>
+                        <option value="pairs">pairs</option>
+                        <option value="boxes">boxes</option>
+                    </select>
+                </div>
+ 
+                <div class="form-group">
+                    <label class="form-label" for="editItemUnitValue">Unit Value</label>
+                    <input class="form-input" type="number" id="editItemUnitValue" min="0" step="0.01" placeholder="0.00" style="width: 100%;">
+                </div>
+ 
+                <div class="form-group">
+                    <label class="form-label" for="editItemCondition">Condition</label>
+                    <select class="form-input" id="editItemCondition" style="width: 100%; background-color: white;">
+                        <option value="New">New</option>
+                        <option value="Good">Good</option>
+                        <option value="Fair">Fair</option>
+                        <option value="Poor">Poor</option>
+                        <option value="Damaged">Damaged</option>
+                    </select>
+                </div>
+ 
+                <div class="form-group">
+                    <label class="form-label" for="editItemDescription">Description (Optional)</label>
+                    <input class="form-input" type="text" id="editItemDescription" maxlength="255">
+                </div>
+ 
+                <div class="form-group">
+                    <label class="form-label" for="editItemRemarks">Remarks (Optional)</label>
+                    <input class="form-input" type="text" id="editItemRemarks" maxlength="255">
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" onclick="window.closeEditPersonnelItemModal()" class="btn btn-secondary">Cancel</button>
+                    <button type="button" onclick="window.handleDeletePersonnelItem()" class="btn btn-danger" style="margin-right: auto;">
+                        <i class="fa-solid fa-trash"></i> Delete Item
+                    </button>
+                    <button type="submit" class="btn btn-primary" id="editPersonnelItemBtn">
+                        <i class="fa-solid fa-save"></i> Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 5. VIEW PERSONNEL ITEM DETAIL MODAL -->
+    <div id="viewPersonnelItemModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Issued Item Details</h3>
+                <button class="modal-close" onclick="window.closeViewPersonnelItemModal()">&times;</button>
+            </div>
+
+            <div class="view-item-grid" style="display: flex; gap: 20px; align-items: flex-start; padding: 15px 0;">
+                <div class="view-item-icon">
+                    <div class="stat-icon" style="width:70px; height:70px; border-radius:12px; background: rgba(85,0,0,0.06); color: var(--hover); display:flex; align-items:center; justify-content:center; font-size:28px;">
+                        <i class="fa-solid fa-box"></i>
+                    </div>
+                </div>
+
+                <div class="view-item-details" style="flex: 1;">
+                    <h4 id="viewItemName" style="font-size: 16px; font-weight: 600; margin: 0 0 10px 0;">Item Name</h4>
+                    <div class="view-item-meta" style="font-size: 13px; color: #555; display: flex; flex-direction: column; gap: 6px;">
+                        <div><strong>Quantity:</strong> <span id="viewItemQuantity">-</span></div>
+                        <div><strong>Units:</strong> <span id="viewItemUnits">-</span></div>
+                        <div><strong>Unit Value:</strong> ₱<span id="viewItemUnitValue">-</span></div>
+                        <div><strong>Condition:</strong> <span id="viewItemCondition">-</span></div>
+                        <div><strong>Description:</strong> <span id="viewItemDescription">-</span></div>
+                        <div><strong>Remarks:</strong> <span id="viewItemRemarks">-</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions view-item-actions" style="display: flex; gap: 10px; justify-content: flex-end; border-top: 1px solid rgba(85,0,0,0.1); padding-top: 15px;">
+                <button type="button" id="viewItemEditBtn" class="btn btn-secondary">Edit</button>
+                <button type="button" id="viewItemDeleteBtn" class="btn btn-danger">Delete</button>
+                <button type="button" id="viewItemCloseBtn" class="btn btn-secondary" onclick="window.closeViewPersonnelItemModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Page Logic Module Import -->
+    <script type="module" src="../js/personnel.js"></script>
+</body>
+</html>

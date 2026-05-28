@@ -27,6 +27,8 @@ let allRooms = [];
 let allRoomItems = [];
 let allActivityLogs = [];
 let allEquipment = [];
+let allPersonnel = [];
+let allPersonnelItems = [];
 
 // Filter state for items list
 let itemsCategoryFilter = '';
@@ -140,8 +142,107 @@ function getQuantityDelta(log) {
     return 0;
 }
 
+function calculateTrend(current, previous) {
+    if (previous === 0) return current > 0 ? 100 : 0;
+    return Math.round(((current - previous) / previous) * 100);
+}
+
+function isDateInRange(dateStr, startDate, endDate) {
+    if (!dateStr) return false;
+    const d = new Date(dateStr);
+    return d >= startDate && d <= endDate;
+}
+
+function calculatePersonnelPeriodSummary(personnel, personnelItems, startDate, endDate, prevStartDate, prevEndDate) {
+    const periodEmployees = personnel.filter(p => isDateInRange(p.created_at, startDate, endDate));
+    const prevPeriodEmployees = personnel.filter(p => isDateInRange(p.created_at, prevStartDate, prevEndDate));
+
+    const periodItems = personnelItems.filter(i => isDateInRange(i.created_at, startDate, endDate));
+    const prevPeriodItems = personnelItems.filter(i => isDateInRange(i.created_at, prevStartDate, prevEndDate));
+
+    const equipmentIssued = periodItems.reduce((sum, i) => sum + (i.quantity || 0), 0);
+    const prevEquipmentIssued = prevPeriodItems.reduce((sum, i) => sum + (i.quantity || 0), 0);
+
+    const equipmentValue = periodItems.reduce(
+        (sum, i) => sum + (i.quantity || 0) * (parseFloat(i.unit_value) || 0),
+        0
+    );
+
+    const personnelById = Object.fromEntries(personnel.map(p => [p.id, p]));
+
+    const itemActivity = {};
+    periodItems.forEach(item => {
+        const name = item.item_name || 'Unknown';
+        if (!itemActivity[name]) {
+            itemActivity[name] = { name, qty: 0, assignments: 0 };
+        }
+        itemActivity[name].qty += item.quantity || 0;
+        itemActivity[name].assignments += 1;
+    });
+
+    const topPersonnelEquipment = Object.values(itemActivity)
+        .sort((a, b) => b.qty - a.qty)
+        .slice(0, 10);
+
+    const personnelActivity = [
+        ...periodEmployees.map(p => ({
+            type: 'employee',
+            itemName: p.employee_name,
+            quantity: 0,
+            person: `${p.school_level} • ${p.department}`,
+            timestamp: p.created_at,
+            action: 'NEW_EMPLOYEE'
+        })),
+        ...periodItems.map(item => {
+            const emp = personnelById[item.personnel_id];
+            return {
+                type: 'equipment',
+                itemName: item.item_name || 'Unknown',
+                quantity: item.quantity || 0,
+                person: emp ? emp.employee_name : 'Unknown employee',
+                timestamp: item.created_at,
+                action: 'ISSUE_EQUIPMENT'
+            };
+        })
+    ]
+        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+        .slice(0, 10);
+
+    return {
+        totalEmployees: personnel.length,
+        juniorHigh: personnel.filter(p => p.school_level === 'Junior High').length,
+        seniorHigh: personnel.filter(p => p.school_level === 'Senior High').length,
+        newEmployees: periodEmployees.length,
+        equipmentIssued,
+        equipmentAssignments: periodItems.length,
+        equipmentValue,
+        trends: {
+            newEmployees: calculateTrend(periodEmployees.length, prevPeriodEmployees.length),
+            equipmentIssued: calculateTrend(equipmentIssued, prevEquipmentIssued)
+        },
+        topPersonnelEquipment,
+        personnelActivity
+    };
+}
+
+function mergeRecentActivity(inventoryActivity, personnelActivity) {
+    const merged = [
+        ...inventoryActivity.map(a => ({ ...a, source: 'inventory' })),
+        ...personnelActivity.map(a => ({ ...a, source: 'personnel' }))
+    ];
+    return merged
+        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+        .slice(0, 10);
+}
+
+function formatTrendHtml(value) {
+    if (value > 0) return `<span class="trend-up"><i class="fa-solid fa-arrow-up"></i> ${value}%</span>`;
+    if (value < 0) return `<span class="trend-down"><i class="fa-solid fa-arrow-down"></i> ${Math.abs(value)}%</span>`;
+    return `<span class="trend-neutral"><i class="fa-solid fa-minus"></i> 0%</span>`;
+}
+
 // Calculate summary for a specific time period
-function calculatePeriodSummary(logs, startDate, endDate, prevStartDate, prevEndDate) {
+function calculatePeriodSummary(logs, startDate, endDate, prevStartDate, prevEndDate, personnelRecords = [], personnelItems = []) {
     // Filter logs for current period
     const periodLogs = logs.filter(log => {
         const logDate = new Date(log.timestamp);
@@ -181,12 +282,6 @@ function calculatePeriodSummary(logs, startDate, endDate, prevStartDate, prevEnd
     
     const prevTransactions = prevPeriodLogs.length;
     
-    // Calculate trends (percentage change)
-    const calculateTrend = (current, previous) => {
-        if (previous === 0) return current > 0 ? 100 : 0;
-        return Math.round(((current - previous) / previous) * 100);
-    };
-    
     // Get top items by activity
     const itemActivity = {};
     periodLogs.forEach(log => {
@@ -211,8 +306,7 @@ function calculatePeriodSummary(logs, startDate, endDate, prevStartDate, prevEnd
         .sort((a, b) => (b.added + b.removed) - (a.added + a.removed))
         .slice(0, 10);
     
-    // Get recent activity (last 10)
-    const recentActivity = periodLogs
+    const inventoryActivity = periodLogs
         .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
         .slice(0, 10)
         .map(log => ({
@@ -224,7 +318,16 @@ function calculatePeriodSummary(logs, startDate, endDate, prevStartDate, prevEnd
             timestamp: log.timestamp,
             action: log.action_type
         }));
-    
+
+    const personnelSummary = calculatePersonnelPeriodSummary(
+        personnelRecords,
+        personnelItems,
+        startDate,
+        endDate,
+        prevStartDate,
+        prevEndDate
+    );
+
     return {
         itemsAdded,
         itemsRemoved,
@@ -236,41 +339,161 @@ function calculatePeriodSummary(logs, startDate, endDate, prevStartDate, prevEnd
             transactions: calculateTrend(transactions, prevTransactions)
         },
         topItems,
-        recentActivity
+        recentActivity: mergeRecentActivity(inventoryActivity, personnelSummary.personnelActivity),
+        personnel: personnelSummary
     };
+}
+
+async function ensureSummarySourceData() {
+    await Promise.all([
+        allActivityLogs.length === 0 ? fetchActivityLogs() : Promise.resolve(),
+        allPersonnel.length === 0 ? fetchPersonnel() : Promise.resolve(),
+        allPersonnelItems.length === 0 ? fetchPersonnelItems() : Promise.resolve()
+    ]);
 }
 
 // Calculate all summaries
 async function calculateAllSummaries() {
-    if (allActivityLogs.length === 0) {
-        await fetchActivityLogs();
-    }
-    
+    await ensureSummarySourceData();
+
     const ranges = getDateRanges();
-    
+
     weeklySummaryData = calculatePeriodSummary(
         allActivityLogs,
         ranges.weekly.start,
         ranges.weekly.end,
         ranges.weekly.prevStart,
-        ranges.weekly.prevEnd
+        ranges.weekly.prevEnd,
+        allPersonnel,
+        allPersonnelItems
     );
-    
+
     monthlySummaryData = calculatePeriodSummary(
         allActivityLogs,
         ranges.monthly.start,
         ranges.monthly.end,
         ranges.monthly.prevStart,
-        ranges.monthly.prevEnd
+        ranges.monthly.prevEnd,
+        allPersonnel,
+        allPersonnelItems
     );
-    
+
     yearlySummaryData = calculatePeriodSummary(
         allActivityLogs,
         ranges.yearly.start,
         ranges.yearly.end,
         ranges.yearly.prevStart,
-        ranges.yearly.prevEnd
+        ranges.yearly.prevEnd,
+        allPersonnel,
+        allPersonnelItems
     );
+}
+
+function injectPersonnelSummarySections() {
+    const periods = ['weekly', 'monthly', 'yearly', 'custom'];
+
+    periods.forEach(period => {
+        const section = document.getElementById(period);
+        if (!section || document.getElementById(`${period}TotalEmployees`)) return;
+
+        const statsGrid = section.querySelector('.stats-grid');
+        if (statsGrid && !section.querySelector('.summary-section-divider--inventory')) {
+            statsGrid.insertAdjacentHTML('beforebegin', `
+                <div class="summary-section-divider summary-section-divider--inventory">
+                    <h4 class="summary-subheading"><i class="fa-solid fa-warehouse"></i> Supplies Inventory Activity</h4>
+                </div>
+            `);
+        }
+        if (statsGrid) {
+            statsGrid.insertAdjacentHTML('afterend', `
+                <div class="summary-section-divider">
+                    <h4 class="summary-subheading"><i class="fa-solid fa-users"></i> Personnel & Issued Equipment</h4>
+                </div>
+                <div class="stats-grid stats-grid--personnel">
+                    <div class="stat-card">
+                        <small>Total Employees</small>
+                        <div id="${period}TotalEmployees" class="stat-value">0</div>
+                        <div id="${period}EmployeeBreakdown" class="small-muted">JH: 0 · SH: 0</div>
+                    </div>
+                    <div class="stat-card">
+                        <small>New Employees</small>
+                        <div id="${period}NewEmployees" class="stat-value">0</div>
+                        <div id="${period}NewEmployeesTrend" class="small-muted"></div>
+                    </div>
+                    <div class="stat-card">
+                        <small>Equipment Issued (Qty)</small>
+                        <div id="${period}EquipmentIssued" class="stat-value">0</div>
+                        <div id="${period}EquipmentIssuedTrend" class="small-muted"></div>
+                    </div>
+                    <div class="stat-card">
+                        <small>Issued Value</small>
+                        <div id="${period}EquipmentValue" class="stat-value">₱0</div>
+                        <div id="${period}EquipmentAssignments" class="small-muted">0 assignments</div>
+                    </div>
+                </div>
+            `);
+        }
+
+        const tablesColumn = section.querySelector('.card-body.two-column > div:last-child');
+        if (tablesColumn && !document.getElementById(`${period}PersonnelEquipmentTable`)) {
+            tablesColumn.insertAdjacentHTML('beforeend', `
+                <h4 class="summary-table-heading"><i class="fa-solid fa-id-card"></i> Top Personnel Equipment</h4>
+                <div class="table-wrap">
+                    <table class="report-table" id="${period}PersonnelEquipmentTable">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Qty Issued</th>
+                                <th>Assignments</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            `);
+        }
+    });
+}
+
+function displayPersonnelSummarySection(period, personnel) {
+    if (!personnel) return;
+
+    const totalEl = document.getElementById(`${period}TotalEmployees`);
+    const breakdownEl = document.getElementById(`${period}EmployeeBreakdown`);
+    const newEl = document.getElementById(`${period}NewEmployees`);
+    const newTrendEl = document.getElementById(`${period}NewEmployeesTrend`);
+    const issuedEl = document.getElementById(`${period}EquipmentIssued`);
+    const issuedTrendEl = document.getElementById(`${period}EquipmentIssuedTrend`);
+    const valueEl = document.getElementById(`${period}EquipmentValue`);
+    const assignmentsEl = document.getElementById(`${period}EquipmentAssignments`);
+
+    if (totalEl) totalEl.textContent = personnel.totalEmployees.toLocaleString();
+    if (breakdownEl) breakdownEl.textContent = `JH: ${personnel.juniorHigh} · SH: ${personnel.seniorHigh}`;
+    if (newEl) newEl.textContent = personnel.newEmployees.toLocaleString();
+    if (newTrendEl) newTrendEl.innerHTML = formatTrendHtml(personnel.trends.newEmployees);
+    if (issuedEl) issuedEl.textContent = personnel.equipmentIssued.toLocaleString();
+    if (issuedTrendEl) issuedTrendEl.innerHTML = formatTrendHtml(personnel.trends.equipmentIssued);
+    if (valueEl) {
+        valueEl.textContent = `₱${personnel.equipmentValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
+    if (assignmentsEl) {
+        assignmentsEl.textContent = `${personnel.equipmentAssignments.toLocaleString()} assignment${personnel.equipmentAssignments === 1 ? '' : 's'}`;
+    }
+
+    const tableBody = document.querySelector(`#${period}PersonnelEquipmentTable tbody`);
+    if (tableBody) {
+        if (!personnel.topPersonnelEquipment.length) {
+            tableBody.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 20px;">No personnel equipment in this period</td></tr>';
+        } else {
+            tableBody.innerHTML = personnel.topPersonnelEquipment.map(item => `
+                <tr>
+                    <td>${escapeHtml(item.name)}</td>
+                    <td>${item.qty}</td>
+                    <td>${item.assignments}</td>
+                </tr>
+            `).join('');
+        }
+    }
 }
 
 // Display summary for a period
@@ -294,33 +517,42 @@ function displayPeriodSummary(period, data) {
     const itemsRemovedTrendEl = document.getElementById(`${period}ItemsRemovedTrend`);
     const transactionsTrendEl = document.getElementById(`${period}TransactionsTrend`);
     
-    const formatTrend = (value) => {
-        if (value > 0) return `<span class="trend-up"><i class="fa-solid fa-arrow-up"></i> ${value}%</span>`;
-        if (value < 0) return `<span class="trend-down"><i class="fa-solid fa-arrow-down"></i> ${Math.abs(value)}%</span>`;
-        return `<span class="trend-neutral"><i class="fa-solid fa-minus"></i> 0%</span>`;
-    };
+    if (itemsAddedTrendEl) itemsAddedTrendEl.innerHTML = formatTrendHtml(data.trends.itemsAdded);
+    if (itemsRemovedTrendEl) itemsRemovedTrendEl.innerHTML = formatTrendHtml(data.trends.itemsRemoved);
+    if (transactionsTrendEl) transactionsTrendEl.innerHTML = formatTrendHtml(data.trends.transactions);
+
+    displayPersonnelSummarySection(period, data.personnel);
     
-    if (itemsAddedTrendEl) itemsAddedTrendEl.innerHTML = formatTrend(data.trends.itemsAdded);
-    if (itemsRemovedTrendEl) itemsRemovedTrendEl.innerHTML = formatTrend(data.trends.itemsRemoved);
-    if (transactionsTrendEl) transactionsTrendEl.innerHTML = formatTrend(data.trends.transactions);
-    
-    // Update activity list
+    // Update activity list (inventory + personnel)
     const activityListEl = document.getElementById(`${period}Activity`);
     if (activityListEl) {
         if (data.recentActivity.length === 0) {
             activityListEl.innerHTML = '<p class="small-muted">No activity in this period</p>';
         } else {
-            activityListEl.innerHTML = data.recentActivity.map(activity => `
+            activityListEl.innerHTML = data.recentActivity.map(activity => {
+                const isPersonnel = activity.source === 'personnel';
+                const iconClass = isPersonnel
+                    ? (activity.type === 'employee' ? 'personnel' : 'personnel-equipment')
+                    : activity.type;
+                const icon = isPersonnel
+                    ? (activity.type === 'employee' ? 'fa-user-plus' : 'fa-box')
+                    : (activity.type === 'added' ? 'fa-plus' : activity.type === 'removed' ? 'fa-minus' : 'fa-pen');
+                const actionText = isPersonnel
+                    ? (activity.type === 'employee' ? 'new employee' : `issued (${activity.quantity})`)
+                    : `${activity.type === 'added' ? 'added' : activity.type === 'removed' ? 'removed' : 'updated'} (${activity.quantity})`;
+
+                return `
                 <div class="activity-item">
-                    <div class="activity-icon ${activity.type}">
-                        <i class="fa-solid ${activity.type === 'added' ? 'fa-plus' : activity.type === 'removed' ? 'fa-minus' : 'fa-pen'}"></i>
+                    <div class="activity-icon ${iconClass}">
+                        <i class="fa-solid ${icon}"></i>
                     </div>
                     <div class="activity-details">
-                        <p>${escapeHtml(activity.itemName)} ${activity.type === 'added' ? 'added' : activity.type === 'removed' ? 'removed' : 'updated'} (${activity.quantity})</p>
+                        <p>${escapeHtml(activity.itemName)} ${actionText}</p>
                         <small>${escapeHtml(activity.person)} • ${new Date(activity.timestamp).toLocaleString()}</small>
                     </div>
                 </div>
-            `).join('');
+            `;
+            }).join('');
         }
     }
     
@@ -487,6 +719,38 @@ async function fetchEquipment() {
         return allEquipment;
     } catch (error) {
         console.error('Error fetching equipment:', error);
+        return [];
+    }
+}
+
+async function fetchPersonnel() {
+    try {
+        const { data: personnel, error } = await supabase
+            .from('personnel')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        allPersonnel = personnel || [];
+        return allPersonnel;
+    } catch (error) {
+        console.error('Error fetching personnel:', error);
+        return [];
+    }
+}
+
+async function fetchPersonnelItems() {
+    try {
+        const { data: items, error } = await supabase
+            .from('personnel_items')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        allPersonnelItems = items || [];
+        return allPersonnelItems;
+    } catch (error) {
+        console.error('Error fetching personnel items:', error);
         return [];
     }
 }
@@ -4319,6 +4583,7 @@ document.addEventListener('DOMContentLoaded', () => {
 async function initializeSummaries() {
     // Check if we're on the main reports page (not a specific report view)
     if (document.getElementById('weekly') && document.getElementById('monthly') && document.getElementById('yearly')) {
+        injectPersonnelSummarySections();
         showLoading(true);
         try {
             await calculateAllSummaries();
@@ -4416,4 +4681,8 @@ window.handleTabSwitch = handleTabSwitch;
 window.displayWeeklySummary = displayWeeklySummary;
 window.displayMonthlySummary = displayMonthlySummary;
 window.displayYearlySummary = displayYearlySummary;
+window.calculatePersonnelPeriodSummary = calculatePersonnelPeriodSummary;
+window.displayPersonnelSummarySection = displayPersonnelSummarySection;
+window.formatTrendHtml = formatTrendHtml;
+window.mergeRecentActivity = mergeRecentActivity;
 window.showLoading = showLoading;
