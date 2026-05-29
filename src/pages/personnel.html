@@ -273,6 +273,13 @@
                                 <input class="form-input" type="text" id="customItemRemarks" placeholder="e.g., Project funded, storage details" maxlength="255" style="padding: 8px 10px; font-size: 13px;">
                             </div>
                         </div>
+
+                        <div style="margin-bottom: 10px;">
+                            <div class="form-group" style="margin: 0;">
+                                <label class="form-label" for="customItemDateIssued" style="font-size: 12px;">Date Issued *</label>
+                                <input class="form-input" type="date" id="customItemDateIssued" required style="padding: 8px 10px; font-size: 13px;">
+                            </div>
+                        </div>
                         
                         <div style="display: flex; gap: 8px; position: sticky; bottom: 0; background: #fff0f0; padding-top: 5px;">
                             <button type="submit" class="btn btn-primary" style="background: #2e7d32; color: white; border: none; flex: 1; padding: 10px; font-size: 14px;">
@@ -365,6 +372,11 @@
                     <input class="form-input" type="text" id="editItemRemarks" maxlength="255">
                 </div>
 
+                <div class="form-group">
+                    <label class="form-label" for="editItemDateIssued">Date Issued</label>
+                    <input class="form-input" type="date" id="editItemDateIssued">
+                </div>
+
                 <div class="modal-footer">
                     <button type="button" onclick="window.closeEditPersonnelItemModal()" class="btn btn-secondary">Cancel</button>
                     <button type="button" onclick="window.handleDeletePersonnelItem()" class="btn btn-danger" style="margin-right: auto;">
@@ -400,6 +412,7 @@
                         <div><strong>Units:</strong> <span id="viewItemUnits">-</span></div>
                         <div><strong>Unit Value:</strong> ₱<span id="viewItemUnitValue">-</span></div>
                         <div><strong>Condition:</strong> <span id="viewItemCondition">-</span></div>
+                        <div><strong>Date Issued:</strong> <span id="viewItemDateIssued">-</span></div>
                         <div><strong>Description:</strong> <span id="viewItemDescription">-</span></div>
                         <div><strong>Remarks:</strong> <span id="viewItemRemarks">-</span></div>
                     </div>
