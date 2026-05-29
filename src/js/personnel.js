@@ -51,6 +51,7 @@ const editItemUnitValueInput = document.getElementById('editItemUnitValue');
 const editItemConditionInput = document.getElementById('editItemCondition');
 const editItemDescriptionInput = document.getElementById('editItemDescription');
 const editItemRemarksInput = document.getElementById('editItemRemarks');
+const editItemDateIssuedInput = document.getElementById('editItemDateIssued');
 
 // View Personnel Item Modal Elements
 const viewPersonnelItemModal = document.getElementById('viewPersonnelItemModal');
@@ -59,6 +60,7 @@ const viewItemQuantityInput = document.getElementById('viewItemQuantity');
 const viewItemUnitsInput = document.getElementById('viewItemUnits');
 const viewItemUnitValueInput = document.getElementById('viewItemUnitValue');
 const viewItemConditionInput = document.getElementById('viewItemCondition');
+const viewItemDateIssuedInput = document.getElementById('viewItemDateIssued');
 const viewItemDescriptionInput = document.getElementById('viewItemDescription');
 const viewItemRemarksInput = document.getElementById('viewItemRemarks');
 const viewItemEditBtn = document.getElementById('viewItemEditBtn');
@@ -646,6 +648,12 @@ window.closePersonnelItemsModal = function() {
 window.showCustomItemForm = function() {
     if (addCustomItemForm) {
         addCustomItemForm.reset();
+        // Set today's date as default for date_issued
+        const dateInput = document.getElementById('customItemDateIssued');
+        if (dateInput) {
+            const today = new Date().toISOString().split('T')[0];
+            dateInput.value = today;
+        }
         addCustomItemForm.style.display = 'block';
     }
     if (showCustomItemBtn) showCustomItemBtn.style.display = 'none';
@@ -751,6 +759,7 @@ window.handleAddCustomItemToPersonnel = async function(event) {
     const condition = document.getElementById('customItemCondition').value;
     const description = document.getElementById('customItemDescription').value.trim() || null;
     const remarks = document.getElementById('customItemRemarks').value.trim() || null;
+    const dateIssued = document.getElementById('customItemDateIssued').value || null;
 
     let quantity = parseInt(qtyInput.value);
     if (isNaN(quantity) || quantity < 1) quantity = 1;
@@ -760,6 +769,11 @@ window.handleAddCustomItemToPersonnel = async function(event) {
 
     if (!name) {
         showNotification('Item name is required.', 'error');
+        return;
+    }
+
+    if (!dateIssued) {
+        showNotification('Date issued is required.', 'error');
         return;
     }
 
@@ -821,7 +835,8 @@ window.handleAddCustomItemToPersonnel = async function(event) {
                     unit_value: unitValue,
                     condition,
                     description,
-                    remarks
+                    remarks,
+                    date_issued: dateIssued
                 }]);
 
             if (insertError) throw insertError;
@@ -859,6 +874,7 @@ window.openEditPersonnelItemModal = async function(id) {
         editItemConditionInput.value = item.condition || 'Good';
         editItemDescriptionInput.value = item.description || '';
         editItemRemarksInput.value = item.remarks || '';
+        editItemDateIssuedInput.value = item.date_issued || '';
 
         // Close details modal if open
         closeViewPersonnelItemModal();
@@ -886,6 +902,7 @@ window.handleEditPersonnelItem = async function(event) {
     const condition = editItemConditionInput.value;
     const desc = editItemDescriptionInput.value.trim() || null;
     const remarks = editItemRemarksInput.value.trim() || null;
+    const dateIssued = editItemDateIssuedInput.value || null;
 
     if (!name || isNaN(qty) || qty < 1) {
         showNotification('Valid item name and quantity are required.', 'error');
@@ -907,6 +924,7 @@ window.handleEditPersonnelItem = async function(event) {
                 condition,
                 description: desc,
                 remarks,
+                date_issued: dateIssued,
                 updated_at: new Date().toISOString()
             })
             .eq('id', id);
@@ -967,6 +985,7 @@ window.openViewPersonnelItemModal = async function(id) {
         viewItemUnitsInput.textContent = item.units || 'pcs';
         viewItemUnitValueInput.textContent = (parseFloat(item.unit_value) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         viewItemConditionInput.textContent = item.condition || 'Good';
+        viewItemDateIssuedInput.textContent = item.date_issued || '-';
         viewItemDescriptionInput.textContent = item.description || '-';
         viewItemRemarksInput.textContent = item.remarks || '-';
 
@@ -1051,7 +1070,7 @@ window.exportPersonnelItemsToExcel = async function() {
                     'Condition': it.condition || 'Good',
                     'Description': it.description || '-',
                     'Remarks': it.remarks || '-',
-                    'Date Issued': it.created_at ? new Date(it.created_at).toLocaleDateString() : '-'
+                    'Date Issued': it.date_issued || '-'
                 };
             })
         ];
